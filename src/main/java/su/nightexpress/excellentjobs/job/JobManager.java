@@ -1,0 +1,712 @@
+package su.nightexpress.excellentjobs.job;
+
+import org.bukkit.Color;
+import org.bukkit.FireworkEffect;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Firework;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.meta.FireworkMeta;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import su.nightexpress.excellentjobs.JobsPlugin;
+import su.nightexpress.excellentjobs.Placeholders;
+import su.nightexpress.excellentjobs.action.ActionType;
+import su.nightexpress.excellentjobs.api.currency.Currency;
+import su.nightexpress.excellentjobs.api.event.*;
+import su.nightexpress.excellentjobs.booster.impl.Booster;
+import su.nightexpress.excellentjobs.config.Config;
+import su.nightexpress.excellentjobs.config.Keys;
+import su.nightexpress.excellentjobs.config.Lang;
+import su.nightexpress.excellentjobs.config.Perms;
+import su.nightexpress.excellentjobs.data.impl.*;
+import su.nightexpress.excellentjobs.job.impl.*;
+import su.nightexpress.excellentjobs.job.listener.JobExploitListener;
+import su.nightexpress.excellentjobs.job.listener.JobGenericListener;
+import su.nightexpress.excellentjobs.job.menu.*;
+import su.nightexpress.excellentjobs.job.util.JobCreator;
+import su.nightexpress.nightcore.manager.AbstractManager;
+import su.nightexpress.nightcore.util.FileUtil;
+import su.nightexpress.nightcore.util.NumberUtil;
+import su.nightexpress.nightcore.util.PDCUtil;
+import su.nightexpress.nightcore.util.TimeUtil;
+import su.nightexpress.nightcore.util.random.Rnd;
+import su.nightexpress.nightcore.util.text.tag.Tags;
+
+import java.io.File;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.*;
+import java.util.stream.Collectors;
+
+public class JobManager extends AbstractManager<JobsPlugin> {
+
+    private final Map<String, Job>                  jobMap;
+    private final Map<UUID, Map<String, JobIncome>> incomeMap;
+
+    private JobListMenu  jobListMenu;
+    private JobMenu      jobMenu;
+    private JobResetMenu jobResetMenu;
+    private JobObjectivesMenu objectivesMenu;
+    private JobJoinConfirmMenu joinConfirmMenu;
+    private JobLeaveConfirmMenu leaveConfirmMenu;
+
+    public JobManager(@NotNull JobsPlugin plugin) {
+        super(plugin);
+        this.jobMap = new HashMap<>();
+        this.incomeMap = new HashMap<>();
+    }
+
+    public static boolean canWorkHere(@NotNull Player player) {
+        if (Config.GENERAL_DISABLED_WORLDS.get().contains(player.getWorld().getName())) return false;
+        if (Config.ABUSE_IGNORE_GAME_MODES.get().contains(player.getGameMode())) return false;
+
+        return true;
+    }
+
+    public static void devastateEntity(@NotNull Entity entity) {
+        PDCUtil.set(entity, Keys.ENTITY_TRACKED, true);
+    }
+
+    public static boolean isDevastated(@NotNull Entity entity) {
+        return PDCUtil.getBoolean(entity, Keys.ENTITY_TRACKED).isPresent();
+    }
+
+    @Override
+    protected void onLoad() {
+        JobCreator.createDefaultJobs();
+
+        FileUtil.getFolders(plugin.getDataFolder() + Config.DIR_JOBS).forEach(jobDir -> {
+            File file = new File(jobDir.getAbsolutePath(), Job.CONFIG_NAME);
+            Job job = new Job(plugin, file, jobDir.getName());
+            if (job.load()) {
+                this.jobMap.put(job.getId(), job);
+            }
+            else this.plugin.warn("Job not loaded: '" + jobDir.getName() + "'.");
+        });
+        this.plugin.info("Loaded " + this.getJobMap().size() + " jobs.");
+
+        this.jobListMenu = new JobListMenu(this.plugin);
+        this.jobMenu = new JobMenu(this.plugin);
+        this.jobResetMenu = new JobResetMenu(this.plugin);
+        this.joinConfirmMenu = new JobJoinConfirmMenu(this.plugin);
+        this.leaveConfirmMenu = new JobLeaveConfirmMenu(this.plugin);
+        this.objectivesMenu = new JobObjectivesMenu(this.plugin);
+
+        this.addListener(new JobGenericListener(this.plugin, this));
+        this.addListener(new JobExploitListener(this.plugin));
+
+        this.addTask(this.plugin.createAsyncTask(this::payForJob).setSecondsInterval(Config.GENERAL_PAYMENT_INTERVAL.get()));
+    }
+
+    @Override
+    protected void onShutdown() {
+        this.payForJob();
+
+        if (this.jobMenu != null) this.jobMenu.clear();
+        if (this.objectivesMenu != null) this.objectivesMenu.clear();
+        if (this.jobListMenu != null) this.jobListMenu.clear();
+        if (this.jobResetMenu != null) this.jobResetMenu.clear();
+        if (this.joinConfirmMenu != null) this.joinConfirmMenu.clear();
+        if (this.leaveConfirmMenu != null) this.leaveConfirmMenu.clear();
+
+        this.getJobMap().clear();
+    }
+
+    @NotNull
+    public JobListMenu getJobsMenu() {
+        return jobListMenu;
+    }
+
+    @NotNull
+    public JobMenu getJobMenu() {
+        return jobMenu;
+    }
+
+    @NotNull
+    public JobResetMenu getResetMenu() {
+        return jobResetMenu;
+    }
+
+    @NotNull
+    public JobObjectivesMenu getObjectivesMenu() {
+        return objectivesMenu;
+    }
+
+    @NotNull
+    public JobJoinConfirmMenu getJoinConfirmMenu() {
+        return joinConfirmMenu;
+    }
+
+    @NotNull
+    public JobLeaveConfirmMenu getLeaveConfirmMenu() {
+        return leaveConfirmMenu;
+    }
+
+    @NotNull
+    public Map<String, Job> getJobMap() {
+        return jobMap;
+    }
+
+    @NotNull
+    public Collection<Job> getJobs() {
+        return this.getJobMap().values();
+    }
+
+    @NotNull
+    public List<String> getJobIds() {
+        return new ArrayList<>(this.getJobMap().keySet());
+    }
+
+    @Nullable
+    public Job getJobById(@NotNull String id) {
+        return this.getJobMap().get(id.toLowerCase());
+    }
+
+    @NotNull
+    public Set<Job> getJobs(@NotNull Player player) {
+        return this.getJobs(player, null);
+    }
+
+    @NotNull
+    public Set<Job> getJobs(@NotNull Player player, @Nullable JobState state) {
+        JobUser user = plugin.getUserManager().getUserData(player);
+
+        return this.getJobs().stream()
+            .filter(job -> state == null || user.getData(job).getState() == state)
+            .collect(Collectors.toSet());
+    }
+
+    @NotNull
+    public Set<Job> getActiveJobs(@NotNull Player player) {
+        JobUser user = plugin.getUserManager().getUserData(player);
+
+        return this.getJobs().stream()
+            .filter(job -> user.getData(job).getState() != JobState.INACTIVE)
+            .collect(Collectors.toSet());
+    }
+
+    @NotNull
+    public <O> Set<Job> getJobsByObjective(@NotNull ActionType<?, O> type, @NotNull O objective) {
+        return this.getJobs().stream().filter(job -> job.hasObjective(type, objective)).collect(Collectors.toCollection(HashSet::new));
+    }
+
+    @NotNull
+    public Map<UUID, Map<String, JobIncome>> getIncomeMap() {
+        return incomeMap;
+    }
+
+    @NotNull
+    private Map<String, JobIncome> getIncomeMap(@NotNull Player player) {
+        return this.getIncomeMap().computeIfAbsent(player.getUniqueId(), k -> new HashMap<>());
+    }
+
+    @NotNull
+    public JobIncome getIncome(@NotNull Player player, @NotNull Job job) {
+        return this.getIncomeMap(player).computeIfAbsent(job.getId(), k -> new JobIncome(job));
+    }
+
+    @NotNull
+    public Collection<JobIncome> getIncomes(@NotNull Player player) {
+        return this.getIncomeMap(player).values();
+    }
+
+    public static int getJobsLimit(@NotNull Player player, @NotNull JobState state) {
+        if (state == JobState.PRIMARY) return getPrimaryJobsLimit(player);
+        if (state == JobState.SECONDARY) return getSeconaryJobsLimit(player);
+
+        return -1;
+    }
+
+    public static int getPrimaryJobsLimit(@NotNull Player player) {
+        return Config.JOBS_PRIMARY_AMOUNT.get().getGreatestOrNegative(player);
+    }
+
+    public static int getSeconaryJobsLimit(@NotNull Player player) {
+        return Config.JOBS_SECONDARY_AMOUNT.get().getGreatestOrNegative(player);
+    }
+
+    public boolean canGetMoreJobs(@NotNull Player player) {
+        return this.canGetMoreJobs(player, JobState.PRIMARY) || this.canGetMoreJobs(player, JobState.SECONDARY);
+    }
+
+    public void openJobsMenu(@NotNull Player player) {
+        this.getJobsMenu().open(player);
+    }
+
+    public void openJobMenu(@NotNull Player player, @NotNull Job job) {
+        this.getJobMenu().open(player, job);
+    }
+
+    public void openObjectivesMenu(@NotNull Player player, @NotNull Job job) {
+        this.getObjectivesMenu().open(player, job);
+    }
+
+    public void openJoinConfirmMenu(@NotNull Player player, @NotNull Job job) {
+        this.getJoinConfirmMenu().open(player, job);
+    }
+
+    public void openLeaveConfirmMenu(@NotNull Player player, @NotNull Job job) {
+        this.getLeaveConfirmMenu().open(player, job);
+    }
+
+    public void openResetMenu(@NotNull Player player, @NotNull Job job) {
+        JobUser user = this.plugin.getUserManager().getUserData(player);
+        this.getResetMenu().open(player, user.getData(job));
+    }
+
+    public boolean canGetMoreJobs(@NotNull Player player, @NotNull JobState state) {
+        JobUser user = this.plugin.getUserManager().getUserData(player);
+        int limit = getJobsLimit(player, state);
+        return limit < 0 || user.countJobs(state) < limit;
+    }
+
+    public boolean leaveJob(@NotNull Player player, @NotNull Job job) {
+        JobUser user = this.plugin.getUserManager().getUserData(player);
+        JobData data = user.getData(job);
+        if (data.getState() == JobState.INACTIVE) {
+            Lang.JOB_LEAVE_ERROR_NOT_JOINED.getMessage().replace(job.replacePlaceholders()).send(player);
+            return false;
+        }
+
+        JobLeaveEvent event = new JobLeaveEvent(player, job, data.getState());
+        this.plugin.getPluginManager().callEvent(event);
+        if (event.isCancelled()) return false;
+
+        data.setState(JobState.INACTIVE);
+        job.removeEmployee(event.getState(), 1);
+        if (Config.JOBS_LEAVE_RESET_PROGRESS.get()) {
+            data.reset();
+        }
+        this.plugin.getUserManager().saveAsync(user);
+
+        Lang.JOB_LEAVE_SUCCESS.getMessage().replace(job.replacePlaceholders()).send(player);
+        return true;
+    }
+
+    public boolean joinJob(@NotNull Player player, @NotNull Job job, boolean forced) {
+        if (forced || this.canGetMoreJobs(player, JobState.PRIMARY)) {
+            return this.joinJob(player, job, JobState.PRIMARY, forced);
+        }
+        if (this.canGetMoreJobs(player, JobState.SECONDARY)) {
+            return this.joinJob(player, job, JobState.SECONDARY, false);
+        }
+
+        Lang.JOB_JOIN_ERROR_LIMIT_GENERAL.getMessage().replace(job.replacePlaceholders()).send(player);
+        return false;
+    }
+
+    public boolean joinJob(@NotNull Player player, @NotNull Job job, @NotNull JobState state, boolean forced) {
+        if (state == JobState.INACTIVE) return false;
+
+        JobUser user = this.plugin.getUserManager().getUserData(player);
+        JobData data = user.getData(job);
+        if (data.getState() == state) {
+            Lang.JOB_JOIN_ERROR_ALREADY_HIRED.getMessage().replace(job.replacePlaceholders()).send(player);
+            return false;
+        }
+
+        if (!forced) {
+            if (!this.canGetMoreJobs(player, state)) {
+                Lang.JOB_JOIN_ERROR_LIMIT_STATE.getMessage()
+                    .replace(Placeholders.GENERIC_AMOUNT, NumberUtil.format(getJobsLimit(player, state)))
+                    .replace(Placeholders.GENERIC_STATE, Lang.getJobState(state))
+                    .replace(job.replacePlaceholders())
+                    .send(player);
+                return false;
+            }
+        }
+
+        JobJoinEvent event = new JobJoinEvent(player, job, state);
+        this.plugin.getPluginManager().callEvent(event);
+        if (event.isCancelled()) return false;
+
+        data.setState(event.getState());
+        job.addEmployee(event.getState(), 1);
+        this.plugin.getUserManager().saveAsync(user);
+
+        Lang.JOB_JOIN_SUCCESS.getMessage().replace(job.replacePlaceholders()).send(player);
+        return true;
+    }
+
+    public void payForJob() {
+        this.plugin.getServer().getOnlinePlayers().forEach(this::payForJob);
+    }
+
+    public void payForJob(@NotNull Player player) {
+        Map<Job, Map<Currency, Double>> perJob = new HashMap<>();
+
+        // Get payment sum of all objectives for each job.
+        this.getIncomes(player).forEach(jobIncome -> {
+            Job job = jobIncome.getJob();
+
+            JobPrePaymentEvent event = new JobPrePaymentEvent(player, job, jobIncome);
+            this.plugin.getPluginManager().callEvent(event);
+            if (event.isCancelled()) return;
+
+            perJob.put(job, jobIncome.getSumAndClear());
+        });
+        perJob.values().removeIf(Map::isEmpty); // Clear empty job payments
+
+
+        // Calculate total payment from all jobs.
+        Map<Currency, Double> total = new HashMap<>();
+        perJob.forEach((job, map) -> map.forEach((currency, amount) -> {
+
+            JobPaymentEvent event = new JobPaymentEvent(player, job, currency, amount);
+            this.plugin.getPluginManager().callEvent(event);
+            if (event.isCancelled()) return;
+
+            total.merge(event.getCurrency(), event.getAmount(), Double::sum);
+        }));
+        if (total.isEmpty()) return;
+
+
+        // Pay the worker.
+        total.forEach((currency, amount) -> {
+            currency.getHandler().give(player, amount);
+        });
+
+        String totalPay = total.entrySet().stream().map(entry -> {
+            Currency currency = entry.getKey();
+            String amount = currency.format(entry.getValue());
+            return Lang.JOB_PAYMENT_RECEIPT_ENTRY_CURRENCY.getString().replace(Placeholders.GENERIC_AMOUNT, amount);
+        }).collect(Collectors.joining(", "));
+
+        Lang.JOB_PAYMENT_RECEIPT.getMessage()
+            .replace(Placeholders.GENERIC_TIME, TimeUtil.formatTime(Config.GENERAL_PAYMENT_INTERVAL.get() * 1000L + 100L))
+            .replace(Placeholders.GENERIC_TOTAL, totalPay)
+            .replace(Placeholders.GENERIC_ENTRY, list -> {
+                perJob.forEach((job, moneyMap) -> {
+                    String currencies = moneyMap.entrySet().stream()
+                        .map(entry -> {
+                            Currency currency = entry.getKey();
+                            String amount = currency.format(entry.getValue());
+                            return Lang.JOB_PAYMENT_RECEIPT_ENTRY_CURRENCY.getString().replace(Placeholders.GENERIC_AMOUNT, amount);
+                        })
+                        .collect(Collectors.joining(Tags.LINE_BREAK.getFullName()));
+
+                    list.add(job.replacePlaceholders().apply(Lang.JOB_PAYMENT_RECEIPT_ENTRY_JOB.getString()
+                        .replace(Placeholders.GENERIC_CURRENCY, currencies)
+                    ));
+                });
+            })
+            .send(player);
+    }
+
+    public boolean createSpecialOrder(@NotNull Player player, @NotNull Job job, boolean force) {
+        if (!Config.SPECIAL_ORDERS_ENABLED.get()) {
+            Lang.SPECIAL_ORDER_ERROR_DISABLED_SERVER.getMessage().send(player);
+            return false;
+        }
+
+        JobUser user = plugin.getUserManager().getUserData(player);
+        JobData jobData = user.getData(job);
+        var costMap = job.getSpecialOrdersCost();
+
+        if (!force) {
+            if (!job.isSpecialOrdersAllowed()) {
+                Lang.SPECIAL_ORDER_ERROR_DISABLED_JOB.getMessage().replace(job.replacePlaceholders()).send(player);
+                return false;
+            }
+
+            if (jobData.hasOrder()) {
+                Lang.SPECIAL_ORDER_ERROR_ALREADY_HAVE.getMessage().replace(job.replacePlaceholders()).send(player);
+                return false;
+            }
+
+            int totalOrders = user.countSpecialOrders();
+            int maxAmount = Config.SPECIAL_ORDERS_MAX_AMOUNT.get();
+            if (maxAmount >= 0 && totalOrders >= maxAmount) {
+                Lang.SPECIAL_ORDER_ERROR_MAX_AMOUNT.getMessage()
+                    .replace(Placeholders.GENERIC_AMOUNT, NumberUtil.format(maxAmount))
+                    .send(player);
+                return false;
+            }
+
+            if (!jobData.isReadyForNextOrder()) {
+                Lang.SPECIAL_ORDER_ERROR_COOLDOWN.getMessage()
+                    .replace(Placeholders.GENERIC_TIME, TimeUtil.formatDuration(jobData.getNextOrderDate()))
+                    .send(player);
+                return false;
+            }
+
+
+            if (costMap.entrySet().stream().anyMatch(entry -> entry.getKey().getHandler().getBalance(player) < entry.getValue())) {
+                Lang.SPECIAL_ORDER_ERROR_NOT_ENOUGH_FUNDS.getMessage()
+                    .replace(Placeholders.GENERIC_AMOUNT, costMap.entrySet().stream().map(entry -> entry.getKey().format(entry.getValue())).collect(Collectors.joining(", ")))
+                    .send(player);
+                return false;
+            }
+        }
+
+        JobOrderData orderData = job.createSpecialOrder(jobData.getLevel());
+        if (orderData == null) {
+            Lang.SPECIAL_ORDER_ERROR_GENERATION.getMessage().send(player);
+            return false;
+        }
+
+        if (!force) {
+            costMap.forEach((currency, amount) -> {
+                currency.getHandler().take(player, amount);
+            });
+        }
+
+        long cooldown = Config.SPECIAL_ORDERS_COOLDOWN.get();
+        long nextOrderDate;
+        if (cooldown < 0) {
+            LocalDateTime midnight = LocalDateTime.of(LocalDate.now().plusDays(1), LocalTime.MIDNIGHT);
+            nextOrderDate = TimeUtil.toEpochMillis(midnight);
+        }
+        else {
+            nextOrderDate = System.currentTimeMillis() + cooldown * 1000L;
+        }
+
+        jobData.setOrderData(orderData);
+        jobData.setNextOrderDate(nextOrderDate);
+        this.plugin.getUserManager().saveAsync(user);
+
+        Lang.SPECIAL_ORDER_TAKEN_INFO.getMessage()
+            .replace(job.replacePlaceholders())
+            .replace(Placeholders.GENERIC_TIME, TimeUtil.formatDuration(orderData.getExpireDate()))
+            .replace(Placeholders.GENERIC_REWARD, list -> {
+                orderData.translateRewards().forEach(reward -> {
+                    list.add(Lang.SPECIAL_ORDER_TAKEN_REWARD.getString()
+                        .replace(Placeholders.GENERIC_NAME, reward.getName())
+                    );
+                });
+            })
+            .replace(Placeholders.GENERIC_ENTRY, list -> {
+                orderData.getObjectiveMap().values().forEach(orderObjective -> {
+                    JobObjective objective = job.getObjectiveById(orderObjective.getObjectiveId());
+                    if (objective == null) return;
+
+                    int totalCount = orderObjective.getObjectCountMap().values().stream().mapToInt(JobOrderCount::getRequired).sum();
+
+                    String details = orderObjective.getObjectCountMap().entrySet().stream().map(entry -> {
+                        String objectName = objective.getType().getObjectLocalizedName(entry.getKey());
+                        String objectAmount = NumberUtil.format(entry.getValue().getRequired());
+
+                        return Lang.SPECIAL_ORDER_TAKEN_DETAIL.getString()
+                            .replace(Placeholders.GENERIC_NAME, objectName)
+                            .replace(Placeholders.GENERIC_AMOUNT, objectAmount);
+                    }).collect(Collectors.joining(Tags.LINE_BREAK.getFullName()));
+
+                    list.add(Lang.SPECIAL_ORDER_TAKEN_ENTRY.getString()
+                        .replace(Placeholders.GENERIC_NAME, objective.getDisplayName())
+                        .replace(Placeholders.GENERIC_AMOUNT, NumberUtil.format(totalCount))
+                        .replace(Placeholders.GENERIC_ENTRY, details)
+                    );
+                });
+            }).send(player);
+
+        return true;
+    }
+
+    public <O> void doObjective(@NotNull Player player, @NotNull ActionType<?, O> type, @NotNull O object, int amount) {
+        JobUser user = plugin.getUserManager().getUserData(player);
+
+        user.getDatas().forEach(jobData -> {
+            if (jobData.getState() == JobState.INACTIVE) return;
+
+            Job job = jobData.getJob();
+            if (!job.isGoodWorld(player.getWorld())) return;
+
+            JobObjective jobObjective = job.getObjectiveByObject(type, object);
+            if (jobObjective == null || !jobObjective.isUnlocked(player, jobData)) return;
+
+            JobOrderData orderData = jobData.getOrderData();
+            Label_Order:
+            if (!orderData.isEmpty()) {
+                if (!orderData.isCompleted()) {
+                    String objectId = type.getObjectName(object);
+                    JobOrderObjective orderObjective = orderData.getObjectiveMap().get(jobObjective.getId());
+                    if (orderObjective == null) break Label_Order;
+
+                    JobOrderCount count = orderObjective.getObjectCountMap().get(objectId);
+                    if (count == null) break Label_Order;
+
+                    orderObjective.countObject(objectId, amount);
+
+                    Lang.SPECIAL_ORDER_PROGRESS.getMessage()
+                        .replace(job.replacePlaceholders())
+                        .replace(Placeholders.GENERIC_NAME, type.getObjectLocalizedName(object))
+                        .replace(Placeholders.GENERIC_CURRENT, NumberUtil.format(count.getCurrent()))
+                        .replace(Placeholders.GENERIC_MAX, NumberUtil.format(count.getRequired()))
+                        .send(player);
+                }
+                if (orderData.isCompleted() && !orderData.isRewarded()) {
+                    List<OrderReward> rewards = orderData.translateRewards();
+                    rewards.forEach(reward -> reward.give(player));
+                    orderData.setRewarded(true);
+                    Lang.SPECIAL_ORDER_COMPLETED.getMessage().replace(job.replacePlaceholders()).send(player);
+                }
+            }
+
+            if (!jobObjective.canPay()) return;
+            int jobLevel = jobData.getLevel();
+            Collection<Booster> boosters = plugin.getBoosterManager().getBoosters(player, job);
+
+            JobIncome income = this.getIncome(player, job);
+            jobObjective.getPaymentMap().forEach((currency, rewardInfo) -> {
+                // Do no process payment for limited currencies.
+                if (jobData.isPaymentLimitReached(currency)) return;
+
+                double payment = rewardInfo.rollAmountNaturally() * amount;
+                double paymentMultiplier = 1D;
+
+                paymentMultiplier += Booster.getCurrencyPlainBoost(currency, boosters);
+                paymentMultiplier += job.getPaymentMultiplier(currency, jobLevel);
+
+                JobObjectiveIncomeEvent event = new JobObjectiveIncomeEvent(
+                    player, user, jobData, jobObjective, type, object, currency, payment, paymentMultiplier
+                );
+                this.plugin.getPluginManager().callEvent(event);
+                if (event.isCancelled()) return;
+
+                payment = event.getPayment() * event.getPaymentMultiplier();
+                if (payment == 0D || Double.isNaN(payment) || Double.isInfinite(payment)) return;
+
+                income.add(jobObjective, currency, payment);
+
+                if (!player.hasPermission(Perms.PREFIX_BYPASS_LIMIT_CURRENCY + job.getId()) && job.hasDailyPaymentLimit(currency, jobLevel)) {
+                    jobData.getLimitData().addCurrency(currency, payment);
+
+                    if (jobData.isPaymentLimitReached(currency)) {
+                        Lang.JOB_LIMIT_CURRENCY_NOTIFY.getMessage()
+                            .replace(job.replacePlaceholders())
+                            .replace(currency.replacePlaceholders())
+                            .send(player);
+                    }
+                }
+            });
+
+
+
+            if (!jobData.isXPLimitReached()) {
+                double xpRoll = jobObjective.getXPReward().rollAmountNaturally() * amount;
+                double xpMultiplier = 1D;
+
+                xpMultiplier += Booster.getPlainXPBoost(boosters);
+                xpMultiplier += job.getXPMultiplier(jobLevel);
+
+                JobObjectiveXPEvent event = new JobObjectiveXPEvent(
+                    player, user, jobData, jobObjective, type, object, xpRoll, xpMultiplier
+                );
+                this.plugin.getPluginManager().callEvent(event);
+                if (event.isCancelled()) return;
+
+                xpRoll = event.getXPAmount() * event.getXPMultiplier();
+                if (xpRoll == 0D || Double.isNaN(xpRoll) || Double.isInfinite(xpRoll)) return;
+
+                if (this.addXP(player, job, /*type.getObjectLocalizedName(object),*/ xpRoll)) {
+                    if (!player.hasPermission(Perms.PREFIX_BYPASS_LIMIT_XP + job.getId()) && job.hasDailyXPLimit(jobLevel)) {
+                        jobData.getLimitData().addXP((int) xpRoll);
+
+                        if (jobData.isXPLimitReached()) {
+                            Lang.JOB_LIMIT_XP_NOTIFY.getMessage().replace(job.replacePlaceholders()).send(player);
+                        }
+                    }
+                }
+            }
+        });
+
+        //this.plugin.getUserManager().saveUser(user);
+    }
+
+    public void addLevel(@NotNull Player player, @NotNull Job job, int amount) {
+        JobUser user = plugin.getUserManager().getUserData(player);
+        JobData jobData = user.getData(job);
+        boolean isMinus = amount < 0;
+
+        for (int count = 0; count < Math.abs(amount); count++) {
+            int exp = isMinus ? -jobData.getXPToLevelDown() : jobData.getXPToLevelUp();
+            this.addXP(player, job, exp);
+        }
+    }
+
+    public boolean addXP(@NotNull Player player, @NotNull Job job, double amount) {
+        if (amount == 0D) return false;
+
+        JobUser user = plugin.getUserManager().getUserData(player);
+        JobData jobData = user.getData(job);
+
+        boolean isLose = amount < 0;
+        int xp = (int) Math.floor(amount);
+
+        JobXPEvent xpEvent = JobXPEvent.createEvent(player, user, jobData, xp);
+        plugin.getPluginManager().callEvent(xpEvent);
+        if (xpEvent.isCancelled()) return false;
+
+        xp = xpEvent.getXP();
+
+        int levelHas = jobData.getLevel();
+        if (isLose) {
+            jobData.removeXP(xp);
+        }
+        else {
+            jobData.addXP(xp);
+        }
+
+        // Send exp gain/lose message.
+        (isLose ? Lang.JOB_XP_LOSE : Lang.JOB_XP_GAIN).getMessage()
+            .replace(jobData.replacePlaceholders())
+            .replace(Placeholders.GENERIC_AMOUNT, NumberUtil.format(amount))
+            .send(player);
+
+        // Call events for level up/down.
+        if (levelHas > jobData.getLevel()) {
+            JobLevelDownEvent event = new JobLevelDownEvent(player, user, jobData);
+            plugin.getPluginManager().callEvent(event);
+
+            Lang.JOB_LEVEL_DOWN.getMessage().replace(jobData.replacePlaceholders()).send(player);
+        }
+        else if (levelHas < jobData.getLevel()) {
+            JobLevelUpEvent event = new JobLevelUpEvent(player, user, jobData);
+            plugin.getPluginManager().callEvent(event);
+
+            if (!jobData.isLevelRewardObtained(jobData.getLevel())) {
+                job.getLevelUpCommands(jobData.getLevel()).forEach(command -> {
+                    plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), Placeholders.forPlayer(player).apply(command));
+                });
+                jobData.setLevelRewardObtained(jobData.getLevel());
+                this.plugin.getUserManager().saveAsync(user);
+            }
+
+            Lang.JOB_LEVEL_UP.getMessage().replace(jobData.replacePlaceholders()).send(player);
+
+            if (Config.LEVELING_FIREWORKS.get()) {
+                this.createFirework(player.getWorld(), player.getLocation());
+            }
+        }
+        return true;
+    }
+
+    public boolean addXPNaturally(@NotNull Player player, @NotNull Job job, double amount) {
+        Collection<Booster> boosters = this.plugin.getBoosterManager().getBoosters(player, job);
+        double xpMultiplier = 1D + Booster.getPlainXPBoost(boosters);
+
+        amount *= xpMultiplier;
+
+        return this.addXP(player, job, amount);
+    }
+
+    @NotNull
+    private Firework createFirework(@NotNull World world, @NotNull Location location) {
+        Firework firework = world.spawn(location, Firework.class);
+        FireworkMeta meta = firework.getFireworkMeta();
+        FireworkEffect.Type type = Rnd.get(FireworkEffect.Type.values());
+        Color color = Color.fromBGR(Rnd.get(256), Rnd.get(256), Rnd.get(256));
+        Color fade = Color.fromBGR(Rnd.get(256), Rnd.get(256), Rnd.get(256));
+        FireworkEffect effect = FireworkEffect.builder()
+            .flicker(Rnd.nextBoolean()).withColor(color).withFade(fade).with(type).trail(Rnd.nextBoolean()).build();
+
+        meta.addEffect(effect);
+        meta.setPower(Rnd.get(4));
+        firework.setFireworkMeta(meta);
+        PDCUtil.set(firework, Keys.LEVEL_FIREWORK, true);
+        return firework;
+    }
+}
