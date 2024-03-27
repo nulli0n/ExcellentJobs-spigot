@@ -23,13 +23,13 @@ import java.util.stream.Collectors;
 public class BlockList implements Placeholder {
 
     private Material fallbackMaterial;
-    private int resetTime;
-    private boolean dropItems;
+    private int      resetTime;
+    private boolean  dropItems;
 
-    private final String id;
+    private final String                               id;
     private final Set<Material>                        materials;
     private final Map<BlockPos, Pair<BlockData, Long>> blocksToReset;
-    private final PlaceholderMap placeholderMap;
+    private final PlaceholderMap                       placeholderMap;
 
     public BlockList(@NotNull String id,
                      @NotNull Set<Material> materials,

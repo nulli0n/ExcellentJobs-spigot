@@ -24,12 +24,15 @@ public class Perms {
     public static final UniPermission COMMAND_BOOSTER      = new UniPermission(PREFIX_COMMAND + "booster");
     public static final UniPermission COMMAND_STATS        = new UniPermission(PREFIX_COMMAND + "stats");
     public static final UniPermission COMMAND_STATS_OTHERS = new UniPermission(PREFIX_COMMAND + "stats.others");
+    public static final UniPermission COMMAND_JOIN         = new UniPermission(PREFIX_COMMAND + "join");
+    public static final UniPermission COMMAND_LEAVE        = new UniPermission(PREFIX_COMMAND + "leave");
     public static final UniPermission COMMAND_MENU         = new UniPermission(PREFIX_COMMAND + "menu");
     public static final UniPermission COMMAND_XP           = new UniPermission(PREFIX_COMMAND + "xp");
     public static final UniPermission COMMAND_LEVEL        = new UniPermission(PREFIX_COMMAND + "level");
     public static final UniPermission COMMAND_OBJECTIVES   = new UniPermission(PREFIX_COMMAND + "objectives");
     public static final UniPermission COMMAND_RESET        = new UniPermission(PREFIX_COMMAND + "reset");
     public static final UniPermission COMMAND_RESET_OTHERS = new UniPermission(PREFIX_COMMAND + "reset.others");
+    public static final UniPermission COMMAND_SET_STATE    = new UniPermission(PREFIX_COMMAND + "setstate");
     public static final UniPermission COMMAND_TOP          = new UniPermission(PREFIX_COMMAND + "top");
     public static final UniPermission COMMAND_RELOAD       = new UniPermission(PREFIX_COMMAND + "reload");
     public static final UniPermission COMMAND_ZONE         = new UniPermission(PREFIX_COMMAND + "zone");
@@ -45,11 +48,14 @@ public class Perms {
 
         COMMAND.addChildren(
             COMMAND_RELOAD,
+            COMMAND_JOIN,
+            COMMAND_LEAVE,
             COMMAND_MENU,
             COMMAND_OBJECTIVES,
             COMMAND_LEVEL,
             COMMAND_XP,
             COMMAND_RESET, COMMAND_RESET_OTHERS,
+            COMMAND_SET_STATE,
             COMMAND_BOOSTER,
             COMMAND_STATS, COMMAND_STATS_OTHERS,
             COMMAND_ZONE

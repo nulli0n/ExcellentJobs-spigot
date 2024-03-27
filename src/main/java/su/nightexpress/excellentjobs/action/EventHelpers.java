@@ -23,6 +23,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.RayTraceResult;
+import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Keys;
 import su.nightexpress.excellentjobs.hook.HookId;
 import su.nightexpress.excellentjobs.hook.impl.MythicMobsHook;
@@ -106,8 +107,11 @@ public class EventHelpers {
 
     public static final EventHelper<BlockBreakEvent, Material> BLOCK_BREAK = (plugin, event, processor) -> {
         Block block = event.getBlock();
-        boolean isLowAge = block.getBlockData() instanceof Ageable ageable && ageable.getAge() < ageable.getMaximumAge();
-        if (PlayerBlockTracker.isTracked(block) || isLowAge) return false;
+
+        if (PlayerBlockTracker.isTracked(block)) {
+            if (!(block.getBlockData() instanceof Ageable ageable)) return false;
+            if (ageable.getAge() < ageable.getMaximumAge()) return false;
+        }
 
         Player player = event.getPlayer();
         processor.progressObjective(player, block.getType(), 1);
@@ -300,7 +304,9 @@ public class EventHelpers {
         Player player = event.getEnchanter();
         ItemStack item = event.getItem();
 
-        processor.progressObjective(player, item.getType(), 1);
+        double modifier = (Config.JOBS_ENCHANT_MULTIPLIER_BY_LEVEL_COST.get() * event.getExpLevelCost() / 100D);
+
+        processor.progressObjective(player, item.getType(), 1, modifier);
         return true;
     };
 

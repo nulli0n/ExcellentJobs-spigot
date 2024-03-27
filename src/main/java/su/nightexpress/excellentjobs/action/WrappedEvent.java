@@ -31,11 +31,11 @@ public class WrappedEvent<E extends Event, O> implements Listener, EventExecutor
     }
 
     @Override
-    public void progressObjective(@NotNull Player player, @NotNull O object, int amount) {
+    public void progressObjective(@NotNull Player player, @NotNull O object, int amount, double multiplier) {
         //if (player.getGameMode() == GameMode.CREATIVE) return;
         // Already included in check below
         if (!JobManager.canWorkHere(player)) return;
 
-        this.plugin.getJobManager().doObjective(player, this.actionType, object, amount);
+        this.plugin.getJobManager().doObjective(player, this.actionType, object, amount, multiplier);
     }
 }

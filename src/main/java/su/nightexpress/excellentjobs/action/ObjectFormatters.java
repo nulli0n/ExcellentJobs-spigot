@@ -1,7 +1,7 @@
 package su.nightexpress.excellentjobs.action;
 
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import su.nightexpress.excellentjobs.JobsAPI;
 import su.nightexpress.nightcore.language.LangAssets;
+import su.nightexpress.nightcore.util.BukkitThing;
 import su.nightexpress.nightcore.util.StringUtil;
 
 public class ObjectFormatters {
@@ -19,7 +20,7 @@ public class ObjectFormatters {
         @NotNull
         @Override
         public String getName(@NotNull Material object) {
-            return object.name();
+            return object.getKey().getKey();
         }
 
         @NotNull
@@ -31,7 +32,7 @@ public class ObjectFormatters {
         @Nullable
         @Override
         public Material parseObject(@NotNull String name) {
-            return Material.getMaterial(name.toUpperCase());
+            return BukkitThing.getMaterial(name);
         }
     };
 
@@ -39,7 +40,7 @@ public class ObjectFormatters {
         @NotNull
         @Override
         public String getName(@NotNull EntityType type) {
-            return type.name();
+            return type.getKey().getKey();//type.name();
         }
 
         @NotNull
@@ -51,7 +52,8 @@ public class ObjectFormatters {
         @Nullable
         @Override
         public EntityType parseObject(@NotNull String name) {
-            return StringUtil.getEnum(name, EntityType.class).orElse(null);
+            return BukkitThing.getEntityType(name);
+            //return StringUtil.getEnum(name, EntityType.class).orElse(null);
         }
     };
 
@@ -59,7 +61,7 @@ public class ObjectFormatters {
         @NotNull
         @Override
         public String getName(@NotNull PotionEffectType object) {
-            return object.getName();
+            return object.getKey().getKey();// object.getName();
         }
 
         @NotNull
@@ -71,7 +73,11 @@ public class ObjectFormatters {
         @Nullable
         @Override
         public PotionEffectType parseObject(@NotNull String name) {
-            return PotionEffectType.getByName(name.toUpperCase());
+            PotionEffectType effectType = BukkitThing.fromRegistry(Registry.EFFECT, name);
+            if (effectType == null) {
+                return PotionEffectType.getByName(name.toUpperCase());
+            }
+            return effectType;
         }
     };
 
@@ -91,7 +97,8 @@ public class ObjectFormatters {
         @Nullable
         @Override
         public Enchantment parseObject(@NotNull String name) {
-            return Enchantment.getByKey(NamespacedKey.minecraft(name.toLowerCase()));
+            return BukkitThing.getEnchantment(name);
+            //return Enchantment.getByKey(NamespacedKey.minecraft(name.toLowerCase()));
         }
     };
 

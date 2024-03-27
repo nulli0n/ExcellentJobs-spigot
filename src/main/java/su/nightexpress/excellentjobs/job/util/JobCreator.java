@@ -14,6 +14,7 @@ import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.currency.CurrencyManager;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.job.impl.JobObjective;
+import su.nightexpress.excellentjobs.job.impl.JobState;
 import su.nightexpress.excellentjobs.job.impl.ObjectiveReward;
 import su.nightexpress.excellentjobs.util.Modifier;
 import su.nightexpress.nightcore.config.FileConfig;
@@ -27,7 +28,7 @@ import java.util.stream.Collectors;
 
 import static su.nightexpress.nightcore.util.text.tag.Tags.LIGHT_GRAY;
 
-@Deprecated // TODO Polish +  Include more jobs
+// TODO Polish +  Include more jobs
 public class JobCreator {
 
     private static final ObjectiveReward MONEY_LOW    = new ObjectiveReward(100D, 0.01, 0.05);
@@ -50,6 +51,7 @@ public class JobCreator {
         createFarmerJob();
         createFisherJob();
         createHunterJob();
+        createEnchanterJob();
     }
 
     private static void createJob(@NotNull String id, @NotNull Consumer<Job> consumer) {
@@ -63,6 +65,7 @@ public class JobCreator {
         consumer.accept(job);
         job.setName(StringUtil.capitalizeUnderscored(id));
         job.setPermissionRequired(false);
+        job.setInitialState(JobState.INACTIVE);
         job.setInitialXP(100);
         job.setXPFactor(1.093);
         job.setMaxLevel(100);
@@ -158,6 +161,18 @@ public class JobCreator {
         createHunterObjectives();
     }
 
+    private static void createEnchanterJob() {
+        createJob("enchanter", job -> {
+            job.setIcon(ItemUtil.getSkinHead("70fbb9178d9d468e3c9735ee571b7baa54338f7f831f7f4e60ca9c8d14870c7"));
+            job.setDescription(Lists.newList(
+                LIGHT_GRAY.enclose("Get levels and enhance your"),
+                LIGHT_GRAY.enclose("gear with enchantments for money!"))
+            );
+        });
+
+        createEnchanterObjectives();
+    }
+
     private static void createMinerObjectives() {
         String jobId = "miner";
         ActionType<?, Material> type = ActionTypes.BLOCK_BREAK;
@@ -187,9 +202,9 @@ public class JobCreator {
         rareOreItems.addAll(Tag.REDSTONE_ORES.getValues());
         rareOreItems.addAll(Tag.LAPIS_ORES.getValues());
 
-        Set<Material> uniqueOreItems = new HashSet<>();
-        uniqueOreItems.addAll(Tag.DIAMOND_ORES.getValues());
-        uniqueOreItems.addAll(Tag.EMERALD_ORES.getValues());
+        Set<Material> deepOreItems = new HashSet<>();
+        deepOreItems.addAll(Tag.DIAMOND_ORES.getValues());
+        deepOreItems.addAll(Tag.EMERALD_ORES.getValues());
 
         Set<Material> netherOreItems = Lists.newSet(Material.NETHER_GOLD_ORE, Material.NETHER_QUARTZ_ORE);
 
@@ -203,7 +218,7 @@ public class JobCreator {
             MONEY_HIGH, XP_HIGH, 1)
         );
 
-        objectives.add(createObjective("unique_ores", type, uniqueOreItems,
+        objectives.add(createObjective("deepest_ores", type, deepOreItems,
             new ItemStack(Material.DIAMOND_ORE),
             MONEY_BEST, XP_BEST, 1)
         );
@@ -485,6 +500,103 @@ public class JobCreator {
         objectives.add(createObjective("fishes", entityKill, fishItems,
             new ItemStack(Material.COD),
             MONEY_MEDIUM.multiply(1.5), XP_MEDIUM, 1)
+        );
+
+        generateObjectives(jobId, objectives);
+    }
+
+    private static void createEnchanterObjectives() {
+        String jobId = "enchanter";
+        ActionType<?, Material> itemEnchantType = ActionTypes.ITEM_ENCHANT;
+        List<JobObjective> objectives = new ArrayList<>();
+
+        Set<Material> leatherItems = Lists.newSet(
+            Material.LEATHER_HELMET,
+            Material.LEATHER_CHESTPLATE,
+            Material.LEATHER_LEGGINGS,
+            Material.LEATHER_BOOTS
+        );
+        objectives.add(createObjective("leather_armor", itemEnchantType, leatherItems,
+            new ItemStack(Material.LEATHER_CHESTPLATE),
+            MONEY_BEST.multiply(2), XP_BEST.multiply(0.5), 1)
+        );
+
+
+        Set<Material> goldenItems = Lists.newSet(
+            Material.GOLDEN_AXE, Material.GOLDEN_PICKAXE,
+            Material.GOLDEN_HOE, Material.GOLDEN_SWORD, Material.GOLDEN_SHOVEL,
+            Material.GOLDEN_HELMET,
+            Material.GOLDEN_CHESTPLATE,
+            Material.GOLDEN_LEGGINGS,
+            Material.GOLDEN_BOOTS
+        );
+        objectives.add(createObjective("golden_items", itemEnchantType, goldenItems,
+            new ItemStack(Material.GOLDEN_CHESTPLATE),
+            MONEY_BEST.multiply(2.25), XP_BEST.multiply(0.55), 1)
+        );
+
+
+        Set<Material> chainmailItems = Lists.newSet(
+            Material.CHAINMAIL_HELMET,
+            Material.CHAINMAIL_CHESTPLATE,
+            Material.CHAINMAIL_LEGGINGS,
+            Material.CHAINMAIL_BOOTS
+        );
+        objectives.add(createObjective("chainmail_armor", itemEnchantType, chainmailItems,
+            new ItemStack(Material.CHAINMAIL_CHESTPLATE),
+            MONEY_BEST.multiply(2.5), XP_BEST.multiply(0.6), 1)
+        );
+
+
+        Set<Material> ironItems = Lists.newSet(
+            Material.IRON_AXE, Material.IRON_PICKAXE,
+            Material.IRON_HOE, Material.IRON_SWORD, Material.IRON_SHOVEL,
+            Material.IRON_HELMET,
+            Material.IRON_CHESTPLATE,
+            Material.IRON_LEGGINGS,
+            Material.IRON_BOOTS
+        );
+        objectives.add(createObjective("iron_items", itemEnchantType, ironItems,
+            new ItemStack(Material.IRON_CHESTPLATE),
+            MONEY_BEST.multiply(2.75), XP_BEST.multiply(0.65), 1)
+        );
+
+
+        Set<Material> diamondItems = Lists.newSet(
+            Material.DIAMOND_AXE, Material.DIAMOND_PICKAXE,
+            Material.DIAMOND_HOE, Material.DIAMOND_SWORD, Material.DIAMOND_SHOVEL,
+            Material.DIAMOND_HELMET,
+            Material.DIAMOND_CHESTPLATE,
+            Material.DIAMOND_LEGGINGS,
+            Material.DIAMOND_BOOTS
+        );
+        objectives.add(createObjective("diamond_items", itemEnchantType, diamondItems,
+            new ItemStack(Material.DIAMOND_CHESTPLATE),
+            MONEY_BEST.multiply(3), XP_BEST.multiply(0.7), 1)
+        );
+
+
+        Set<Material> netherItems = Lists.newSet(
+            Material.NETHERITE_AXE, Material.NETHERITE_PICKAXE,
+            Material.NETHERITE_HOE, Material.NETHERITE_SWORD, Material.NETHERITE_SHOVEL,
+            Material.NETHERITE_HELMET,
+            Material.NETHERITE_CHESTPLATE,
+            Material.NETHERITE_LEGGINGS,
+            Material.NETHERITE_BOOTS
+        );
+        objectives.add(createObjective("netherite_items", itemEnchantType, netherItems,
+            new ItemStack(Material.NETHERITE_CHESTPLATE),
+            MONEY_BEST.multiply(3.25), XP_BEST.multiply(0.75), 1)
+        );
+
+
+        Set<Material> otherItems = Lists.newSet(
+            Material.BOW, Material.CROSSBOW, Material.TURTLE_HELMET,
+            Material.BOOK, Material.TRIDENT
+        );
+        objectives.add(createObjective("other_items", itemEnchantType, otherItems,
+            new ItemStack(Material.ENCHANTED_BOOK),
+            MONEY_BEST.multiply(2), XP_BEST.multiply(0.5), 1)
         );
 
         generateObjectives(jobId, objectives);

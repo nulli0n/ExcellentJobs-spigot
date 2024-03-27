@@ -4,6 +4,7 @@ import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import su.nightexpress.excellentjobs.Placeholders;
+import su.nightexpress.excellentjobs.action.ActionTypes;
 import su.nightexpress.excellentjobs.booster.BoosterMultiplier;
 import su.nightexpress.excellentjobs.booster.config.BoosterInfo;
 import su.nightexpress.excellentjobs.booster.config.RankBoosterInfo;
@@ -76,6 +77,14 @@ public class Config {
     public static final ConfigValue<Boolean> JOBS_LEAVE_RESET_PROGRESS = ConfigValue.create("Jobs.Leave_Reset_Progress",
         true,
         "Sets whether or not leaving a job will reset all leveling progress for it.");
+
+    public static final ConfigValue<Double> JOBS_ENCHANT_MULTIPLIER_BY_LEVEL_COST = ConfigValue.create("Jobs.Details.Enchant.Multiplier_By_Level_Cost",
+        1D,
+        "Sets amount of percents (%) added to XP and payment for each level in enchanting table cost for " + ActionTypes.ITEM_ENCHANT.getName() + " job objectives.",
+        "Examples:",
+        "==> With 30 level cost, player will gain 30% more XP and payment.",
+        "==> With 7 level cost, player will gain 7% more XP and payment."
+    );
 
     public static final ConfigValue<Boolean> ZONES_ENABLED = ConfigValue.create("Zones.Enabled",
         true,

@@ -113,6 +113,9 @@ public class JobsPlugin extends NightDataPlugin<JobUser> {
         baseCommand.addChildren(new XPCommand(this));
         baseCommand.addChildren(new LevelCommand(this));
         baseCommand.addChildren(new ResetCommand(this));
+        baseCommand.addChildren(new JoinCommand(this));
+        baseCommand.addChildren(new LeaveCommand(this));
+        baseCommand.addChildren(new SetStateCommand(this));
 
         if (Config.GENERAL_DEFAULT_MENU_COMMAND_ENABLED.get()) {
             baseCommand.addDefaultCommand(new MenuCommand(this));

@@ -5,5 +5,9 @@ import org.jetbrains.annotations.NotNull;
 
 public interface ObjectiveProcessor<O> {
 
-    void progressObjective(@NotNull Player player, @NotNull O object, int amount);
+    default void progressObjective(@NotNull Player player, @NotNull O object, int amount) {
+        this.progressObjective(player, object, amount, 0D);
+    }
+
+    void progressObjective(@NotNull Player player, @NotNull O object, int amount, double multiplier);
 }

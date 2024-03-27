@@ -148,6 +148,10 @@ public class JobData implements Placeholder {
         return limit > 0 && this.getLimitData().getXPEarned() >= limit;
     }
 
+    public boolean isActive() {
+        return this.getState() != JobState.INACTIVE;
+    }
+
     public boolean hasOrder() {
         return !this.getOrderData().isEmpty() && !this.getOrderData().isExpired();
     }

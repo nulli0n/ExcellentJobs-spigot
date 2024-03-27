@@ -5,6 +5,7 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import su.nightexpress.excellentjobs.JobsPlugin;
+import su.nightexpress.excellentjobs.Placeholders;
 import su.nightexpress.excellentjobs.action.ActionType;
 import su.nightexpress.excellentjobs.api.currency.Currency;
 import su.nightexpress.excellentjobs.config.Config;
@@ -143,7 +144,7 @@ public class JobObjective {
     }
 
     public boolean hasObject(@NotNull String name) {
-        return this.getObjects().contains(name.toLowerCase());
+        return this.getObjects().contains(name.toLowerCase()) || this.getObjects().contains(Placeholders.WILDCARD);
     }
 
     public boolean isUnlocked(@NotNull Player player, @NotNull JobData jobData) {

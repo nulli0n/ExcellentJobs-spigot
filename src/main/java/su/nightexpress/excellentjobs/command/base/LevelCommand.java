@@ -10,6 +10,7 @@ import su.nightexpress.excellentjobs.command.CommandMode;
 import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.config.Perms;
 import su.nightexpress.excellentjobs.data.impl.JobData;
+import su.nightexpress.excellentjobs.data.impl.JobUser;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.nightcore.command.CommandResult;
 import su.nightexpress.nightcore.command.impl.AbstractCommand;
@@ -68,38 +69,53 @@ public class LevelCommand extends AbstractCommand<JobsPlugin> {
             return;
         }
 
+        Player player = Players.getPlayer(result.getArg(4, sender.getName()));
+        if (player != null) {
+            JobUser user = plugin.getUserManager().getUserData(player);
+            JobData data = user.getData(job);
+            int level = data.getLevel();
+            int modified = mode.modify(level, amount);
+            int add = modified - level;
+            this.plugin.getJobManager().addLevel(player, job, add);
+            this.notify(sender, user, data, mode, amount, result.hasFlag(CommandFlags.SILENT));
+            return;
+        }
+
         this.plugin.getUserManager().getUserDataAndPerformAsync(result.getArg(4, sender.getName()), user -> {
             if (user == null) {
                 this.errorPlayer(sender);
                 return;
             }
 
-            JobData jobData = user.getData(job);
-            jobData.setLevel(mode.modify(jobData.getLevel(), amount));
-            jobData.normalize();
+            JobData data = user.getData(job);
+            data.setLevel(mode.modify(data.getLevel(), amount));
+            data.normalize();
             this.plugin.getUserManager().saveAsync(user);
+            this.notify(sender, user, data, mode, amount, result.hasFlag(CommandFlags.SILENT));
+        });
+    }
 
+    private void notify(@NotNull CommandSender sender, @NotNull JobUser user, @NotNull JobData jobData, @NotNull CommandMode mode, int amount, boolean silent) {
+        (switch (mode) {
+            case ADD -> Lang.COMMAND_LEVEL_ADD_DONE;
+            case REMOVE -> Lang.COMMAND_LEVEL_REMOVE_DONE;
+            case SET -> Lang.COMMAND_LEVEL_SET_DONE;
+        }).getMessage()
+            .replace(jobData.replacePlaceholders())
+            .replace(Placeholders.PLAYER_NAME, user.getName())
+            .replace(Placeholders.GENERIC_AMOUNT, amount)
+            .send(sender);
+
+        Player target = user.getPlayer();
+        if (target != null && silent) {
             (switch (mode) {
-                case ADD -> Lang.COMMAND_LEVEL_ADD_DONE;
-                case REMOVE -> Lang.COMMAND_LEVEL_REMOVE_DONE;
-                case SET -> Lang.COMMAND_LEVEL_SET_DONE;
+                case ADD -> Lang.COMMAND_LEVEL_ADD_NOTIFY;
+                case REMOVE -> Lang.COMMAND_LEVEL_REMOVE_NOTIFY;
+                case SET -> Lang.COMMAND_LEVEL_SET_NOTIFY;
             }).getMessage()
                 .replace(jobData.replacePlaceholders())
-                .replace(Placeholders.PLAYER_NAME, user.getName())
                 .replace(Placeholders.GENERIC_AMOUNT, amount)
-                .send(sender);
-
-            Player target = user.getPlayer();
-            if (target != null && !result.hasFlag(CommandFlags.SILENT)) {
-                (switch (mode) {
-                    case ADD -> Lang.COMMAND_LEVEL_ADD_NOTIFY;
-                    case REMOVE -> Lang.COMMAND_LEVEL_REMOVE_NOTIFY;
-                    case SET -> Lang.COMMAND_LEVEL_SET_NOTIFY;
-                }).getMessage()
-                    .replace(jobData.replacePlaceholders())
-                    .replace(Placeholders.GENERIC_AMOUNT, amount)
-                    .send(target);
-            }
-        });
+                .send(target);
+        }
     }
 }

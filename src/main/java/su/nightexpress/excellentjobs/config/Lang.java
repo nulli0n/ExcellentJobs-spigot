@@ -153,6 +153,18 @@ public class Lang extends CoreLang {
     public static final LangString COMMAND_OBJECTIVES_DESC  = LangString.of("Command.Objectives.Desc",
         "Browse job objectives.");
 
+
+    public static final LangString COMMAND_JOIN_DESC = LangString.of("Command.Join.Desc", "Join a job.");
+    public static final LangString COMMAND_JOIN_USAGE = LangString.of("Command.Join.Usage", "<job>");
+
+    public static final LangString COMMAND_LEAVE_DESC = LangString.of("Command.Leave.Desc", "Leave a job.");
+    public static final LangString COMMAND_LEAVE_USAGE = LangString.of("Command.Leave.Usage", "<job>");
+
+    public static final LangString COMMAND_SET_STATE_DESC  = LangString.of("Command.SetState.Desc", "Set player's job state.");
+    public static final LangString COMMAND_SET_STATE_USAGE = LangString.of("Command.State.Usage", "<player> <job> <state>");
+    public static final LangText   COMMAND_SET_STATE_DONE  = LangText.of("Command.SetState.Done",
+        LIGHT_GRAY.enclose("Set " + LIGHT_YELLOW.enclose(GENERIC_STATE) + " state for " + LIGHT_YELLOW.enclose(PLAYER_NAME) + "'s " + LIGHT_YELLOW.enclose(JOB_NAME) + " job!"));
+
     public static final LangString COMMAND_TOP_USAGE = LangString.of("Command.Top.Usage",
         "<job> [page]");
 
@@ -190,6 +202,10 @@ public class Lang extends CoreLang {
 
     public static final LangText JOB_ERROR_INVALID = LangText.of("Job.Error.Invalid",
         LIGHT_RED.enclose("Invalid job!")
+    );
+
+    public static final LangText ERROR_INVALID_STATE = LangText.of("Error.InvalidState",
+        LIGHT_RED.enclose("Invalid state!")
     );
 
     public static final LangText JOB_JOIN_ERROR_ALREADY_HIRED = LangText.of("Job.Join.Error.AlreadyHired",

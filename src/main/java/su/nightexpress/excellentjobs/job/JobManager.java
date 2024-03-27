@@ -266,7 +266,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
     public boolean leaveJob(@NotNull Player player, @NotNull Job job) {
         JobUser user = this.plugin.getUserManager().getUserData(player);
         JobData data = user.getData(job);
-        if (data.getState() == JobState.INACTIVE) {
+        if (!data.isActive()) {
             Lang.JOB_LEAVE_ERROR_NOT_JOINED.getMessage().replace(job.replacePlaceholders()).send(player);
             return false;
         }
@@ -506,6 +506,10 @@ public class JobManager extends AbstractManager<JobsPlugin> {
     }
 
     public <O> void doObjective(@NotNull Player player, @NotNull ActionType<?, O> type, @NotNull O object, int amount) {
+        this.doObjective(player, type, object, amount, 0D);
+    }
+
+    public <O> void doObjective(@NotNull Player player, @NotNull ActionType<?, O> type, @NotNull O object, int amount, double multiplier) {
         JobUser user = plugin.getUserManager().getUserData(player);
 
         user.getDatas().forEach(jobData -> {
@@ -559,6 +563,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
 
                 paymentMultiplier += Booster.getCurrencyPlainBoost(currency, boosters);
                 paymentMultiplier += job.getPaymentMultiplier(currency, jobLevel);
+                paymentMultiplier += multiplier;
 
                 JobObjectiveIncomeEvent event = new JobObjectiveIncomeEvent(
                     player, user, jobData, jobObjective, type, object, currency, payment, paymentMultiplier
@@ -591,6 +596,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
 
                 xpMultiplier += Booster.getPlainXPBoost(boosters);
                 xpMultiplier += job.getXPMultiplier(jobLevel);
+                xpMultiplier += multiplier;
 
                 JobObjectiveXPEvent event = new JobObjectiveXPEvent(
                     player, user, jobData, jobObjective, type, object, xpRoll, xpMultiplier
@@ -667,13 +673,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
             JobLevelUpEvent event = new JobLevelUpEvent(player, user, jobData);
             plugin.getPluginManager().callEvent(event);
 
-            if (!jobData.isLevelRewardObtained(jobData.getLevel())) {
-                job.getLevelUpCommands(jobData.getLevel()).forEach(command -> {
-                    plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), Placeholders.forPlayer(player).apply(command));
-                });
-                jobData.setLevelRewardObtained(jobData.getLevel());
-                this.plugin.getUserManager().saveAsync(user);
-            }
+            this.triggerLevelRewards(player, job, jobData.getLevel(), false);
 
             Lang.JOB_LEVEL_UP.getMessage().replace(jobData.replacePlaceholders()).send(player);
 
@@ -691,6 +691,18 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         amount *= xpMultiplier;
 
         return this.addXP(player, job, amount);
+    }
+
+    public void triggerLevelRewards(@NotNull Player player, @NotNull Job job, int level, boolean force) {
+        JobUser user = this.plugin.getUserManager().getUserData(player);
+        JobData jobData = user.getData(job);
+        if (!force && jobData.isLevelRewardObtained(level)) return;
+
+        job.getLevelUpCommands(jobData.getLevel()).forEach(command -> {
+            plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), Placeholders.forPlayer(player).apply(command));
+        });
+        jobData.setLevelRewardObtained(jobData.getLevel());
+        this.plugin.getUserManager().saveAsync(user);
     }
 
     @NotNull

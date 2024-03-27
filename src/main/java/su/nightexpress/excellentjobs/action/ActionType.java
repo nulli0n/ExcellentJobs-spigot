@@ -3,6 +3,8 @@ package su.nightexpress.excellentjobs.action;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.excellentjobs.JobsPlugin;
+import su.nightexpress.excellentjobs.Placeholders;
+import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.util.Colorizer;
@@ -65,6 +67,9 @@ public class ActionType<E extends Event, O> {
 
     @NotNull
     public String getObjectLocalizedName(@NotNull String object) {
+        if (object.equals(Placeholders.WILDCARD)) {
+            return Lang.OTHER_ANY.getString();
+        }
         return this.objectFormatter.getLocalizedName(object);
     }
 
