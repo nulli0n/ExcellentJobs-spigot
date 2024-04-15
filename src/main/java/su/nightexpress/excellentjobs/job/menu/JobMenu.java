@@ -96,7 +96,7 @@ public class JobMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
                     Job job = this.getLink().get(player);
                     JobData jobData = user.getData(job);
                     JobOrderData orderData = jobData.getOrderData();
-                    boolean orderDone = jobData.hasOrder() && orderData.isCompleted();
+                    boolean hasActiveOrder = jobData.hasOrder() && !orderData.isCompleted();
 
                     List<String> source;
                     if (jobData.hasOrder() && !orderData.isCompleted()) {
@@ -135,7 +135,7 @@ public class JobMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
                                 else {
                                     lore.add(line
                                         .replace(GENERIC_CURRENCY, job.getSpecialOrdersCost().entrySet().stream().map(entry -> entry.getKey().format(entry.getValue())).collect(Collectors.joining(", ")))
-                                        .replace(GENERIC_TIME, TimeUtil.formatDuration(orderDone ? jobData.getNextOrderDate() : orderData.getExpireDate()))
+                                        .replace(GENERIC_TIME, TimeUtil.formatDuration(hasActiveOrder ?  orderData.getExpireDate() : jobData.getNextOrderDate()))
                                     );
                                 }
                             }

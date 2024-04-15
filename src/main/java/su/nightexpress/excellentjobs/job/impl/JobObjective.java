@@ -23,10 +23,10 @@ import java.util.stream.Collectors;
 
 public class JobObjective {
 
-    private final String                    id;
-    private final ActionType<?, ?>          type;
-    private final String                    displayName;
-    private final ItemStack                 icon;
+    private final String                         id;
+    private final ActionType<?, ?>               type;
+    private final String                         displayName;
+    private final ItemStack                      icon;
     private final Set<String>                    objects;
     private final Map<Currency, ObjectiveReward> paymentMap;
     private final ObjectiveReward                xpReward;
@@ -64,7 +64,7 @@ public class JobObjective {
     public static JobObjective read(@NotNull JobsPlugin plugin, @NotNull FileConfig cfg, @NotNull String path, @NotNull String id) {
         //if (!cfg.getBoolean(path + ".Enabled")) return null;
 
-        String typeRaw = cfg.getString(path + ".Type", "null");
+        String typeRaw = ConfigValue.create(path + ".Type", "null").read(cfg);
         ActionType<?, ?> type = plugin.getActionRegistry().getActionType(typeRaw);
         if (type == null) {
             plugin.warn("Invalid objective type: '" + typeRaw + "'.");
@@ -72,11 +72,11 @@ public class JobObjective {
         }
 
         // Add missing currencies for users to know they can use them.
-        plugin.getCurrencyManager().getCurrencies().forEach(currency -> {
+        /*plugin.getCurrencyManager().getCurrencies().forEach(currency -> {
             if (!cfg.contains(path + ".Payment." + currency.getId())) {
                 ObjectiveReward.EMPTY.write(cfg, path + ".Payment." + currency.getId());
             }
-        });
+        });*/
 
         String displayName = cfg.getString(path + ".Display.Name", id);
         ItemStack icon = cfg.getItem(path + ".Display.Icon");
@@ -97,7 +97,7 @@ public class JobObjective {
         }
         ObjectiveReward xpDrop = ObjectiveReward.read(cfg, path + ".Job_XP");
 
-        int unlockLevel = cfg.getInt(path + ".Unlock_Level");
+        int unlockLevel = ConfigValue.create(path + ".Unlock_Level", 1).read(cfg);
 
         boolean specialOrderAllowed = false;
         UniInt specialOrderObjectsAmount = null;

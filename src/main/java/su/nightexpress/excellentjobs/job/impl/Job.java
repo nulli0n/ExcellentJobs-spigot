@@ -12,7 +12,7 @@ import su.nightexpress.excellentjobs.action.ActionType;
 import su.nightexpress.excellentjobs.api.currency.Currency;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Perms;
-import su.nightexpress.excellentjobs.currency.CurrencyManager;
+import su.nightexpress.excellentjobs.currency.handler.VaultEconomyHandler;
 import su.nightexpress.excellentjobs.data.impl.JobOrderCount;
 import su.nightexpress.excellentjobs.data.impl.JobOrderData;
 import su.nightexpress.excellentjobs.data.impl.JobOrderObjective;
@@ -169,7 +169,7 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
             (cfg, path, key) -> Modifier.read(cfg, path + "." + key),
             (cfg, path, map) -> map.forEach((id, mod) -> mod.write(cfg, path + "." + id)),
             () -> Map.of(
-                CurrencyManager.ID_MONEY, Modifier.add(1.00, 0.01, 1)
+                VaultEconomyHandler.ID, Modifier.add(1.00, 0.01, 1)
             ),
             "Sets payment multipliers for each currency adjustable by player's job level.",
             "You can use '" + Placeholders.DEFAULT + "' keyword for all currencies not included here."
@@ -180,7 +180,7 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
             (cfg, path, key) -> Modifier.read(cfg, path + "." + key),
             (cfg, path, map) -> map.forEach((id, mod) -> mod.write(cfg, path + "." + id)),
             () -> Map.of(
-                CurrencyManager.ID_MONEY, Modifier.add(-1, 0, 0)
+                VaultEconomyHandler.ID, Modifier.add(-1, 0, 0)
             ),
             "Sets payment daily limits for each currency adjustable by player's job level.",
             "You can use '" + Placeholders.DEFAULT + "' keyword for all currencies not included here."
@@ -197,22 +197,32 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
         );
 
         if (Config.SPECIAL_ORDERS_ENABLED.get()) {
-            this.specialOrdersAllowed = ConfigValue.create("SpecialOrder.Enabled", true).read(config);
+            this.specialOrdersAllowed = ConfigValue.create("SpecialOrder.Enabled",
+                true,
+                "Enables Special Orders feature for this job.",
+                Placeholders.URL_WIKI_SPECIAL_ORDERS
+            ).read(config);
 
             this.specialOrdersObjectivesAmount = ConfigValue.create("SpecialOrder.Objectives_Amount",
                 (cfg2, path2, def) -> UniInt.read(cfg2, path2),
                 (cfg2, path2, obj) -> obj.write(cfg2, path2),
-                () -> UniInt.of(1, 2)).read(config);
+                () -> UniInt.of(1, 2),
+                "Sets possible amount of objectives picked for Special Orders of this job."
+            ).read(config);
 
             this.specialOrdersCompleteTime = ConfigValue.create("SpecialOrder.Time_To_Complete",
-                (cfg2, path2, def) -> UniInt.read(cfg2, path2),
-                (cfg2, path2, obj) -> obj.write(cfg2, path2),
-                () -> UniInt.of(14400, 43200)).read(config);
+                (cfg, path, def) -> UniInt.read(cfg, path),
+                (cfg, path, obj) -> obj.write(cfg, path),
+                () -> UniInt.of(14400, 43200),
+                "Sets possible amount of completion time (in seconds) picked for Special Orders of this job."
+            ).read(config);
 
             this.specialOrdersRewardsAmount = ConfigValue.create("SpecialOrder.Rewards_Amount",
-                (cfg2, path2, def) -> UniInt.read(cfg2, path2),
-                (cfg2, path2, obj) -> obj.write(cfg2, path2),
-                () -> UniInt.of(1, 3)).read(config);
+                (cfg, path, def) -> UniInt.read(cfg, path),
+                (cfg, path, obj) -> obj.write(cfg, path),
+                () -> UniInt.of(1, 3),
+                "Sets possible amount of rewards picked for Special Orders of this job."
+            ).read(config);
 
             this.specialOrdersAllowedRewards = new TreeMap<>(ConfigValue.forMap("SpecialOrder.Rewards_List",
                 NumberUtil::getInteger,
@@ -221,6 +231,7 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
                 Map.of(1, Lists.newList(Placeholders.WILDCARD)),
                 "A list of reward names available to use when generating Special Orders depens on job level.",
                 "When picking rewards, it will get rewards with the greatest key less than or equal to the job level.",
+                "You can create or edit Special Order rewards in config.yml",
                 "You can put asterisk '" + Placeholders.WILDCARD + "' to include all possible rewards."
             ).read(config));
 
@@ -229,9 +240,10 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
                 (cfg, path, key) -> cfg.getDouble(path + "." + key),
                 (cfg, path, map) -> map.forEach((currency, amount) -> cfg.set(path + "." + currency.getId(), amount)),
                 () -> Map.of(
-                    plugin.getCurrencyManager().getCurrencyOrAny(CurrencyManager.ID_MONEY), 5000D
+                    plugin.getCurrencyManager().getCurrencyOrAny(VaultEconomyHandler.ID), 5000D
                 ),
-                "Sets amount of currency player have to pay to take a Special Order."
+                "Sets amount of currency player have to pay to take a Special Order.",
+                "Available currencies: " + Placeholders.URL_WIKI_CURRENCY
             ).read(config));
         }
 
@@ -242,6 +254,14 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
 
     public void loadObjectives() {
         FileConfig config = FileConfig.loadOrExtract(this.plugin, Config.DIR_JOBS + this.getId(), OBJECTIVES_CONFIG_NAME);
+        config.options().setHeader(Lists.newList(
+            "=".repeat(50),
+            "For a list of available Types and acceptable Objects, please refer to " + Placeholders.URL_WIKI_ACTION_TYPES,
+            "For a list of available currencies, please refer to " + Placeholders.URL_WIKI_CURRENCY,
+            "For a list of available Icon options, please refer to " + Placeholders.WIKI_ITEMS_URL,
+            "=".repeat(50)
+        ));
+
         for (String sId : config.getSection("")) {
             JobObjective objective = JobObjective.read(plugin, config, sId, sId);
             if (objective == null) {
@@ -251,10 +271,6 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
             this.getObjectiveMap().put(objective.getId(), objective);
         }
         config.saveChanges();
-
-        /*for (FileConfig config : FileConfig.loadAll(this.getObjectivesPath())) {
-
-        }*/
     }
 
     @Override

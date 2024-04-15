@@ -2,6 +2,8 @@ package su.nightexpress.excellentjobs.config;
 
 import org.bukkit.GameMode;
 import org.bukkit.Material;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import su.nightexpress.excellentjobs.Placeholders;
 import su.nightexpress.excellentjobs.action.ActionTypes;
@@ -9,7 +11,7 @@ import su.nightexpress.excellentjobs.booster.BoosterMultiplier;
 import su.nightexpress.excellentjobs.booster.config.BoosterInfo;
 import su.nightexpress.excellentjobs.booster.config.RankBoosterInfo;
 import su.nightexpress.excellentjobs.booster.config.TimedBoosterInfo;
-import su.nightexpress.excellentjobs.currency.CurrencyManager;
+import su.nightexpress.excellentjobs.currency.handler.VaultEconomyHandler;
 import su.nightexpress.excellentjobs.job.impl.OrderReward;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.util.Lists;
@@ -22,6 +24,9 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Set;
+
+import static su.nightexpress.excellentjobs.Placeholders.*;
+import static su.nightexpress.nightcore.util.text.tag.Tags.*;
 
 public class Config {
 
@@ -48,6 +53,32 @@ public class Config {
         "Sets how often (in seconds) players will get payments for their work.",
         "Players will get instant payment when leaving server.",
         "[Default is 900 (15 minues)]");
+
+    public static final ConfigValue<Boolean> GENERAL_PROGRESS_BAR_ENABLED = ConfigValue.create("General.ProgressBar.Enabled",
+        true,
+        "Enables boss bar indicating gained job XP and future income for the latest X seconds.");
+
+    public static final ConfigValue<Integer> GENERAL_PROGRESS_BAR_STAY_TIME = ConfigValue.create("General.ProgressBar.StayTime",
+        8,
+        "Sets for how long (in seconds) progress bar will stay before reset and disappear.");
+
+    public static final ConfigValue<String> GENERAL_PROGRESS_BAR_TITLE = ConfigValue.create("General.ProgressBar.Title",
+        GRAY.enclose(LIGHT_YELLOW.enclose(BOLD.enclose(JOB_NAME + " Job")) + " (Lv. " + WHITE.enclose(JOB_DATA_LEVEL) + ") | " + LIGHT_RED.enclose("+" + GENERIC_EXP + " XP") + " | " + LIGHT_GREEN.enclose("+" + GENERIC_INCOME)),
+        "Sets title for job progress bar.",
+        "You can use 'Job' placeholders (not all of them): " + URL_WIKI_PLACEHOLDERS
+    );
+
+    public static final ConfigValue<BarColor> GENERAL_PROGRESS_BAR_COLOR = ConfigValue.create("General.ProgressBar.Color",
+        BarColor.class, BarColor.GREEN,
+        "Sets color for job progress bar.",
+        "Allowed values: " + StringUtil.inlineEnum(BarColor.class, ", ")
+    );
+
+    public static final ConfigValue<BarStyle> GENERAL_PROGRESS_BAR_STYLE = ConfigValue.create("General.ProgressBar.Style",
+        BarStyle.class, BarStyle.SOLID,
+        "Sets style for job progress bar.",
+        "Allowed values: " + StringUtil.inlineEnum(BarStyle.class, ", ")
+    );
 
     public static final ConfigValue<RankMap<Integer>> JOBS_PRIMARY_AMOUNT = ConfigValue.create("Jobs.Primary_Amount",
         (cfg, path, def) -> RankMap.readInt(cfg, path),
@@ -110,7 +141,9 @@ public class Config {
         true,
         "Sets whether or not Special Orders feature is enabled.",
         "Special Orders allows players to take daily randomized quests for their jobs.",
-        "Players gets better rewards for completing Special Orders.");
+        "Players gets better rewards for completing Special Orders.",
+        "Read wiki for details: " + URL_WIKI_SPECIAL_ORDERS
+    );
 
     public static final ConfigValue<Integer> SPECIAL_ORDERS_MAX_AMOUNT = ConfigValue.create("SpecialOrders.Max_Amount",
         3,
@@ -205,7 +238,7 @@ public class Config {
         (cfg, path, map) -> map.forEach((id, info) -> info.write(cfg, path + "." + id)),
         Map.of(
             "example", new TimedBoosterInfo(Set.of(Placeholders.WILDCARD),
-                new BoosterMultiplier(Map.of(CurrencyManager.ID_MONEY, 25D), 25D),
+                new BoosterMultiplier(Map.of(VaultEconomyHandler.ID, 25D), 25D),
                 Map.of(DayOfWeek.SATURDAY, Set.of(LocalTime.of(16, 0))), 7200)
         ),
         "List of global, automated XP / currency boosters.",
@@ -219,10 +252,10 @@ public class Config {
         (cfg, path, map) -> map.forEach((id, info) -> info.write(cfg, path + "." + id)),
         Map.of(
             "vip", new RankBoosterInfo("vip", 10, Set.of(Placeholders.WILDCARD),
-                new BoosterMultiplier(Map.of(CurrencyManager.ID_MONEY, 25D), 25D)
+                new BoosterMultiplier(Map.of(VaultEconomyHandler.ID, 25D), 25D)
             ),
             "premium", new RankBoosterInfo("premium", 10, Set.of(Placeholders.WILDCARD),
-                new BoosterMultiplier(Map.of(CurrencyManager.ID_MONEY, 50D), 50D)
+                new BoosterMultiplier(Map.of(VaultEconomyHandler.ID, 50D), 50D)
             )
         ),
         "List of passive XP / currency boosters based on player permission group(s).",
@@ -234,13 +267,13 @@ public class Config {
         (cfg, path, map) -> map.forEach((id, info) -> info.write(cfg, path + "." + id)),
         Map.of(
             "xp_money_25", new BoosterInfo(Set.of(Placeholders.WILDCARD),
-                new BoosterMultiplier(Map.of(CurrencyManager.ID_MONEY, 25D), 25D)),
+                new BoosterMultiplier(Map.of(VaultEconomyHandler.ID, 25D), 25D)),
             "xp_money_50", new BoosterInfo(Set.of(Placeholders.WILDCARD),
-                new BoosterMultiplier(Map.of(CurrencyManager.ID_MONEY, 50D), 50D)),
+                new BoosterMultiplier(Map.of(VaultEconomyHandler.ID, 50D), 50D)),
             "money_100", new BoosterInfo(Set.of(Placeholders.WILDCARD),
-                new BoosterMultiplier(Map.of(CurrencyManager.ID_MONEY, 100D), 0D)),
+                new BoosterMultiplier(Map.of(VaultEconomyHandler.ID, 100D), 0D)),
             "xp_100", new BoosterInfo(Set.of(Placeholders.WILDCARD),
-                new BoosterMultiplier(Map.of(CurrencyManager.ID_MONEY, 0D), 100D))
+                new BoosterMultiplier(Map.of(VaultEconomyHandler.ID, 0D), 100D))
         ),
         "List of custom XP / currency boosters to be given via booster commands.",
         "You can create as many boosters as you want.",

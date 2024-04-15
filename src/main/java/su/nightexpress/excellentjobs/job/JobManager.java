@@ -39,31 +39,33 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class JobManager extends AbstractManager<JobsPlugin> {
 
-    private final Map<String, Job>                  jobMap;
-    private final Map<UUID, Map<String, JobIncome>> incomeMap;
+    private final Map<String, Job>                    jobMap;
+    private final Map<UUID, Map<String, JobIncome>>   incomeMap;
+    private final Map<UUID, Map<String, ProgressBar>> progressBarMap;
 
-    private JobListMenu  jobListMenu;
-    private JobMenu      jobMenu;
-    private JobResetMenu jobResetMenu;
-    private JobObjectivesMenu objectivesMenu;
-    private JobJoinConfirmMenu joinConfirmMenu;
+    private JobListMenu         jobListMenu;
+    private JobMenu             jobMenu;
+    private JobResetMenu        jobResetMenu;
+    private JobObjectivesMenu   objectivesMenu;
+    private JobJoinConfirmMenu  joinConfirmMenu;
     private JobLeaveConfirmMenu leaveConfirmMenu;
 
     public JobManager(@NotNull JobsPlugin plugin) {
         super(plugin);
         this.jobMap = new HashMap<>();
         this.incomeMap = new HashMap<>();
+        this.progressBarMap = new ConcurrentHashMap<>();
     }
 
     public static boolean canWorkHere(@NotNull Player player) {
         if (Config.GENERAL_DISABLED_WORLDS.get().contains(player.getWorld().getName())) return false;
-        if (Config.ABUSE_IGNORE_GAME_MODES.get().contains(player.getGameMode())) return false;
 
-        return true;
+        return !Config.ABUSE_IGNORE_GAME_MODES.get().contains(player.getGameMode());
     }
 
     public static void devastateEntity(@NotNull Entity entity) {
@@ -86,7 +88,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
             }
             else this.plugin.warn("Job not loaded: '" + jobDir.getName() + "'.");
         });
-        this.plugin.info("Loaded " + this.getJobMap().size() + " jobs.");
+        this.plugin.info("Loaded " + this.jobMap.size() + " jobs.");
 
         this.jobListMenu = new JobListMenu(this.plugin);
         this.jobMenu = new JobMenu(this.plugin);
@@ -99,11 +101,15 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         this.addListener(new JobExploitListener(this.plugin));
 
         this.addTask(this.plugin.createAsyncTask(this::payForJob).setSecondsInterval(Config.GENERAL_PAYMENT_INTERVAL.get()));
+        if (Config.GENERAL_PROGRESS_BAR_ENABLED.get()) {
+            this.addTask(this.plugin.createAsyncTask(this::tickProgressBars).setSecondsInterval(1));
+        }
     }
 
     @Override
     protected void onShutdown() {
         this.payForJob();
+        this.progressBarMap.values().forEach(map -> map.values().forEach(ProgressBar::discard));
 
         if (this.jobMenu != null) this.jobMenu.clear();
         if (this.objectivesMenu != null) this.objectivesMenu.clear();
@@ -112,37 +118,9 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         if (this.joinConfirmMenu != null) this.joinConfirmMenu.clear();
         if (this.leaveConfirmMenu != null) this.leaveConfirmMenu.clear();
 
-        this.getJobMap().clear();
-    }
-
-    @NotNull
-    public JobListMenu getJobsMenu() {
-        return jobListMenu;
-    }
-
-    @NotNull
-    public JobMenu getJobMenu() {
-        return jobMenu;
-    }
-
-    @NotNull
-    public JobResetMenu getResetMenu() {
-        return jobResetMenu;
-    }
-
-    @NotNull
-    public JobObjectivesMenu getObjectivesMenu() {
-        return objectivesMenu;
-    }
-
-    @NotNull
-    public JobJoinConfirmMenu getJoinConfirmMenu() {
-        return joinConfirmMenu;
-    }
-
-    @NotNull
-    public JobLeaveConfirmMenu getLeaveConfirmMenu() {
-        return leaveConfirmMenu;
+        this.jobMap.clear();
+        this.incomeMap.clear();
+        this.progressBarMap.clear();
     }
 
     @NotNull
@@ -152,17 +130,17 @@ public class JobManager extends AbstractManager<JobsPlugin> {
 
     @NotNull
     public Collection<Job> getJobs() {
-        return this.getJobMap().values();
+        return this.jobMap.values();
     }
 
     @NotNull
     public List<String> getJobIds() {
-        return new ArrayList<>(this.getJobMap().keySet());
+        return new ArrayList<>(this.jobMap.keySet());
     }
 
     @Nullable
     public Job getJobById(@NotNull String id) {
-        return this.getJobMap().get(id.toLowerCase());
+        return this.jobMap.get(id.toLowerCase());
     }
 
     @NotNull
@@ -200,7 +178,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
 
     @NotNull
     private Map<String, JobIncome> getIncomeMap(@NotNull Player player) {
-        return this.getIncomeMap().computeIfAbsent(player.getUniqueId(), k -> new HashMap<>());
+        return this.incomeMap.computeIfAbsent(player.getUniqueId(), k -> new ConcurrentHashMap<>());
     }
 
     @NotNull
@@ -211,6 +189,35 @@ public class JobManager extends AbstractManager<JobsPlugin> {
     @NotNull
     public Collection<JobIncome> getIncomes(@NotNull Player player) {
         return this.getIncomeMap(player).values();
+    }
+
+    @NotNull
+    private Map<String, ProgressBar> getProgressBarMap(@NotNull Player player) {
+        return this.progressBarMap.getOrDefault(player.getUniqueId(), Collections.emptyMap());
+    }
+
+    @Nullable
+    private ProgressBar getProgressBar(@NotNull Player player, @NotNull Job job) {
+        return this.getProgressBarMap(player).get(job.getId());
+    }
+
+    @Nullable
+    public ProgressBar getProgressBarOrCreate(@NotNull Player player, @NotNull Job job) {
+        if (!Config.GENERAL_PROGRESS_BAR_ENABLED.get()) return null;
+
+        ProgressBar progressBar = this.getProgressBar(player, job);
+        if (progressBar == null) {
+            progressBar = new ProgressBar(this.plugin, job, player);
+            this.progressBarMap.computeIfAbsent(player.getUniqueId(), k -> new ConcurrentHashMap<>()).put(job.getId(), progressBar);
+        }
+        return progressBar;
+
+        //return this.getProgressBarMap(player).computeIfAbsent(job.getId(), k -> new ProgressBar(this.plugin, job, player));
+    }
+
+    @NotNull
+    public Collection<ProgressBar> getProgressBars(@NotNull Player player) {
+        return this.getProgressBarMap(player).values();
     }
 
     public static int getJobsLimit(@NotNull Player player, @NotNull JobState state) {
@@ -233,34 +240,45 @@ public class JobManager extends AbstractManager<JobsPlugin> {
     }
 
     public void openJobsMenu(@NotNull Player player) {
-        this.getJobsMenu().open(player);
+        this.jobListMenu.open(player);
     }
 
     public void openJobMenu(@NotNull Player player, @NotNull Job job) {
-        this.getJobMenu().open(player, job);
+        this.jobMenu.open(player, job);
     }
 
     public void openObjectivesMenu(@NotNull Player player, @NotNull Job job) {
-        this.getObjectivesMenu().open(player, job);
+        this.objectivesMenu.open(player, job);
     }
 
     public void openJoinConfirmMenu(@NotNull Player player, @NotNull Job job) {
-        this.getJoinConfirmMenu().open(player, job);
+        this.joinConfirmMenu.open(player, job);
     }
 
     public void openLeaveConfirmMenu(@NotNull Player player, @NotNull Job job) {
-        this.getLeaveConfirmMenu().open(player, job);
+        this.leaveConfirmMenu.open(player, job);
     }
 
     public void openResetMenu(@NotNull Player player, @NotNull Job job) {
         JobUser user = this.plugin.getUserManager().getUserData(player);
-        this.getResetMenu().open(player, user.getData(job));
+        this.jobResetMenu.open(player, user.getData(job));
     }
 
     public boolean canGetMoreJobs(@NotNull Player player, @NotNull JobState state) {
         JobUser user = this.plugin.getUserManager().getUserData(player);
         int limit = getJobsLimit(player, state);
         return limit < 0 || user.countJobs(state) < limit;
+    }
+
+    public void handleQuit(@NotNull Player player) {
+        this.payForJob(player);
+        this.getProgressBars(player).forEach(ProgressBar::discard);
+        this.incomeMap.remove(player.getUniqueId());
+        this.progressBarMap.remove(player.getUniqueId());
+    }
+
+    public void displayJobProgress(@NotNull Player player, @NotNull Job job) {
+
     }
 
     public boolean leaveJob(@NotNull Player player, @NotNull Job job) {
@@ -329,6 +347,11 @@ public class JobManager extends AbstractManager<JobsPlugin> {
 
         Lang.JOB_JOIN_SUCCESS.getMessage().replace(job.replacePlaceholders()).send(player);
         return true;
+    }
+
+    public void tickProgressBars() {
+        this.progressBarMap.values().forEach(map -> map.values().removeIf(ProgressBar::checkExpired));
+        this.progressBarMap.values().removeIf(Map::isEmpty);
     }
 
     public void payForJob() {
@@ -550,8 +573,10 @@ public class JobManager extends AbstractManager<JobsPlugin> {
             }
 
             if (!jobObjective.canPay()) return;
+
             int jobLevel = jobData.getLevel();
-            Collection<Booster> boosters = plugin.getBoosterManager().getBoosters(player, job);
+            Collection<Booster> boosters = this.plugin.getBoosterManager().getBoosters(player, job);
+            ProgressBar progressBar = this.getProgressBarOrCreate(player, job);
 
             JobIncome income = this.getIncome(player, job);
             jobObjective.getPaymentMap().forEach((currency, rewardInfo) -> {
@@ -575,6 +600,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
                 if (payment == 0D || Double.isNaN(payment) || Double.isInfinite(payment)) return;
 
                 income.add(jobObjective, currency, payment);
+                if (progressBar != null) progressBar.addPayment(currency, amount);
 
                 if (!player.hasPermission(Perms.PREFIX_BYPASS_LIMIT_CURRENCY + job.getId()) && job.hasDailyPaymentLimit(currency, jobLevel)) {
                     jobData.getLimitData().addCurrency(currency, payment);
@@ -607,7 +633,9 @@ public class JobManager extends AbstractManager<JobsPlugin> {
                 xpRoll = event.getXPAmount() * event.getXPMultiplier();
                 if (xpRoll == 0D || Double.isNaN(xpRoll) || Double.isInfinite(xpRoll)) return;
 
-                if (this.addXP(player, job, /*type.getObjectLocalizedName(object),*/ xpRoll)) {
+                if (this.addXP(player, job, /*type.getObjectLocalizedName(object),*/ xpRoll, false)) {
+                    if (progressBar != null) progressBar.addXP((int) xpRoll);
+
                     if (!player.hasPermission(Perms.PREFIX_BYPASS_LIMIT_XP + job.getId()) && job.hasDailyXPLimit(jobLevel)) {
                         jobData.getLimitData().addXP((int) xpRoll);
 
@@ -617,9 +645,9 @@ public class JobManager extends AbstractManager<JobsPlugin> {
                     }
                 }
             }
-        });
 
-        //this.plugin.getUserManager().saveUser(user);
+            if (progressBar != null) progressBar.updateDisplay();
+        });
     }
 
     public void addLevel(@NotNull Player player, @NotNull Job job, int amount) {
@@ -629,11 +657,15 @@ public class JobManager extends AbstractManager<JobsPlugin> {
 
         for (int count = 0; count < Math.abs(amount); count++) {
             int exp = isMinus ? -jobData.getXPToLevelDown() : jobData.getXPToLevelUp();
-            this.addXP(player, job, exp);
+            this.addXP(player, job, exp, false);
         }
     }
 
     public boolean addXP(@NotNull Player player, @NotNull Job job, double amount) {
+        return this.addXP(player, job, amount, true);
+    }
+
+    public boolean addXP(@NotNull Player player, @NotNull Job job, double amount, boolean notify) {
         if (amount == 0D) return false;
 
         JobUser user = plugin.getUserManager().getUserData(player);
@@ -657,10 +689,12 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         }
 
         // Send exp gain/lose message.
-        (isLose ? Lang.JOB_XP_LOSE : Lang.JOB_XP_GAIN).getMessage()
-            .replace(jobData.replacePlaceholders())
-            .replace(Placeholders.GENERIC_AMOUNT, NumberUtil.format(amount))
-            .send(player);
+        if (notify) {
+            (isLose ? Lang.JOB_XP_LOSE : Lang.JOB_XP_GAIN).getMessage()
+                .replace(jobData.replacePlaceholders())
+                .replace(Placeholders.GENERIC_AMOUNT, NumberUtil.format(amount))
+                .send(player);
+        }
 
         // Call events for level up/down.
         if (levelHas > jobData.getLevel()) {

@@ -240,14 +240,13 @@ public class Lang extends CoreLang {
 
     public static final LangText JOB_PAYMENT_RECEIPT = LangText.of("Job.Payment.Receipt.General",
         NO_PREFIX.getFullName(),
-        LIGHT_ORANGE.enclose(STRIKETHROUGH.enclose("━".repeat(25))),
-        LIGHT_YELLOW.enclose("Hey, worker!"),
-        LIGHT_YELLOW.enclose("Here is your payment for latest " + LIGHT_GREEN.enclose(GENERIC_TIME) + ":"),
+        " ",
+        LIGHT_YELLOW.enclose(BOLD.enclose("Work Payment for " + LIGHT_GREEN.enclose(GENERIC_TIME) + ":")),
         " ",
         GENERIC_ENTRY,
         " ",
         LIGHT_ORANGE.enclose(BOLD.enclose("Total: ") + LIGHT_GREEN.enclose(GENERIC_TOTAL)),
-        LIGHT_ORANGE.enclose(STRIKETHROUGH.enclose("━".repeat(25)))
+        " "
     );
 
     public static final LangString JOB_PAYMENT_RECEIPT_ENTRY_JOB = LangString.of("Job.Payment.Receipt.Entry.Job",
@@ -327,12 +326,11 @@ public class Lang extends CoreLang {
     );
 
     public static final LangText JOB_XP_GAIN = LangText.of("Job.XP.Gain",
-        OUTPUT.enclose(OutputType.ACTION_BAR) +
-            LIGHT_YELLOW.enclose(BOLD.enclose(JOB_NAME + ": ") + LIGHT_GREEN.enclose("+" + GENERIC_AMOUNT + " XP"))
+        LIGHT_GRAY.enclose("You gain " + LIGHT_YELLOW.enclose(GENERIC_AMOUNT + " XP") + " for " + LIGHT_YELLOW.enclose(JOB_NAME) + " job.")
     );
 
     public static final LangText JOB_XP_LOSE = LangText.of("Job.XP.Lose",
-        LIGHT_GRAY.enclose("You lost " + RED.enclose(GENERIC_AMOUNT + " XP") + " from " + RED.enclose(JOB_NAME) + " job.")
+        LIGHT_GRAY.enclose("You lost " + LIGHT_RED.enclose(GENERIC_AMOUNT + " XP") + " from " + LIGHT_RED.enclose(JOB_NAME) + " job.")
     );
 
     public static final LangText JOB_LEVEL_UP = LangText.of("Job.Level.Up",

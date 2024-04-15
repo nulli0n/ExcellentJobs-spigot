@@ -15,6 +15,7 @@ import org.bukkit.event.player.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import su.nightexpress.excellentjobs.JobsPlugin;
+import su.nightexpress.excellentjobs.api.event.bukkit.PlayerCollectedHoneyEvent;
 import su.nightexpress.excellentjobs.hook.HookId;
 import su.nightexpress.excellentjobs.hook.impl.MythicMobsHook;
 import su.nightexpress.nightcore.manager.AbstractManager;
@@ -71,6 +72,9 @@ public class ActionRegistry extends AbstractManager<JobsPlugin> {
         // Enchantment related
         this.registerAction(EnchantItemEvent.class, EventPriority.MONITOR, ActionTypes.ENCHANT_GET);
         this.registerAction(InventoryClickEvent.class, EventPriority.MONITOR, ActionTypes.ENCHANT_REMOVE);
+
+        // Misc
+        this.registerAction(PlayerCollectedHoneyEvent.class, EventPriority.MONITOR, ActionTypes.HONEY_COLLECT);
 
         this.registerHooks();
         this.plugin.getLang().saveChanges();

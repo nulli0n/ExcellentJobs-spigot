@@ -24,7 +24,7 @@ public class BoosterInfo {
     public void validate() {
         if (this.getJobs().contains(Placeholders.WILDCARD)) {
             this.getJobs().clear();
-            this.getJobs().addAll(JobsAPI.getJobManager().getJobMap().keySet());
+            this.getJobs().addAll(JobsAPI.getJobManager().getJobIds());
         }
     }
 

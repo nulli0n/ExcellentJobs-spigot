@@ -2,11 +2,9 @@ package su.nightexpress.excellentjobs.currency;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import su.nightexpress.coinsengine.api.CoinsEngineAPI;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.api.currency.Currency;
 import su.nightexpress.excellentjobs.api.currency.CurrencyHandler;
-import su.nightexpress.excellentjobs.currency.handler.CoinsEngineHandler;
 import su.nightexpress.excellentjobs.currency.handler.VaultEconomyHandler;
 import su.nightexpress.excellentjobs.currency.impl.CoinsEngineCurrency;
 import su.nightexpress.excellentjobs.currency.impl.ConfigCurrency;
@@ -24,8 +22,6 @@ import java.util.function.Supplier;
 
 public class CurrencyManager extends AbstractManager<JobsPlugin> {
 
-    public static final String ID_MONEY = "money";
-
     private final Map<String, Currency> currencyMap;
 
     public CurrencyManager(@NotNull JobsPlugin plugin) {
@@ -36,16 +32,11 @@ public class CurrencyManager extends AbstractManager<JobsPlugin> {
     @Override
     protected void onLoad() {
         if (Plugins.hasVault() && VaultHook.hasEconomy()) {
-            this.registerCurrency(ID_MONEY, VaultEconomyHandler::new);
+            this.registerCurrency(VaultEconomyHandler.ID, VaultEconomyHandler::new);
         }
+
         if (Plugins.isLoaded(HookId.COINS_ENGINE)) {
-            CoinsEngineAPI.getCurrencyManager().getCurrencies().forEach(currency -> {
-                if (!currency.isVaultEconomy()) {
-                    String id = "coinsengine_" + currency.getId();
-                    String name = currency.getName();
-                    this.registerCurrency(new CoinsEngineCurrency(id, new CoinsEngineHandler(currency), name, currency.getFormat()));
-                }
-            });
+            CoinsEngineCurrency.getCurrencies().forEach(this::registerCurrency);
         }
 
         this.plugin.getConfig().saveChanges();
@@ -55,11 +46,6 @@ public class CurrencyManager extends AbstractManager<JobsPlugin> {
     protected void onShutdown() {
         this.currencyMap.clear();
     }
-
-    /*@NotNull
-    private File getFile(@NotNull String id) {
-        return new File(plugin.getDataFolder() + DIR_CURRENCIES, id.toLowerCase() + ".yml");
-    }*/
 
     public boolean registerCurrency(@NotNull String id, @NotNull Supplier<CurrencyHandler> supplier) {
         FileConfig config = this.plugin.getConfig();

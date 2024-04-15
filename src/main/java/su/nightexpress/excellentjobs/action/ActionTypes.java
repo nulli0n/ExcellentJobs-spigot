@@ -14,6 +14,7 @@ import org.bukkit.event.inventory.FurnaceExtractEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.potion.PotionEffectType;
+import su.nightexpress.excellentjobs.api.event.bukkit.PlayerCollectedHoneyEvent;
 
 public class ActionTypes {
 
@@ -119,5 +120,9 @@ public class ActionTypes {
 
     public static final ActionType<EnchantItemEvent, Enchantment> ENCHANT_GET = ActionType.create(
         "get_enchant", ObjectFormatters.ENCHANTMENT, EventHelpers.ENCHANT_GET
+    );
+
+    public static final ActionType<PlayerCollectedHoneyEvent, Material> HONEY_COLLECT = ActionType.create(
+        "collect_honey", ObjectFormatters.MATERIAL, EventHelpers.HONEY_COLLECT
     );
 }

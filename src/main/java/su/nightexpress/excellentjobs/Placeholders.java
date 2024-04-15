@@ -17,8 +17,12 @@ import java.time.LocalTime;
 
 public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
 
-    public static final String URL_WIKI          = "https://github.com/nulli0n/ExcellentJobs-spigot/wiki/";
-    public static final String URL_PLACEHOLDERS  = URL_WIKI + "Internal-Placeholders";
+    public static final String URL_WIKI                = "https://nightexpress.gitbook.io/excellentjobs/";
+    public static final String URL_WIKI_PLACEHOLDERS   = URL_WIKI + "utility/placeholders";
+    public static final String URL_WIKI_ACTION_TYPES   = URL_WIKI + "features/job-action-types";
+    public static final String URL_WIKI_CURRENCY       = URL_WIKI + "features/multi-currency";
+    public static final String URL_WIKI_SPECIAL_ORDERS = URL_WIKI + "features/special-orders";
+    public static final String URL_WIKI_ZONES          = URL_WIKI + "features/zones";
 
     public static final String GENERIC_AMOUNT   = "%amount%";
     public static final String GENERIC_NAME     = "%name%";
@@ -35,6 +39,8 @@ public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
     public static final String GENERIC_TYPE     = "%type%";
     public static final String GENERIC_TOTAL    = "%total%";
     public static final String GENERIC_REWARD   = "%reward%";
+    public static final String GENERIC_INCOME   = "%income%";
+    public static final String GENERIC_LEVEL    = "%level%";
 
     public static final String MODIFIER_BASE      = "%modifier_base%";
     public static final String MODIFIER_PER_LEVEL = "%modifier_per_level%";
@@ -71,33 +77,30 @@ public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
     public static final String JOB_EMPLOYEES_PRIMARY   = "%job_employees_primary%";
     public static final String JOB_EMPLOYEES_SECONDARY = "%job_employees_secondary%";
 
-    public static final String ZONE_ID = "%zone_id%";
-    public static final String ZONE_NAME = "%zone_name%";
-    public static final String ZONE_DESCRIPTION = "%zone_description%";
-    public static final String ZONE_JOB_ID = "%zone_job_id%";
-    public static final String ZONE_JOB_NAME = "%zone_job_name%";
+    public static final String ZONE_ID            = "%zone_id%";
+    public static final String ZONE_NAME          = "%zone_name%";
+    public static final String ZONE_DESCRIPTION   = "%zone_description%";
+    public static final String ZONE_JOB_ID        = "%zone_job_id%";
+    public static final String ZONE_JOB_NAME      = "%zone_job_name%";
     public static final String ZONE_JOB_MIN_LEVEL = "%zone_job_min_level%";
     public static final String ZONE_JOB_MAX_LEVEL = "%zone_job_max_level%";
     //public static final String ZONE_CLOSEST_TIME = "%zone_closest_open_time%";
-    public static final String ZONE_CLOSE_TIME = "%zone_close_time%";
-    public static final String ZONE_OPEN_TIME  = "%zone_open_time%";
+    public static final String ZONE_CLOSE_TIME    = "%zone_close_time%";
+    public static final String ZONE_OPEN_TIME     = "%zone_open_time%";
 
     //public static final String ZONE_OPEN_TIMES = "%zone_open_times%";
-    public static final String ZONE_REPORT = "%zone_report%";
-    public static final String ZONE_INSPECT_SELECTION = "%zone_inspect_selection%";
-    public static final String ZONE_INSPECT_JOB = "%zone_inspect_job%";
-    public static final String ZONE_PERMISSION = "%zone_permission%";
+    public static final String ZONE_REPORT              = "%zone_report%";
+    public static final String ZONE_INSPECT_SELECTION   = "%zone_inspect_selection%";
+    public static final String ZONE_INSPECT_JOB         = "%zone_inspect_job%";
+    public static final String ZONE_PERMISSION          = "%zone_permission%";
     public static final String ZONE_PERMISSION_REQUIRED = "%zone_permission_required%";
-    public static final String ZONE_PVP_ALLOWED = "%zone_pvp_allowed%";
+    public static final String ZONE_PVP_ALLOWED         = "%zone_pvp_allowed%";
 
     public static final String BLOCK_LIST_ID                = "%blocklist_id%";
     public static final String BLOCK_LIST_MATERIALS         = "%blocklist_materials%";
     public static final String BLOCK_LIST_FALLBACK_MATERIAL = "%blocklist_fallback_material%";
     public static final String BLOCK_LIST_RESET_TIME        = "%blocklist_reset_time%";
     public static final String BLOCK_LIST_DROP_ITEMS        = "%blocklist_drop_items%";
-
-    @Deprecated public static final String RANK_ID        = "%rank_id%";
-    @Deprecated public static final String RANK_NAME     = "%rank_name%";
 
     public static final String BOOSTER_TIME_LEFT         = "%booster_timeleft%";
 

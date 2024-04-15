@@ -37,7 +37,7 @@ import java.util.*;
 public class Zone extends AbstractFileData<JobsPlugin> implements Placeholder, Inspectable {
 
     private final Map<DayOfWeek, List<Pair<LocalTime, LocalTime>>> openTimes;
-    private final Map<String, BlockList> blockListMap;
+    private final Map<String, BlockList>                           blockListMap;
     private final Map<Currency, Modifier>                          paymentModifierMap;
     private final PlaceholderMap                                   placeholderMap;
 

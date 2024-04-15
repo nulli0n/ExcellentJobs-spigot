@@ -23,6 +23,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.RayTraceResult;
+import su.nightexpress.excellentjobs.api.event.bukkit.PlayerCollectedHoneyEvent;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Keys;
 import su.nightexpress.excellentjobs.hook.HookId;
@@ -108,9 +109,15 @@ public class EventHelpers {
     public static final EventHelper<BlockBreakEvent, Material> BLOCK_BREAK = (plugin, event, processor) -> {
         Block block = event.getBlock();
 
-        if (PlayerBlockTracker.isTracked(block)) {
-            if (!(block.getBlockData() instanceof Ageable ageable)) return false;
+        if (block.getBlockData() instanceof Ageable ageable) {
             if (ageable.getAge() < ageable.getMaximumAge()) return false;
+        }
+
+        if (PlayerBlockTracker.isTracked(block)) {
+            // Dont need this, bc block tracker untrack plants when grow naturally.
+            //if (!(block.getBlockData() instanceof Ageable ageable)) return false;
+            //if (ageable.getAge() < ageable.getMaximumAge()) return false;
+            return false;
         }
 
         Player player = event.getPlayer();
@@ -460,6 +467,12 @@ public class EventHelpers {
         event.getEnchantsToAdd().keySet().forEach(enchantment -> {
             processor.progressObjective(player, enchantment, 1);
         });
+        return true;
+    };
+
+    public static final EventHelper<PlayerCollectedHoneyEvent, Material> HONEY_COLLECT = (plugin, event, processor) -> {
+        Player player = event.getPlayer();
+        processor.progressObjective(player, event.getBlock().getType(), 1);
         return true;
     };
 }

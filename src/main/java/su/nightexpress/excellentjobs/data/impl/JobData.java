@@ -73,11 +73,6 @@ public class JobData implements Placeholder {
             .add(Placeholders.JOB_DATA_XP_MAX, () -> NumberUtil.format(this.getMaxXP()))
             .add(Placeholders.JOB_DATA_XP_TO_UP, () -> NumberUtil.format(this.getXPToLevelUp()))
             .add(Placeholders.JOB_DATA_XP_TO_DOWN, () -> NumberUtil.format(this.getXPToLevelDown()))
-            //.add(Placeholders.JOB_DATA_RANK, () -> this.getRank().getName())
-            //.add(Placeholders.JOB_DATA_NEXT_RANK, () -> this.hasNextRank() ? this.getNextRank().getName() : "-")
-            //.add(Placeholders.JOB_DATA_NEXT_RANK_LEVEL, () -> this.hasNextRank() ? NumberUtil.format(this.getMaxLevel() + 1) : "-")
-            //.add(Placeholders.JOB_DATA_PREVIOUS_RANK, () -> this.hasPreviousRank() ? this.getPreviousRank().getName() : "-")
-            //.add(Placeholders.JOB_DATA_PREVIOUS_RANK_LEVEL, () -> this.hasPreviousRank() ? NumberUtil.format(this.getPreviousRank().getMaxLevel()) : "-")
         ;
     }
 
@@ -104,7 +99,7 @@ public class JobData implements Placeholder {
         }
 
         if (this.getXP() <= -(this.getMaxXP()) && (this.getLevel() > 1)) {
-            this.downLevel(this.getXP() - -(this.getMaxXP()));
+            this.downLevel(this.getXP() + (this.getMaxXP()));
         }
     }
 
@@ -124,7 +119,7 @@ public class JobData implements Placeholder {
         boolean isFirstLevel = this.getLevel() == 1;
         if (this.getXP() <= -(this.getMaxXP())) {
             if ((!isFirstLevel)) {
-                this.downLevel(this.getXP() - -(this.getMaxXP()));
+                this.downLevel(this.getXP() + (this.getMaxXP()));
             }
             else this.setXP(-this.getMaxXP());
         }
@@ -161,7 +156,7 @@ public class JobData implements Placeholder {
     }
 
     public boolean isReadyForNextOrder() {
-        return this.getOrderData().isExpired();
+        return System.currentTimeMillis() >= this.getNextOrderDate() && this.getOrderData().isExpired();
     }
 
     public void removeXP(int amount) {

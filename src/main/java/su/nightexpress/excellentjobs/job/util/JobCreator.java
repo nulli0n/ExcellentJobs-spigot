@@ -11,7 +11,7 @@ import su.nightexpress.excellentjobs.action.ActionType;
 import su.nightexpress.excellentjobs.action.ActionTypes;
 import su.nightexpress.excellentjobs.api.currency.Currency;
 import su.nightexpress.excellentjobs.config.Config;
-import su.nightexpress.excellentjobs.currency.CurrencyManager;
+import su.nightexpress.excellentjobs.currency.handler.VaultEconomyHandler;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.job.impl.JobObjective;
 import su.nightexpress.excellentjobs.job.impl.JobState;
@@ -70,9 +70,9 @@ public class JobCreator {
         job.setXPFactor(1.093);
         job.setMaxLevel(100);
         job.setMaxSecondaryLevel(30);
-        job.getPaymentMultiplier().put(CurrencyManager.ID_MONEY, Modifier.add(0D, 0.01, 1D));
+        job.getPaymentMultiplier().put(VaultEconomyHandler.ID, Modifier.add(0D, 0.01, 1D));
         job.setXPMultiplier(Modifier.add(0D, 0.01, 3D));
-        job.getDailyPaymentLimits().put(CurrencyManager.ID_MONEY, Modifier.add(-1D, 0D, 0D));
+        job.getDailyPaymentLimits().put(VaultEconomyHandler.ID, Modifier.add(-1D, 0D, 0D));
         job.setXPDailyLimits(Modifier.add(-1D, 0D, 0D));
         //job.setSpecialOrdersAllowed(true);
         //job.setSpecialOrdersAllowedRewards(new TreeMap<>(Map.of(1, Lists.newList(Placeholders.WILDCARD))));
@@ -356,23 +356,27 @@ public class JobCreator {
         crops.add(Material.MELON);
         crops.add(Material.PUMPKIN);
 
+        objectives.add(createObjective("honey", ActionTypes.HONEY_COLLECT, Lists.newSet(Material.BEEHIVE, Material.BEE_NEST),
+            new ItemStack(Material.HONEY_BOTTLE),
+            MONEY_HIGH.multiply(1.25), XP_HIGH.multiply(0.45), 1));
+
         objectives.add(createObjective("milks", milk, Lists.newSet(EntityType.COW, EntityType.MUSHROOM_COW, EntityType.GOAT),
             new ItemStack(Material.MILK_BUCKET),
-            MONEY_MEDIUM.multiply(2), XP_HIGH.multiply(0.45), 1));
+            MONEY_MEDIUM.multiply(2), XP_HIGH.multiply(0.35), 1));
 
         objectives.add(createObjective("crops", blockBreak, crops,
             new ItemStack(Material.WHEAT),
-            MONEY_MEDIUM.multiply(2), XP_HIGH.multiply(0.45), 1)
+            MONEY_MEDIUM.multiply(2), XP_HIGH.multiply(0.35), 1)
         );
 
         objectives.add(createObjective("berries", blockHarvest, Lists.newSet(Material.GLOW_BERRIES, Material.SWEET_BERRIES),
             new ItemStack(Material.SWEET_BERRIES),
-            MONEY_MEDIUM.multiply(2), XP_HIGH.multiply(0.45), 1)
+            MONEY_MEDIUM.multiply(2), XP_HIGH.multiply(0.35), 1)
         );
 
         objectives.add(createObjective("flowers", blockBreak, Tag.FLOWERS.getValues(),
             new ItemStack(Material.POPPY),
-            MONEY_MEDIUM.multiply(0.8), XP_LOW, 1)
+            MONEY_MEDIUM.multiply(0.75), XP_LOW, 1)
         );
 
         Set<EntityType> breedItems = Lists.newSet(
@@ -626,7 +630,7 @@ public class JobCreator {
                                                    @NotNull ObjectiveReward xp,
                                                    int unlockLevel) {
 
-        Currency currency = JobsAPI.PLUGIN.getCurrencyManager().getCurrencyOrAny(CurrencyManager.ID_MONEY);
+        Currency currency = JobsAPI.PLUGIN.getCurrencyManager().getCurrencyOrAny(VaultEconomyHandler.ID);
         Set<String> objects = items.stream().map(type::getObjectName).sorted(String::compareTo).collect(Collectors.toCollection(LinkedHashSet::new));
 
         Map<Currency, ObjectiveReward> paymentMap = new HashMap<>();

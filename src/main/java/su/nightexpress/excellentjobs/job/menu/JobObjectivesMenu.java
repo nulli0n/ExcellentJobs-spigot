@@ -8,6 +8,8 @@ import org.jetbrains.annotations.NotNull;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.Placeholders;
 import su.nightexpress.excellentjobs.action.ActionType;
+import su.nightexpress.excellentjobs.api.currency.Currency;
+import su.nightexpress.excellentjobs.booster.impl.Booster;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.data.impl.JobData;
 import su.nightexpress.excellentjobs.data.impl.JobUser;
@@ -31,8 +33,10 @@ import su.nightexpress.nightcore.util.NumberUtil;
 import su.nightexpress.nightcore.util.text.NightMessage;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.IntStream;
 
 import static su.nightexpress.excellentjobs.Placeholders.*;
@@ -171,6 +175,11 @@ public class JobObjectivesMenu extends ConfigMenu<JobsPlugin> implements AutoFil
         JobUser user = plugin.getUserManager().getUserData(player);
         JobData jobData = user.getData(job);
 
+        int jobLevel = jobData.getLevel();
+        Collection<Booster> boosters = this.plugin.getBoosterManager().getBoosters(player, job);
+        double xpMultiplier = 1D + Booster.getPlainXPBoost(boosters) + job.getXPMultiplier(jobLevel);
+        Function<Currency, Double> payMultiplier = currency -> 1D + Booster.getCurrencyPlainBoost(currency, boosters) + job.getPaymentMultiplier(currency, jobLevel);
+
         autoFill.setSlots(this.objSlots);
         autoFill.setItems(job.getObjectives().stream().sorted(Comparator.comparing(JobObjective::getDisplayName)).toList());
         autoFill.setItemCreator(jobObjective -> {
@@ -196,8 +205,8 @@ public class JobObjectivesMenu extends ConfigMenu<JobsPlugin> implements AutoFil
 
             List<String> rewardXP = new ArrayList<>(jobData.isXPLimitReached() ? this.rewardXPLimitLore : this.rewardXPAvailLore);
             rewardXP.replaceAll(line -> line
-                .replace(Placeholders.OBJECTIVE_XP_MIN, NumberUtil.format(jobObjective.getXPReward().getMin()))
-                .replace(Placeholders.OBJECTIVE_XP_MAX, NumberUtil.format(jobObjective.getXPReward().getMax()))
+                .replace(Placeholders.OBJECTIVE_XP_MIN, NumberUtil.format(jobObjective.getXPReward().getMin() * xpMultiplier))
+                .replace(Placeholders.OBJECTIVE_XP_MAX, NumberUtil.format(jobObjective.getXPReward().getMax() * xpMultiplier))
                 .replace(Placeholders.OBJECTIVE_XP_CHANCE, NumberUtil.format(jobObjective.getXPReward().getChance()))
             );
 
@@ -205,8 +214,8 @@ public class JobObjectivesMenu extends ConfigMenu<JobsPlugin> implements AutoFil
             jobObjective.getPaymentMap().forEach((currency, rewardInfo) -> {
                 for (String line : (jobData.isPaymentLimitReached(currency) ? this.rewardCurrencyLimitLore : this.rewardCurrencyAvailLore)) {
                     rewardCurrency.add(currency.replacePlaceholders().apply(line)
-                        .replace(Placeholders.OBJECTIVE_CURRENCY_MIN, NumberUtil.format(rewardInfo.getMin()))
-                        .replace(Placeholders.OBJECTIVE_CURRENCY_MAX, NumberUtil.format(rewardInfo.getMax()))
+                        .replace(Placeholders.OBJECTIVE_CURRENCY_MIN, NumberUtil.format(rewardInfo.getMin() * payMultiplier.apply(currency)))
+                        .replace(Placeholders.OBJECTIVE_CURRENCY_MAX, NumberUtil.format(rewardInfo.getMax() * payMultiplier.apply(currency)))
                         .replace(Placeholders.OBJECTIVE_CURRENCY_CHANCE, NumberUtil.format(rewardInfo.getChance()))
                     );
                 }
