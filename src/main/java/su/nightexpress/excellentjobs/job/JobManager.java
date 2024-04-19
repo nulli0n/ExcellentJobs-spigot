@@ -600,7 +600,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
                 if (payment == 0D || Double.isNaN(payment) || Double.isInfinite(payment)) return;
 
                 income.add(jobObjective, currency, payment);
-                if (progressBar != null) progressBar.addPayment(currency, amount);
+                if (progressBar != null) progressBar.addPayment(currency, payment);
 
                 if (!player.hasPermission(Perms.PREFIX_BYPASS_LIMIT_CURRENCY + job.getId()) && job.hasDailyPaymentLimit(currency, jobLevel)) {
                     jobData.getLimitData().addCurrency(currency, payment);

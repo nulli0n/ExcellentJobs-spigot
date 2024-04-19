@@ -161,7 +161,8 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
                 0, Lists.newList("eco give " + PLAYER_NAME + " 250", "feed " + PLAYER_NAME)
             ),
             "A list of commands to execute when player reaches certain level(s).",
-            "Key = Level reached."
+            "Key = Level reached.",
+            "Use '0' as a level to run command(s) on every level up."
         ).read(config));
 
         this.paymentMultiplier.putAll(ConfigValue.forMap("Payment_Modifier.Currency",
@@ -359,7 +360,10 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
 
     @NotNull
     public List<String> getLevelUpCommands(int level) {
-        return this.getLevelUpCommands().getOrDefault(level, Collections.emptyList());
+        List<String> commands = new ArrayList<>();
+        commands.addAll(this.levelUpCommands.getOrDefault(0, Collections.emptyList()));
+        commands.addAll(this.levelUpCommands.getOrDefault(level, Collections.emptyList()));
+        return commands;
     }
 
     @Nullable

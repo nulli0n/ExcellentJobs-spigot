@@ -2,14 +2,17 @@ package su.nightexpress.excellentjobs.job.listener;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.BrewingStand;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.BrewerInventory;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -66,5 +69,16 @@ public class JobGenericListener extends AbstractListener<JobsPlugin> {
             PlayerCollectedHoneyEvent honeyEvent = new PlayerCollectedHoneyEvent(player, block);
             this.plugin.getPluginManager().callEvent(honeyEvent);
         });
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onBrewingClick(InventoryClickEvent event) {
+        if (!(event.getInventory() instanceof BrewerInventory inventory)) return;
+
+        BrewingStand stand = inventory.getHolder();
+        if (stand == null) return;
+
+        PDCUtil.set(stand, Keys.BREWING_HOLDER, event.getWhoClicked().getUniqueId().toString());
+        stand.update();
     }
 }
