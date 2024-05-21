@@ -38,8 +38,6 @@ public class CurrencyManager extends AbstractManager<JobsPlugin> {
         if (Plugins.isLoaded(HookId.COINS_ENGINE)) {
             CoinsEngineCurrency.getCurrencies().forEach(this::registerCurrency);
         }
-
-        this.plugin.getConfig().saveChanges();
     }
 
     @Override

@@ -7,7 +7,6 @@ import su.nightexpress.excellentjobs.Placeholders;
 import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
-import su.nightexpress.nightcore.util.Colorizer;
 import su.nightexpress.nightcore.util.StringUtil;
 
 public class ActionType<E extends Event, O> {
@@ -52,7 +51,7 @@ public class ActionType<E extends Event, O> {
     }
 
     public void setDisplayName(@NotNull String displayName) {
-        this.displayName = Colorizer.apply(displayName);
+        this.displayName = displayName;
     }
 
     @NotNull

@@ -27,6 +27,8 @@ import su.nightexpress.excellentjobs.api.event.bukkit.PlayerCollectedHoneyEvent;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Keys;
 import su.nightexpress.excellentjobs.hook.HookId;
+import su.nightexpress.excellentjobs.hook.impl.EvenMoreFishHook;
+import su.nightexpress.excellentjobs.hook.impl.LevelledMobsHook;
 import su.nightexpress.excellentjobs.hook.impl.MythicMobsHook;
 import su.nightexpress.excellentjobs.job.JobManager;
 import su.nightexpress.nightcore.util.*;
@@ -190,10 +192,19 @@ public class EventHelpers {
         Player killer = entity.getKiller();
         if (killer == null) return false;
 
+        double multiplier = 0D;
+
         // Do not count MythicMobs here.
         if (Plugins.isInstalled(HookId.MYTHIC_MOBS) && MythicMobsHook.isMythicMob(entity)) return false;
 
-        processor.progressObjective(killer, entity.getType(), 1);
+        // LevelledMobs integration.
+        if (Plugins.isInstalled(HookId.LEVELLED_MOBS) && Config.LEVELLED_MOBS_KILL_ENTITY_ENABLED.get()) {
+            int level = LevelledMobsHook.getLevel(entity);
+            double amount = Config.LEVELLED_MOBS_KILL_ENTITY_MULTIPLIER.get();
+            multiplier = level * amount;
+        }
+
+        processor.progressObjective(killer, entity.getType(), 1, multiplier);
         return true;
     };
 
@@ -209,10 +220,19 @@ public class EventHelpers {
         if (!(entity.getLastDamageCause() instanceof EntityDamageByEntityEvent ede)) return false;
         if (!(ede.getDamager() instanceof Projectile)) return false;
 
+        double multiplier = 0D;
+
         // Do not count MythicMobs here.
         if (Plugins.isInstalled(HookId.MYTHIC_MOBS) && MythicMobsHook.isMythicMob(entity)) return false;
 
-        processor.progressObjective(killer, entity.getType(), 1);
+        // LevelledMobs integration.
+        if (Plugins.isInstalled(HookId.LEVELLED_MOBS) && Config.LEVELLED_MOBS_KILL_ENTITY_ENABLED.get()) {
+            int level = LevelledMobsHook.getLevel(entity);
+            double amount = Config.LEVELLED_MOBS_KILL_ENTITY_MULTIPLIER.get();
+            multiplier = level * amount;
+        }
+
+        processor.progressObjective(killer, entity.getType(), 1, multiplier);
         return true;
     };
 
@@ -324,8 +344,12 @@ public class EventHelpers {
         if (!(caught instanceof Item item)) return false;
 
         Player player = event.getPlayer();
-        ItemStack stack = item.getItemStack();
-        processor.progressObjective(player, stack.getType(), stack.getAmount());
+        ItemStack itemStack = item.getItemStack();
+
+        // Do not count EMF fishes.
+        if (Plugins.isInstalled(HookId.EVEN_MORE_FISH) && EvenMoreFishHook.isCustomFish(itemStack)) return false;
+
+        processor.progressObjective(player, itemStack.getType(), itemStack.getAmount());
         return true;
     };
 

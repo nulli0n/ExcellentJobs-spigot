@@ -60,6 +60,7 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
     private TreeMap<Integer, List<String>> specialOrdersAllowedRewards;
     private Map<Currency, Double>          specialOrdersCost;
 
+    private final Set<JobState> allowedStates;
     private final Set<String> disabledWorlds;
     private final Map<JobState, Integer> employeesAmount;
     private final TreeMap<Integer, Integer>  xpTable;
@@ -71,6 +72,7 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
 
     public Job(@NotNull JobsPlugin plugin, @NotNull File file, @NotNull String id) {
         super(plugin, file, id);
+        this.allowedStates = new HashSet<>();
         this.disabledWorlds = new HashSet<>();
         this.employeesAmount = new ConcurrentHashMap<>();
         this.xpTable = new TreeMap<>();
@@ -125,24 +127,41 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
             "[Default is " + JobState.INACTIVE.name() + "]"
         ).read(config));
 
+        this.allowedStates.addAll(ConfigValue.forSet("Allowed_States",
+            id -> StringUtil.getEnum(id, JobState.class).orElse(null),
+            (cfg, path, set) -> cfg.set(path, set.stream().map(Enum::name).toList()),
+            Lists.newSet(
+                JobState.PRIMARY,
+                JobState.SECONDARY,
+                JobState.INACTIVE
+            ),
+            "A list of Job States that are allowed for this job.",
+            "Removing " + JobState.INACTIVE.name() + " state will prevent players from leaving this job.",
+            "[Allowed values: " + StringUtil.inlineEnum(JobState.class, ", ") + "]"
+        ).read(config));
+
         this.setDisabledWorlds(ConfigValue.create("Disabled_Worlds",
             Set.of("some_world"),
             "A list of worlds where this job will have no effect (no XP, no payments)."
         ).read(config));
 
-        this.setMaxLevel(ConfigValue.create("Leveling.Max_Level", 100,
+        this.setMaxLevel(ConfigValue.create("Leveling.Max_Level",
+            100,
             "Max. possible job level."
         ).read(config));
 
-        this.setMaxSecondaryLevel(ConfigValue.create("Leveling.Max_Secondary_Level", 30,
+        this.setMaxSecondaryLevel(ConfigValue.create("Leveling.Max_Secondary_Level",
+            30,
             "Max. possible job level when job is set as 'Secondary' for a player."
         ).read(config));
 
-        this.setInitialXP(ConfigValue.create("Leveling.XP_Initial", 100,
+        this.setInitialXP(ConfigValue.create("Leveling.XP_Initial",
+            1000,
             "Sets start amount of XP required for the next level."
         ).read(config));
 
-        this.setXPFactor(ConfigValue.create("Leveling.XP_Factor", 1.093,
+        this.setXPFactor(ConfigValue.create("Leveling.XP_Factor",
+            1.093,
             "Sets XP multiplier to calculate XP amount required for next level.",
             "The formula is: <xp_required> = <previous_xp_required> * <xp_factor>"
         ).read(config));
@@ -162,7 +181,7 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
             ),
             "A list of commands to execute when player reaches certain level(s).",
             "Key = Level reached.",
-            "Use '0' as a level to run command(s) on every level up."
+            "Use '0' as a level key to run command(s) on every level up."
         ).read(config));
 
         this.paymentMultiplier.putAll(ConfigValue.forMap("Payment_Modifier.Currency",
@@ -344,6 +363,10 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
 
     public boolean isGoodWorld(@NotNull String worldName) {
         return !this.getDisabledWorlds().contains(worldName.toLowerCase());
+    }
+
+    public boolean isAllowedState(@NotNull JobState state) {
+        return this.allowedStates.contains(state);
     }
 
     public int getMaxLevel(@NotNull JobState state) {
@@ -605,6 +628,11 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
 
     public void setInitialState(@NotNull JobState initialState) {
         this.initialState = initialState;
+    }
+
+    @NotNull
+    public Set<JobState> getAllowedStates() {
+        return allowedStates;
     }
 
     @NotNull

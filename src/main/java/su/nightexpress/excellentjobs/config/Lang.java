@@ -232,6 +232,9 @@ public class Lang extends CoreLang {
     public static final LangText JOB_LEAVE_ERROR_NOT_JOINED = LangText.of("Job.Leave.Error.NotJoined",
         LIGHT_GRAY.enclose("You're not employed for the " + LIGHT_RED.enclose(JOB_NAME) + " job!"));
 
+    public static final LangText JOB_LEAVE_ERROR_NOT_ALLOWED = LangText.of("Job.Leave.Error.NotAllowed",
+        LIGHT_GRAY.enclose("You can't leave the " + LIGHT_RED.enclose(JOB_NAME) + " job!"));
+
     public static final LangText JOB_RESET_NOTIFY = LangText.of("Job.Reset.Notify",
         OUTPUT.enclose(20, 60) + SOUND.enclose(Sound.ENTITY_ZOMBIE_BREAK_WOODEN_DOOR) +
             LIGHT_GREEN.enclose(BOLD.enclose("Job Reset!")),

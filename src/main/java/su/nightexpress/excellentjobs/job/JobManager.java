@@ -6,6 +6,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Firework;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.jetbrains.annotations.NotNull;
@@ -64,8 +65,16 @@ public class JobManager extends AbstractManager<JobsPlugin> {
 
     public static boolean canWorkHere(@NotNull Player player) {
         if (Config.GENERAL_DISABLED_WORLDS.get().contains(player.getWorld().getName())) return false;
+        if (!checkVehicle(player)) return false;
 
         return !Config.ABUSE_IGNORE_GAME_MODES.get().contains(player.getGameMode());
+    }
+
+    public static boolean checkVehicle(@NotNull Player player) {
+        if (!Config.ABUSE_IGNORE_VEHICLES.get()) return true;
+
+        Entity vehicle = player.getVehicle();
+        return vehicle == null || vehicle instanceof LivingEntity;
     }
 
     public static void devastateEntity(@NotNull Entity entity) {
@@ -289,6 +298,11 @@ public class JobManager extends AbstractManager<JobsPlugin> {
             return false;
         }
 
+        if (!job.isAllowedState(JobState.INACTIVE)) {
+            Lang.JOB_LEAVE_ERROR_NOT_ALLOWED.getMessage().replace(job.replacePlaceholders()).send(player);
+            return false;
+        }
+
         JobLeaveEvent event = new JobLeaveEvent(player, job, data.getState());
         this.plugin.getPluginManager().callEvent(event);
         if (event.isCancelled()) return false;
@@ -305,10 +319,10 @@ public class JobManager extends AbstractManager<JobsPlugin> {
     }
 
     public boolean joinJob(@NotNull Player player, @NotNull Job job, boolean forced) {
-        if (forced || this.canGetMoreJobs(player, JobState.PRIMARY)) {
+        if (forced || (this.canGetMoreJobs(player, JobState.PRIMARY) && job.isAllowedState(JobState.PRIMARY))) {
             return this.joinJob(player, job, JobState.PRIMARY, forced);
         }
-        if (this.canGetMoreJobs(player, JobState.SECONDARY)) {
+        if (this.canGetMoreJobs(player, JobState.SECONDARY) && job.isAllowedState(JobState.SECONDARY)) {
             return this.joinJob(player, job, JobState.SECONDARY, false);
         }
 
@@ -552,7 +566,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
                     JobOrderObjective orderObjective = orderData.getObjectiveMap().get(jobObjective.getId());
                     if (orderObjective == null) break Label_Order;
 
-                    JobOrderCount count = orderObjective.getObjectCountMap().get(objectId);
+                    JobOrderCount count = orderObjective.getCount(objectId);
                     if (count == null) break Label_Order;
 
                     orderObjective.countObject(objectId, amount);
@@ -732,10 +746,10 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         JobData jobData = user.getData(job);
         if (!force && jobData.isLevelRewardObtained(level)) return;
 
-        job.getLevelUpCommands(jobData.getLevel()).forEach(command -> {
+        job.getLevelUpCommands(level).forEach(command -> {
             plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), Placeholders.forPlayer(player).apply(command));
         });
-        jobData.setLevelRewardObtained(jobData.getLevel());
+        jobData.setLevelRewardObtained(level);
         this.plugin.getUserManager().saveAsync(user);
     }
 

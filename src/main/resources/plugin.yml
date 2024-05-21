@@ -5,9 +5,10 @@ description: A better & elegant jobs solution for your server!
 author: NightExpress
 depend: [nightcore]
 softdepend:
-  - MythicMobs
   - PlaceholderAPI
   - CoinsEngine
   - Vault
   - ProtocolLib
+  - MythicMobs
+  - EvenMoreFish
 api-version: 1.18

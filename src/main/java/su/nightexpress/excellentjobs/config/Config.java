@@ -81,7 +81,7 @@ public class Config {
     );
 
     public static final ConfigValue<RankMap<Integer>> JOBS_PRIMARY_AMOUNT = ConfigValue.create("Jobs.Primary_Amount",
-        (cfg, path, def) -> RankMap.readInt(cfg, path),
+        (cfg, path, def) -> RankMap.readInt(cfg, path, -1),
         (cfg, path, map) -> map.write(cfg, path),
         () -> new RankMap<>(RankMap.Mode.RANK, Perms.PREFIX_PRIMARY_JOBS, -1, Map.of(
             Placeholders.DEFAULT, -1
@@ -91,7 +91,7 @@ public class Config {
     );
 
     public static final ConfigValue<RankMap<Integer>> JOBS_SECONDARY_AMOUNT = ConfigValue.create("Jobs.Secondary_Amount",
-        (cfg, path, def) -> RankMap.readInt(cfg, path),
+        (cfg, path, def) -> RankMap.readInt(cfg, path, -1),
         (cfg, path, map) -> map.write(cfg, path),
         () -> new RankMap<>(RankMap.Mode.RANK, Perms.PREFIX_SECONDARY_JOBS, -1, Map.of(
             Placeholders.DEFAULT, -1
@@ -111,10 +111,23 @@ public class Config {
 
     public static final ConfigValue<Double> JOBS_ENCHANT_MULTIPLIER_BY_LEVEL_COST = ConfigValue.create("Jobs.Details.Enchant.Multiplier_By_Level_Cost",
         1D,
-        "Sets amount of percents (%) added to XP and payment for each level in enchanting table cost for " + ActionTypes.ITEM_ENCHANT.getName() + " job objectives.",
+        "Sets amount of percents (%) added to a job's objective XP and payment for each level in enchanting table cost for " + ActionTypes.ITEM_ENCHANT.getName() + " job objectives.",
         "Examples:",
         "==> With 30 level cost, player will gain 30% more XP and payment.",
         "==> With 7 level cost, player will gain 7% more XP and payment."
+    );
+
+    public static final ConfigValue<Boolean> LEVELLED_MOBS_KILL_ENTITY_ENABLED = ConfigValue.create("LevelledMobs.Integration.KillEntity.Enabled",
+        true,
+        "When enabled, multiplies XP and payment amount produced by '" + ActionTypes.ENTITY_KILL.getName() + "' and " + ActionTypes.ENTITY_SHOOT.getName() + "' job objectives when killing mobs with levels from LevelledMobs."
+    );
+
+    public static final ConfigValue<Double> LEVELLED_MOBS_KILL_ENTITY_MULTIPLIER = ConfigValue.create("LevelledMobs.Integration.KillEntity.Multiplier",
+        1D,
+        "Sets percent amount (%) added to a job's objective XP and payment for each mob level.",
+        "Examples:",
+        "==> With value = 1, a mob with lvl 30 will produce 30% more job XP and payments.",
+        "==> With value = 0.5, a mob with lvl 30 will produce 15% more job XP and payments."
     );
 
     public static final ConfigValue<Boolean> ZONES_ENABLED = ConfigValue.create("Zones.Enabled",
@@ -220,6 +233,12 @@ public class Config {
         ),
         "The following blocks will give no job XP / currency if been fertilized by bone meal.",
         "Take block names from F3 debug screen wihout the 'minecraft:' prefix."
+    );
+
+    public static final ConfigValue<Boolean> ABUSE_IGNORE_VEHICLES = ConfigValue.create("Abuse_Protection.Ignore_Vehicles",
+        false,
+        "When enabled, players will get no XP / money for doing job objectives while in vehicle.",
+        "Vehicles are all non-living entities (e.g. minecarts, boats, etc.)"
     );
 
     public static final ConfigValue<Boolean> STATISTIC_ENABLED = ConfigValue.create("Statistic.Enabled",

@@ -103,10 +103,10 @@ public class JobListMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<Jo
             if (jobData.getState() != JobState.INACTIVE) {
                 status = new ArrayList<>(this.jobAvailSettingsLore);
             }
-            else if (this.plugin.getJobManager().canGetMoreJobs(player, JobState.PRIMARY)) {
+            else if (this.plugin.getJobManager().canGetMoreJobs(player, JobState.PRIMARY) && job.isAllowedState(JobState.PRIMARY)) {
                 status = new ArrayList<>(this.jobAvailJoinPrimLore);
             }
-            else if (this.plugin.getJobManager().canGetMoreJobs(player, JobState.SECONDARY)) {
+            else if (this.plugin.getJobManager().canGetMoreJobs(player, JobState.SECONDARY) && job.isAllowedState(JobState.SECONDARY)) {
                 status = new ArrayList<>(this.jobAvailJoinSeconLore);
             }
             else {

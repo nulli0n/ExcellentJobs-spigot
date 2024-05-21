@@ -17,12 +17,14 @@ import org.jetbrains.annotations.Nullable;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.api.event.bukkit.PlayerCollectedHoneyEvent;
 import su.nightexpress.excellentjobs.hook.HookId;
+import su.nightexpress.excellentjobs.hook.impl.EvenMoreFishHook;
 import su.nightexpress.excellentjobs.hook.impl.MythicMobsHook;
 import su.nightexpress.nightcore.manager.AbstractManager;
 import su.nightexpress.nightcore.util.Plugins;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class ActionRegistry extends AbstractManager<JobsPlugin> {
 
@@ -77,13 +79,17 @@ public class ActionRegistry extends AbstractManager<JobsPlugin> {
         this.registerAction(PlayerCollectedHoneyEvent.class, EventPriority.MONITOR, ActionTypes.HONEY_COLLECT);
 
         this.registerHooks();
-        this.plugin.getLang().saveChanges();
     }
 
     private void registerHooks() {
-        if (Plugins.isInstalled(HookId.MYTHIC_MOBS)) {
-            this.plugin.info("Found " + HookId.MYTHIC_MOBS + "! Registering new objective types...");
-            MythicMobsHook.register(this);
+        this.registerExternal(HookId.MYTHIC_MOBS, MythicMobsHook::register);
+        this.registerExternal(HookId.EVEN_MORE_FISH, EvenMoreFishHook::register);
+    }
+
+    private void registerExternal(@NotNull String name, @NotNull Consumer<ActionRegistry> consumer) {
+        if (Plugins.isInstalled(name)) {
+            this.plugin.info("Found " + name + "! Registering new objective types...");
+            consumer.accept(this);
         }
     }
 
