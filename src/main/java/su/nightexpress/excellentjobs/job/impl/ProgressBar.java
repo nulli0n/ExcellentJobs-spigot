@@ -31,7 +31,7 @@ public class ProgressBar {
         this.job = job;
         this.player = player;
         this.moneyMap = new HashMap<>();
-        this.bossBar = plugin.getServer().createBossBar("", Config.GENERAL_PROGRESS_BAR_COLOR.get(), Config.GENERAL_PROGRESS_BAR_STYLE.get());
+        this.bossBar = plugin.getServer().createBossBar("", job.getProgressBarColor(), Config.GENERAL_PROGRESS_BAR_STYLE.get());
         this.bossBar.setVisible(false);
         this.bossBar.addPlayer(player);
 
@@ -69,7 +69,7 @@ public class ProgressBar {
 
         this.bossBar.setTitle(NightMessage.asLegacy(title
             .replace(Placeholders.JOB_NAME, job.getName())
-            .replace(Placeholders.GENERIC_EXP, xp)
+            .replace(Placeholders.GENERIC_XP, xp)
             .replace(Placeholders.GENERIC_INCOME, money)
         ));
         this.bossBar.setProgress(percent);

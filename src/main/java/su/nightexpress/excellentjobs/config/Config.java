@@ -63,11 +63,12 @@ public class Config {
         "Sets for how long (in seconds) progress bar will stay before reset and disappear.");
 
     public static final ConfigValue<String> GENERAL_PROGRESS_BAR_TITLE = ConfigValue.create("General.ProgressBar.Title",
-        GRAY.enclose(LIGHT_YELLOW.enclose(BOLD.enclose(JOB_NAME + " Job")) + " (Lv. " + WHITE.enclose(JOB_DATA_LEVEL) + ") | " + LIGHT_RED.enclose("+" + GENERIC_EXP + " XP") + " | " + LIGHT_GREEN.enclose("+" + GENERIC_INCOME)),
+        GRAY.enclose(LIGHT_YELLOW.enclose(BOLD.enclose(JOB_NAME + " Job")) + " (Lv. " + WHITE.enclose(JOB_DATA_LEVEL) + ") | " + LIGHT_RED.enclose("+" + GENERIC_XP + " XP") + " | " + LIGHT_GREEN.enclose("+" + GENERIC_INCOME)),
         "Sets title for job progress bar.",
         "You can use 'Job' placeholders (not all of them): " + URL_WIKI_PLACEHOLDERS
     );
 
+    @Deprecated
     public static final ConfigValue<BarColor> GENERAL_PROGRESS_BAR_COLOR = ConfigValue.create("General.ProgressBar.Color",
         BarColor.class, BarColor.GREEN,
         "Sets color for job progress bar.",

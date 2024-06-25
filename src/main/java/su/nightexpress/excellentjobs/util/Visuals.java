@@ -12,24 +12,22 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.excellentjobs.hook.HookId;
-import su.nightexpress.nightcore.util.*;
+import su.nightexpress.nightcore.util.EntityUtil;
+import su.nightexpress.nightcore.util.Lists;
+import su.nightexpress.nightcore.util.LocationUtil;
+import su.nightexpress.nightcore.util.Plugins;
 import su.nightexpress.nightcore.util.text.NightMessage;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
 public class Visuals {
 
-    private static final Class<?>      NMS_ENTITY          = Reflex.getClass("net.minecraft.world.entity", "Entity");
-    private static final String        ENTITY_COUNTER_NAME = Version.isAtLeast(Version.V1_19_R3) ? "d" : "c";
-    public static final  AtomicInteger ENTITY_COUNTER      = (AtomicInteger) Reflex.getFieldValue(NMS_ENTITY, ENTITY_COUNTER_NAME);
-
     private static final Map<Player, Set<Integer>> VISUALS_MAP = new WeakHashMap<>();
 
     public static int nextEntityId() {
-        return ENTITY_COUNTER.incrementAndGet();
+        return EntityUtil.nextEntityId();
     }
 
     public static void highlightPoints(@NotNull Player player, @NotNull World world, BlockPos[] cuboid) {

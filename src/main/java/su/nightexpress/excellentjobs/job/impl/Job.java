@@ -2,6 +2,7 @@ package su.nightexpress.excellentjobs.job.impl;
 
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.boss.BarColor;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -52,6 +53,7 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
     private double       xpFactor;
     private Modifier     xpMultiplier;
     private Modifier     xpDailyLimits;
+    private BarColor progressBarColor;
 
     private boolean                        specialOrdersAllowed;
     private UniInt                         specialOrdersObjectivesAmount;
@@ -60,9 +62,9 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
     private TreeMap<Integer, List<String>> specialOrdersAllowedRewards;
     private Map<Currency, Double>          specialOrdersCost;
 
-    private final Set<JobState> allowedStates;
-    private final Set<String> disabledWorlds;
-    private final Map<JobState, Integer> employeesAmount;
+    private final Set<JobState>              allowedStates;
+    private final Set<String>                disabledWorlds;
+    private final Map<JobState, Integer>     employeesAmount;
     private final TreeMap<Integer, Integer>  xpTable;
     private final Map<Integer, List<String>> levelUpCommands;
     private final Map<String, Modifier>      paymentMultiplier;
@@ -114,6 +116,12 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
 
         this.setPermissionRequired(ConfigValue.create("Permission_Required", false,
             "When enabled, players must have '" + this.getPermission() + "' permission in order to use this job."
+        ).read(config));
+
+        this.setProgressBarColor(ConfigValue.create("ProgressBar.Color",
+            BarColor.class, BarColor.GREEN,
+            "Sets color for this job progress bar.",
+            "Allowed values: " + StringUtil.inlineEnum(BarColor.class, ", ")
         ).read(config));
 
         this.setInitialState(ConfigValue.create("Initial_State",
@@ -299,6 +307,7 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
         config.set("Description", this.getDescription());
         config.setItem("Icon", this.getIcon());
         config.set("Permission_Required", this.isPermissionRequired());
+        config.set("ProgressBar.Color", this.getProgressBarColor().name());
         config.set("Initial_State", this.getInitialState().name());
         config.set("Disabled_Worlds", this.getDisabledWorlds());
         config.set("Leveling.Max_Level", this.getMaxLevel());
@@ -643,6 +652,15 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
     public void setDisabledWorlds(@NotNull Set<String> disabledWorlds) {
         this.getDisabledWorlds().clear();
         this.getDisabledWorlds().addAll(disabledWorlds.stream().map(String::toLowerCase).collect(Collectors.toSet()));
+    }
+
+    @NotNull
+    public BarColor getProgressBarColor() {
+        return progressBarColor;
+    }
+
+    public void setProgressBarColor(@NotNull BarColor progressBarColor) {
+        this.progressBarColor = progressBarColor;
     }
 
     public int getInitialXP() {

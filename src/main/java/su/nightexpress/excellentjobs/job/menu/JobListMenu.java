@@ -11,6 +11,7 @@ import su.nightexpress.excellentjobs.booster.impl.Booster;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.data.impl.JobData;
+import su.nightexpress.excellentjobs.data.impl.JobLimitData;
 import su.nightexpress.excellentjobs.data.impl.JobOrderData;
 import su.nightexpress.excellentjobs.data.impl.JobUser;
 import su.nightexpress.excellentjobs.job.impl.Job;
@@ -43,6 +44,7 @@ public class JobListMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<Jo
     private static final String PLACEHOLDER_STATUS = "%status%";
     private static final String PLACEHOLDER_BOOSTER = "%booster%";
     private static final String PLACEHOLDER_STATE = "%state%";
+    private static final String DAILY_LIMITS = "%daily_limits%";
 
     private String       jobNameAvailable;
     private List<String> jobLoreAvailable;
@@ -55,6 +57,9 @@ public class JobListMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<Jo
     private List<String> jobPrimStateLore;
     private List<String> jobSecondStateLore;
     private List<String> jobInactiveStateLore;
+    private List<String> jobDailyLimits;
+    private List<String> jobDailyCurrencyLimit;
+    private List<String> jobDailyXPLimit;
     private String       jobNameLockedPerm;
     private List<String> jobLoreLockedPerm;
     private int[]        jobSlots;
@@ -84,6 +89,8 @@ public class JobListMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<Jo
         autoFill.setItems(plugin.getJobManager().getJobs().stream().sorted(Comparator.comparing(Job::getName)).toList());
         autoFill.setItemCreator(job -> {
             JobData jobData = user.getData(job);
+            JobLimitData limitData = jobData.getLimitData();
+
             int level = jobData.getLevel();
             Collection<Booster> boosters = plugin.getBoosterManager().getBoosters(player, job);
 
@@ -111,6 +118,39 @@ public class JobListMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<Jo
             }
             else {
                 status = new ArrayList<>(this.jobAvailLimitLore);
+            }
+
+            List<String> dailyLimits = new ArrayList<>();
+            List<String> currencyLimits = new ArrayList<>();
+            List<String> xpLimits = new ArrayList<>();
+            if (job.hasDailyXPLimit(level)) {
+                xpLimits = new ArrayList<>(this.jobDailyXPLimit);
+                xpLimits.replaceAll(str -> str
+                    .replace(GENERIC_CURRENT, NumberUtil.format(limitData.getXPEarned()))
+                    .replace(GENERIC_TOTAL, NumberUtil.format(job.getDailyXPLimit(level)))
+                );
+            }
+            if (!job.getDailyPaymentLimits().isEmpty()) {
+                currencyLimits = new ArrayList<>();
+                for (String line : this.jobDailyCurrencyLimit) {
+                    if (line.contains(CURRENCY_NAME)) {
+                        for (Currency currency : plugin.getCurrencyManager().getCurrencies()) {
+                            if (!job.hasDailyPaymentLimit(currency, level)) continue;
+
+                            currencyLimits.add(currency.replacePlaceholders().apply(line)
+                                .replace(GENERIC_CURRENT, currency.format(limitData.getCurrencyEarned(currency)))
+                                .replace(GENERIC_TOTAL, currency.format(job.getDailyPaymentLimit(currency, level)))
+                            );
+                        }
+                        continue;
+                    }
+                    currencyLimits.add(line);
+                }
+            }
+            if (!currencyLimits.isEmpty() || !xpLimits.isEmpty()) {
+                dailyLimits = new ArrayList<>(this.jobDailyLimits);
+                dailyLimits = Lists.replace(dailyLimits, GENERIC_CURRENCY, currencyLimits);
+                dailyLimits = Lists.replace(dailyLimits, GENERIC_XP, xpLimits);
             }
 
             List<String> boosterInfo = new ArrayList<>();
@@ -169,6 +209,7 @@ public class JobListMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<Jo
             ItemStack item = job.getIcon();
             ItemReplacer.create(item).trimmed().hideFlags()
                 .setDisplayName(name).setLore(loreFinal)
+                .replaceLoreExact(DAILY_LIMITS, dailyLimits)
                 .replaceLoreExact(PLACEHOLDER_STATE, state)
                 .replaceLoreExact(PLACEHOLDER_BOOSTER, boosterInfo)
                 .replaceLoreExact(PLACEHOLDER_STATUS, status)
@@ -250,11 +291,27 @@ public class JobListMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<Jo
             LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("XP Multiplier: ") + "+" + XP_MULTIPLIER + "%"),
             LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose(CURRENCY_NAME + " Multiplier: ") + "+" + CURRENCY_MULTIPLIER + "%"),
             "",
+            DAILY_LIMITS,
+            "",
             PLACEHOLDER_BOOSTER,
             "",
             PLACEHOLDER_ORDER,
             "",
             PLACEHOLDER_STATUS
+        )).read(cfg);
+
+        this.jobDailyLimits = ConfigValue.create("Job.DailyLimits.Header", Lists.newList(
+            LIGHT_YELLOW.enclose(BOLD.enclose("Daily Limits:")),
+            GENERIC_CURRENCY,
+            GENERIC_XP
+        )).read(cfg);
+
+        this.jobDailyCurrencyLimit = ConfigValue.create("Job.DailyLimits.Currency", Lists.newList(
+            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose(CURRENCY_NAME + ": ") + GENERIC_CURRENT + LIGHT_GRAY.enclose("/") + GENERIC_TOTAL)
+        )).read(cfg);
+
+        this.jobDailyXPLimit = ConfigValue.create("Job.DailyLimits.XP", Lists.newList(
+            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("XP: ") + GENERIC_CURRENT + LIGHT_GRAY.enclose("/") + GENERIC_TOTAL)
         )).read(cfg);
 
         this.jobAvailJoinPrimLore = ConfigValue.create("Job.Available.Status.Join_Primary", Lists.newList(

@@ -381,6 +381,16 @@ public class JobCreator {
             MONEY_MEDIUM.multiply(2), XP_HIGH.multiply(0.35), 1)
         );
 
+        objectives.add(createObjective("sugar_cane", blockBreak, Lists.newSet(Material.SUGAR_CANE),
+            new ItemStack(Material.SUGAR_CANE),
+            MONEY_MEDIUM.multiply(1.5), XP_HIGH.multiply(0.35), 1)
+        );
+
+        objectives.add(createObjective("bamboo", blockBreak, Lists.newSet(Material.BAMBOO),
+            new ItemStack(Material.BAMBOO),
+            MONEY_MEDIUM.multiply(1.5), XP_HIGH.multiply(0.35), 1)
+        );
+
         objectives.add(createObjective("berries", blockHarvest, Lists.newSet(Material.GLOW_BERRIES, Material.SWEET_BERRIES),
             new ItemStack(Material.SWEET_BERRIES),
             MONEY_MEDIUM.multiply(2), XP_HIGH.multiply(0.35), 1)

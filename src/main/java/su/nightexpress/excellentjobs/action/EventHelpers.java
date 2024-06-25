@@ -110,9 +110,12 @@ public class EventHelpers {
 
     public static final EventHelper<BlockBreakEvent, Material> BLOCK_BREAK = (plugin, event, processor) -> {
         Block block = event.getBlock();
+        Material material = block.getType();
 
         if (block.getBlockData() instanceof Ageable ageable) {
-            if (ageable.getAge() < ageable.getMaximumAge()) return false;
+            if (material != Material.SUGAR_CANE && material != Material.BAMBOO) {
+                if (ageable.getAge() < ageable.getMaximumAge()) return false;
+            }
         }
 
         if (PlayerBlockTracker.isTracked(block)) {
@@ -443,7 +446,15 @@ public class EventHelpers {
         if (!(item.getItemMeta() instanceof PotionMeta potionMeta)) return false;
 
         Set<PotionEffectType> types = new HashSet<>();
-        potionMeta.getBasePotionType().getPotionEffects().forEach(e -> types.add(e.getType()));
+        if (Version.isAtLeast(Version.V1_20_R2)) {
+            potionMeta.getBasePotionType().getPotionEffects().forEach(e -> types.add(e.getType()));
+        }
+        else {
+            PotionType potionType = potionMeta.getBasePotionData().getType();
+            if (potionType.getEffectType() != null) {
+                types.add(potionType.getEffectType());
+            }
+        }
         potionMeta.getCustomEffects().forEach(e -> types.add(e.getType()));
 
         types.forEach(effectType -> {
