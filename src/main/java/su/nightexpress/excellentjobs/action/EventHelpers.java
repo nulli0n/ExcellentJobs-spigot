@@ -143,8 +143,8 @@ public class EventHelpers {
     };
 
     public static final EventHelper<PlayerHarvestBlockEvent, Material> BLOCK_HARVEST = (plugin, event, processor) -> {
-        //Block block = event.getHarvestedBlock();
-        //if (PlayerBlockTracker.isTracked(block)) return false;
+        Block block = event.getHarvestedBlock();
+        if (PlayerBlockTracker.isTracked(block)) return false;
 
         Player player = event.getPlayer();
         event.getItemsHarvested().forEach(itemStack -> {
@@ -447,7 +447,9 @@ public class EventHelpers {
 
         Set<PotionEffectType> types = new HashSet<>();
         if (Version.isAtLeast(Version.V1_20_R2)) {
-            potionMeta.getBasePotionType().getPotionEffects().forEach(e -> types.add(e.getType()));
+            if (potionMeta.getBasePotionType() != null) {
+                potionMeta.getBasePotionType().getPotionEffects().forEach(e -> types.add(e.getType()));
+            }
         }
         else {
             PotionType potionType = potionMeta.getBasePotionData().getType();

@@ -2,6 +2,7 @@ package su.nightexpress.excellentjobs.job.util;
 
 import org.bukkit.Material;
 import org.bukkit.Tag;
+import org.bukkit.boss.BarColor;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -70,6 +71,7 @@ public class JobCreator {
         job.setXPFactor(1.093);
         job.setMaxLevel(100);
         job.setMaxSecondaryLevel(30);
+        job.setProgressBarColor(BarColor.GREEN);
         job.getPaymentMultiplier().put(VaultEconomyHandler.ID, Modifier.add(0D, 0.01, 1D));
         job.setXPMultiplier(Modifier.add(0D, 0.01, 3D));
         job.getDailyPaymentLimits().put(VaultEconomyHandler.ID, Modifier.add(-1D, 0D, 0D));

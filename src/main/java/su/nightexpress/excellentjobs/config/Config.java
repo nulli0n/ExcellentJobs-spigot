@@ -223,18 +223,12 @@ public class Config {
         "Take block names from F3 debug screen wihout the 'minecraft:' prefix."
     );
 
-    public static final ConfigValue<Set<Material>> ABUSE_IGNORE_FERTILIZED = ConfigValue.forSet("Abuse_Protection.Ignore_Fertilized",
-        raw -> Material.getMaterial(raw.toUpperCase()),
-        (cfg, path, set) -> cfg.set(path, set.stream().map(Enum::name).toList()),
-        Set.of(
-            Material.WHEAT,
-            Material.CARROTS,
-            Material.POTATOES,
-            Material.BEETROOTS
-        ),
+    public static final ConfigValue<Set<String>> ABUSE_IGNORE_FERTILIZED = ConfigValue.create("Abuse_Protection.Ignore_Fertilized",
+        Lists.newSet(WILDCARD),
         "The following blocks will give no job XP / currency if been fertilized by bone meal.",
-        "Take block names from F3 debug screen wihout the 'minecraft:' prefix."
-    );
+        "Add '" + WILDCARD + "' to the list to include all possible blocks.",
+        "List of all block names: https://minecraft.wiki/w/Java_Edition_data_values#Blocks"
+    ).onRead(set -> Lists.modify(set, String::toLowerCase));
 
     public static final ConfigValue<Boolean> ABUSE_IGNORE_VEHICLES = ConfigValue.create("Abuse_Protection.Ignore_Vehicles",
         false,
