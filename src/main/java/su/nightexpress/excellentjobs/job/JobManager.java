@@ -33,7 +33,6 @@ import su.nightexpress.nightcore.util.NumberUtil;
 import su.nightexpress.nightcore.util.PDCUtil;
 import su.nightexpress.nightcore.util.TimeUtil;
 import su.nightexpress.nightcore.util.random.Rnd;
-import su.nightexpress.nightcore.util.text.tag.Tags;
 
 import java.io.File;
 import java.time.LocalDate;
@@ -290,7 +289,24 @@ public class JobManager extends AbstractManager<JobsPlugin> {
 
     }
 
+    public void validateJobs(@NotNull Player player) {
+        if (!Config.JOBS_FORCE_LEAVE_WHEN_LOST_PERMISSION.get()) return;
+
+        JobUser user = this.plugin.getUserManager().getUserData(player);
+        this.getJobs().forEach(job -> {
+            JobData data = user.getData(job);
+            if (data.isActive() && !job.hasPermission(player)) {
+                this.onLeaveJob(job, data);
+            }
+        });
+        this.plugin.getUserManager().scheduleSave(user);
+    }
+
     public boolean leaveJob(@NotNull Player player, @NotNull Job job) {
+        return this.leaveJob(player, job, false);
+    }
+
+    public boolean leaveJob(@NotNull Player player, @NotNull Job job, boolean silent) {
         JobUser user = this.plugin.getUserManager().getUserData(player);
         JobData data = user.getData(job);
         if (!data.isActive()) {
@@ -307,15 +323,19 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         this.plugin.getPluginManager().callEvent(event);
         if (event.isCancelled()) return false;
 
-        data.setState(JobState.INACTIVE);
-        job.removeEmployee(event.getState(), 1);
-        if (Config.JOBS_LEAVE_RESET_PROGRESS.get()) {
-            data.reset();
-        }
-        this.plugin.getUserManager().saveAsync(user);
+        this.onLeaveJob(job, data);
+        this.plugin.getUserManager().scheduleSave(user);
 
         Lang.JOB_LEAVE_SUCCESS.getMessage().replace(job.replacePlaceholders()).send(player);
         return true;
+    }
+
+    private void onLeaveJob(@NotNull Job job, @NotNull JobData data) {
+        job.removeEmployee(data.getState(), 1);
+        data.setState(JobState.INACTIVE);
+        if (Config.JOBS_LEAVE_RESET_PROGRESS.get()) {
+            data.reset();
+        }
     }
 
     public boolean joinJob(@NotNull Player player, @NotNull Job job, boolean forced) {
@@ -357,7 +377,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
 
         data.setState(event.getState());
         job.addEmployee(event.getState(), 1);
-        this.plugin.getUserManager().saveAsync(user);
+        this.plugin.getUserManager().scheduleSave(user);
 
         Lang.JOB_JOIN_SUCCESS.getMessage().replace(job.replacePlaceholders()).send(player);
         return true;
@@ -423,7 +443,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
                             String amount = currency.format(entry.getValue());
                             return Lang.JOB_PAYMENT_RECEIPT_ENTRY_CURRENCY.getString().replace(Placeholders.GENERIC_AMOUNT, amount);
                         })
-                        .collect(Collectors.joining(Tags.LINE_BREAK.getFullName()));
+                        .collect(Collectors.joining(Placeholders.TAG_LINE_BREAK));
 
                     list.add(job.replacePlaceholders().apply(Lang.JOB_PAYMENT_RECEIPT_ENTRY_JOB.getString()
                         .replace(Placeholders.GENERIC_CURRENCY, currencies)
@@ -503,7 +523,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
 
         jobData.setOrderData(orderData);
         jobData.setNextOrderDate(nextOrderDate);
-        this.plugin.getUserManager().saveAsync(user);
+        this.plugin.getUserManager().scheduleSave(user);
 
         Lang.SPECIAL_ORDER_TAKEN_INFO.getMessage()
             .replace(job.replacePlaceholders())
@@ -529,7 +549,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
                         return Lang.SPECIAL_ORDER_TAKEN_DETAIL.getString()
                             .replace(Placeholders.GENERIC_NAME, objectName)
                             .replace(Placeholders.GENERIC_AMOUNT, objectAmount);
-                    }).collect(Collectors.joining(Tags.LINE_BREAK.getFullName()));
+                    }).collect(Collectors.joining(Placeholders.TAG_LINE_BREAK));
 
                     list.add(Lang.SPECIAL_ORDER_TAKEN_ENTRY.getString()
                         .replace(Placeholders.GENERIC_NAME, objective.getDisplayName())
@@ -750,7 +770,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
             plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), Placeholders.forPlayer(player).apply(command));
         });
         jobData.setLevelRewardObtained(level);
-        this.plugin.getUserManager().saveAsync(user);
+        this.plugin.getUserManager().scheduleSave(user);
     }
 
     @NotNull

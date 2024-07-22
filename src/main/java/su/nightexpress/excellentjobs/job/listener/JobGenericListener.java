@@ -11,6 +11,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.BrewerInventory;
 import org.bukkit.inventory.EquipmentSlot;
@@ -30,6 +31,11 @@ public class JobGenericListener extends AbstractListener<JobsPlugin> {
     public JobGenericListener(@NotNull JobsPlugin plugin, @NotNull JobManager jobManager) {
         super(plugin);
         this.jobManager = jobManager;
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onJoin(PlayerJoinEvent event) {
+        this.jobManager.validateJobs(event.getPlayer());
     }
 
     @EventHandler(priority = EventPriority.LOWEST)

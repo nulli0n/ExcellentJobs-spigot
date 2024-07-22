@@ -110,6 +110,10 @@ public class Config {
         true,
         "Sets whether or not leaving a job will reset all leveling progress for it.");
 
+    public static final ConfigValue<Boolean> JOBS_FORCE_LEAVE_WHEN_LOST_PERMISSION = ConfigValue.create("Jobs.Leave_When_Lost_Permission",
+        true,
+        "Sets whether or not players will lost their jobs for which they don't have permission(s) anymore.");
+
     public static final ConfigValue<Double> JOBS_ENCHANT_MULTIPLIER_BY_LEVEL_COST = ConfigValue.create("Jobs.Details.Enchant.Multiplier_By_Level_Cost",
         1D,
         "Sets amount of percents (%) added to a job's objective XP and payment for each level in enchanting table cost for " + ActionTypes.ITEM_ENCHANT.getName() + " job objectives.",

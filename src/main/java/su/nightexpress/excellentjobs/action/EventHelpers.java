@@ -421,8 +421,10 @@ public class EventHelpers {
 
                 PotionType potionType;
                 if (Version.isAtLeast(Version.V1_20_R2)) {
-                    for (PotionEffect effect : potionMeta.getBasePotionType().getPotionEffects()) {
-                        processor.progressObjective(player, effect.getType(), item.getAmount());
+                    if (potionMeta.getBasePotionType() != null) {
+                        for (PotionEffect effect : potionMeta.getBasePotionType().getPotionEffects()) {
+                            processor.progressObjective(player, effect.getType(), item.getAmount());
+                        }
                     }
                 }
                 else {
