@@ -74,7 +74,7 @@ public class JobsPlugin extends NightDataPlugin<JobUser> {
             this.zoneManager.setup();
         }
 
-        if (Config.STATISTIC_ENABLED.get()) {
+        if (Config.isStatisticEnabled()) {
             this.statsManager = new StatsManager(this);
             this.statsManager.setup();
         }

@@ -75,6 +75,13 @@ public class ZoneBlocksEditor extends EditorMenu<JobsPlugin, Zone> implements Au
         autoFill.setItems(zone.getBlockListMap().values().stream().sorted(Comparator.comparing(BlockList::getId)).toList());
         autoFill.setItemCreator(blockList -> {
             Material material = blockList.getMaterials().isEmpty() ? blockList.getFallbackMaterial() : Rnd.get(blockList.getMaterials());
+            if (!material.isItem()) {
+                if (material == Material.CARROTS) material = Material.CARROT;
+                else if (material == Material.POTATOES) material = Material.POTATO;
+                else if (material == Material.BEETROOTS) material = Material.BEETROOT;
+                else material = Material.BARRIER;
+            }
+
             ItemStack item = new ItemStack(material);
             ItemReplacer.create(item).hideFlags().trimmed()
                 .readLocale(Lang.EDITOR_ZONE_BLOCK_LIST_OBJECT)

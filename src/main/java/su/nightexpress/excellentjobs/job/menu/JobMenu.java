@@ -1,21 +1,22 @@
 package su.nightexpress.excellentjobs.job.menu;
 
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.config.Config;
+import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.data.impl.JobData;
 import su.nightexpress.excellentjobs.data.impl.JobOrderData;
 import su.nightexpress.excellentjobs.data.impl.JobUser;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.job.impl.JobObjective;
+import su.nightexpress.excellentjobs.stats.StatsManager;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.menu.MenuOptions;
+import su.nightexpress.nightcore.menu.MenuSize;
 import su.nightexpress.nightcore.menu.MenuViewer;
 import su.nightexpress.nightcore.menu.impl.ConfigMenu;
 import su.nightexpress.nightcore.menu.item.ItemHandler;
@@ -23,7 +24,6 @@ import su.nightexpress.nightcore.menu.item.MenuItem;
 import su.nightexpress.nightcore.menu.link.Linked;
 import su.nightexpress.nightcore.menu.link.ViewLink;
 import su.nightexpress.nightcore.util.*;
-import su.nightexpress.nightcore.util.text.NightMessage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +41,7 @@ public class JobMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
     private final ItemHandler objectivesHandler;
     private final ItemHandler leaveHandler;
     private final ItemHandler orderHandler;
+    private final ItemHandler statsHandler;
     private final ItemHandler returnHandler;
     private final ViewLink<Job> link;
 
@@ -80,15 +81,30 @@ public class JobMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
                 if (jobData.hasOrder() || !jobData.isReadyForNextOrder()) return;
             //}
 
-            this.plugin.getJobManager().createSpecialOrder(player, job, true);
+            this.plugin.getJobManager().createSpecialOrder(player, job, false);
             this.runNextTick(player::closeInventory);
+        }));
+
+        this.addHandler(this.statsHandler = new ItemHandler("stats", (viewer, event) -> {
+            StatsManager statsManager = plugin.getStatsManager();
+            if (statsManager == null) return;
+
+            Player player = viewer.getPlayer();
+            Job job = this.getLink().get(player);
+
+            this.runNextTick(() -> statsManager.openStats(player, job));
         }));
 
         this.load();
 
         this.getItems().forEach(menuItem -> {
-            if (menuItem.getHandler().getName().equalsIgnoreCase("special_order")) {
-                menuItem.getOptions().addVisibilityPolicy(viewer -> Config.SPECIAL_ORDERS_ENABLED.get());
+            ItemHandler handler = menuItem.getHandler();
+
+            if (handler == this.statsHandler) {
+                menuItem.getOptions().setVisibilityPolicy(viewer -> Config.isStatisticEnabled());
+            }
+            else if (handler == this.orderHandler) {
+                menuItem.getOptions().addVisibilityPolicy(viewer -> Config.isSpecialOrdersEnabled());
 
                 menuItem.getOptions().addDisplayModifier((viewer, item) -> {
                     Player player = viewer.getPlayer();
@@ -167,7 +183,7 @@ public class JobMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
     @Override
     @NotNull
     protected MenuOptions createDefaultOptions() {
-        return new MenuOptions(BLACK.enclose("Job Settings: " + BLUE.enclose(JOB_NAME)), 36, InventoryType.CHEST);
+        return new MenuOptions(BLACK.enclose("Job Settings: " + BLUE.enclose(JOB_NAME)), MenuSize.CHEST_36);
     }
 
     @Override
@@ -175,33 +191,46 @@ public class JobMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
     protected List<MenuItem> createDefaultItems() {
         List<MenuItem> list = new ArrayList<>();
 
-        ItemStack back = ItemUtil.getSkinHead("be9ae7a4be65fcbaee65181389a2f7d47e2e326db59ea3eb789a92c85ea46");
+        ItemStack back = ItemUtil.getSkinHead(SKIN_ARROW_DOWN);
         ItemUtil.editMeta(back, meta -> {
-            meta.setDisplayName(NightMessage.asLegacy(LIGHT_GRAY.enclose("↓ Back")));
+            meta.setDisplayName(Lang.EDITOR_ITEM_RETURN.getLocalizedName());
         });
         list.add(new MenuItem(back).setSlots(31).setPriority(10).setHandler(this.returnHandler));
 
-        ItemStack objectItem = new ItemStack(Material.BOOK);
+
+        ItemStack objectItem = ItemUtil.getSkinHead("5a140a8dfb0f1f5ab979241e58c253a94d65e725f180ab52396e1d8e4c81ce37");
         ItemUtil.editMeta(objectItem, meta -> {
             meta.setDisplayName(LIGHT_YELLOW.enclose(BOLD.enclose("Objectives")));
             meta.setLore(Lists.newList(LIGHT_GRAY.enclose("Click to browse job objectives!")));
         });
         list.add(new MenuItem(objectItem).setPriority(10).setSlots(10).setHandler(this.objectivesHandler));
 
-        ItemStack orderItem = ItemUtil.getSkinHead("900d28ff7b543dd088d004b1b1f95b38d444ea0461ff5ae3c68d76c0c16e2527");
+
+
+        ItemStack statsItem = ItemUtil.getSkinHead("a8d5cb12219a3f5e9bb68c8914c443c2de160eff00cf3e730fbaccd8db6918fe");
+        ItemUtil.editMeta(statsItem, meta -> {
+            meta.setDisplayName(LIGHT_CYAN.enclose(BOLD.enclose("Stats")));
+            meta.setLore(Lists.newList(LIGHT_GRAY.enclose("Click to view personal job stats!")));
+        });
+        list.add(new MenuItem(statsItem).setPriority(10).setSlots(12).setHandler(this.statsHandler));
+
+
+
+        ItemStack orderItem = ItemUtil.getSkinHead("77b20efd92ffda9e6d7d859b96bb79280e1df5b37bd39a2b5b691da4d85925ef");
         ItemUtil.editMeta(orderItem, meta -> {
-            meta.setDisplayName(LIGHT_YELLOW.enclose(BOLD.enclose("Special Order")));
+            meta.setDisplayName(LIGHT_ORANGE.enclose(BOLD.enclose("Special Order")));
             meta.setLore(Lists.newList(PLACEHOLDER_ORDER));
         });
-        list.add(new MenuItem(orderItem).setPriority(10).setSlots(13).setHandler(this.orderHandler));
+        list.add(new MenuItem(orderItem).setPriority(10).setSlots(14).setHandler(this.orderHandler));
 
-        ItemStack leaveItem = ItemUtil.getSkinHead("3ed1aba73f639f4bc42bd48196c715197be2712c3b962c97ebf9e9ed8efa025");
+
+        ItemStack leaveItem = ItemUtil.getSkinHead("94f90c7bd60bfd0dfc31808d0484d8c2db9959f68df91fbf29423a3da62429a6");
         ItemUtil.editMeta(leaveItem, meta -> {
             meta.setDisplayName(LIGHT_RED.enclose(BOLD.enclose("Leave Job")));
             meta.setLore(Lists.newList(
                 DARK_GRAY.enclose("Leaving so soon?"),
                 " ",
-                LIGHT_GRAY.enclose("Please, note: all job progress will"),
+                LIGHT_GRAY.enclose("Note: all job progress will"),
                 LIGHT_GRAY.enclose("be lost " + LIGHT_RED.enclose("forever") + "!"),
                 " ",
                 LIGHT_RED.enclose("[▶] " + LIGHT_GRAY.enclose("Click to " + LIGHT_RED.enclose("leave") + LIGHT_GRAY.enclose(".")))
@@ -218,13 +247,13 @@ public class JobMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
         this.orderAvailableLore = ConfigValue.create("Format.SpecialOrder.Available", Lists.newList(
             DARK_GRAY.enclose("You don't have Special Orders."),
             "",
-            LIGHT_GRAY.enclose(LIGHT_YELLOW.enclose("Special Orders") + " are set of random job objectives"),
-            LIGHT_GRAY.enclose("with " + LIGHT_YELLOW.enclose("unqiue rewards") + " for completion in"),
+            LIGHT_GRAY.enclose(LIGHT_ORANGE.enclose("Special Orders") + " are set of random job objectives"),
+            LIGHT_GRAY.enclose("with " + LIGHT_ORANGE.enclose("unqiue rewards") + " for completion in"),
             LIGHT_GRAY.enclose("specified timeframe."),
             "",
-            LIGHT_YELLOW.enclose(BOLD.enclose("Cost: ") + LIGHT_RED.enclose(GENERIC_CURRENCY)),
+            LIGHT_ORANGE.enclose(BOLD.enclose("Cost: ") + LIGHT_RED.enclose(GENERIC_CURRENCY)),
             "",
-            LIGHT_YELLOW.enclose("[▶] " + LIGHT_GRAY.enclose("Click to ") + "get order" + LIGHT_GRAY.enclose("."))
+            LIGHT_ORANGE.enclose("[▶] " + LIGHT_GRAY.enclose("Click to ") + "get order" + LIGHT_GRAY.enclose("."))
         )).read(cfg);
 
         this.orderCooldownLore = ConfigValue.create("Format.SpecialOrder.Cooldown", Lists.newList(
@@ -232,19 +261,19 @@ public class JobMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
             "",
             LIGHT_GRAY.enclose("You've already completed a Special Order recently."),
             "",
-            LIGHT_YELLOW.enclose(BOLD.enclose("Cooldown: ") + LIGHT_RED.enclose(GENERIC_TIME))
+            LIGHT_ORANGE.enclose(BOLD.enclose("Cooldown: ") + LIGHT_RED.enclose(GENERIC_TIME))
         )).read(cfg);
 
         this.orderHaveLore = ConfigValue.create("Format.SpecialOrder.Active", Lists.newList(
             DARK_GRAY.enclose("You have a Special Order."),
             "",
-            LIGHT_YELLOW.enclose(BOLD.enclose("Objectives:")),
-            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose(GENERIC_NAME + ": ") + GENERIC_CURRENT + LIGHT_GRAY.enclose("/") + GENERIC_MAX),
+            LIGHT_ORANGE.enclose(BOLD.enclose("Objectives:")),
+            LIGHT_ORANGE.enclose("▪ " + LIGHT_GRAY.enclose(GENERIC_NAME + ": ") + GENERIC_CURRENT + LIGHT_GRAY.enclose("/") + GENERIC_MAX),
             "",
-            LIGHT_YELLOW.enclose(BOLD.enclose("Rewards:")),
-            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose(GENERIC_REWARD)),
+            LIGHT_ORANGE.enclose(BOLD.enclose("Rewards:")),
+            LIGHT_ORANGE.enclose("▪ " + LIGHT_GRAY.enclose(GENERIC_REWARD)),
             "",
-            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Timeleft: ") + GENERIC_TIME)
+            LIGHT_ORANGE.enclose("▪ " + LIGHT_GRAY.enclose("Timeleft: ") + GENERIC_TIME)
         )).read(cfg);
 
     }

@@ -52,8 +52,6 @@ public class Modifier implements Placeholder {
             "Start modifier value."
         ).read(cfg);
 
-        // TODO Per State ?
-
         double perLevel = ConfigValue.create(path + ".Per_Level", 0D,
             "Additional value calculated by job level step (see below). Formula: <per_level> * <step>"
         ).read(cfg);

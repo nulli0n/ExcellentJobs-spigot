@@ -35,7 +35,7 @@ public class JobGenericListener extends AbstractListener<JobsPlugin> {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent event) {
-        this.jobManager.validateJobs(event.getPlayer());
+        this.jobManager.handleJoin(event.getPlayer());
     }
 
     @EventHandler(priority = EventPriority.LOWEST)

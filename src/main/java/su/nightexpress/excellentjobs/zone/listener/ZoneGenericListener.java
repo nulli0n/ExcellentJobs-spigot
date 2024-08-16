@@ -3,20 +3,19 @@ package su.nightexpress.excellentjobs.zone.listener;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.Sign;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockExplodeEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.block.EntityBlockFormEvent;
+import org.bukkit.event.block.*;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.*;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.api.currency.Currency;
@@ -189,18 +188,74 @@ public class ZoneGenericListener extends AbstractListener<JobsPlugin> {
         }
     }
 
+    @EventHandler(priority = EventPriority.NORMAL)
+    public void onProtectionSignChange(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        Action action = event.getAction();
+
+        Zone zone = this.zoneManager.getZone(player);
+        if (zone == null) return;
+
+//        if (event.useItemInHand() != Event.Result.DENY) {
+//            EquipmentSlot slot = event.getHand();
+//            if (slot == null) return;
+//
+//            ItemStack itemStack = player.getInventory().getItem(slot);
+//            if (itemStack == null || itemStack.getType().isAir()) return;
+//
+//            Material type = itemStack.getType();
+//            if (type == Material.WATER_BUCKET || type == Material.LAVA_BUCKET || type == Material.BUCKET) {
+//                event.setUseItemInHand(Event.Result.DENY);
+//            }
+//        }
+
+        if (event.useInteractedBlock() != Event.Result.DENY) {
+            if (action != Action.RIGHT_CLICK_BLOCK) return;
+
+            Block block = event.getClickedBlock();
+            if (block == null) return;
+
+            if (!(block.getState() instanceof Sign sign)) return;
+
+            event.setUseInteractedBlock(Event.Result.DENY);
+        }
+    }
+
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
-    public void onZoneBlockExplode1(BlockExplodeEvent event) {
+    public void onProtectionLuqidFill(PlayerBucketFillEvent event) {
+        event.setCancelled(this.checkProtectionLuqid(event));
+    }
+
+    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    public void onProtectionLuqidEmpty(PlayerBucketEmptyEvent event) {
+        event.setCancelled(this.checkProtectionLuqid(event));
+    }
+
+    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    public void onProtectionLuqidEntity(PlayerBucketEntityEvent event) {
+        event.setCancelled(this.checkProtectionLuqid(event));
+    }
+
+    private boolean checkProtectionLuqid(PlayerEvent event) {
+        Player player = event.getPlayer();
+        if (player.hasPermission(Perms.BYPASS_ZONE_PROTECTION)) return false;
+
+        Zone zone = this.zoneManager.getZone(player);
+        return zone != null;
+    }
+
+    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    public void onBlockExplode(BlockExplodeEvent event) {
         event.blockList().removeIf(block -> zoneManager.getZone(block) != null);
     }
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
-    public void onZoneBlockExplode2(EntityExplodeEvent event) {
+    public void onEntityExplode(EntityExplodeEvent event) {
         event.blockList().removeIf(block -> zoneManager.getZone(block) != null);
     }
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
-    public void onZoneBlockForm(EntityBlockFormEvent event) {
+    public void onEntityBlockForm(EntityBlockFormEvent event) {
         if (event.getEntity().hasPermission(Perms.BYPASS_ZONE_PROTECTION)) return;
         if (this.zoneManager.isInZone(event.getBlock())) {
             event.setCancelled(true);

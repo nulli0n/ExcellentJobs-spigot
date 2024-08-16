@@ -3,7 +3,6 @@ package su.nightexpress.excellentjobs.api.event;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
-import org.checkerframework.checker.units.qual.N;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.excellentjobs.action.ActionType;
 import su.nightexpress.excellentjobs.api.currency.Currency;
@@ -17,6 +16,7 @@ public class JobObjectiveIncomeEvent extends JobObjectiveEvent implements Cancel
 
     private final ActionType<?, ?> actionType;
     private final Object object;
+    private final String objectName;
 
     private boolean cancelled;
     private Currency currency;
@@ -29,12 +29,14 @@ public class JobObjectiveIncomeEvent extends JobObjectiveEvent implements Cancel
                                    @NotNull JobObjective objective,
                                    @NotNull ActionType<?, ?> actionType,
                                    @NotNull Object object,
+                                   @NotNull String objectName,
                                    @NotNull Currency currency,
                                    double payment,
                                    double paymentMultiplier) {
         super(player, user, jobData, objective);
         this.actionType = actionType;
         this.object = object;
+        this.objectName = objectName;
 
         this.setCurrency(currency);
         this.setPayment(payment);
@@ -70,6 +72,11 @@ public class JobObjectiveIncomeEvent extends JobObjectiveEvent implements Cancel
     @NotNull
     public final Object getObject() {
         return object;
+    }
+
+    @NotNull
+    public final String getObjectName() {
+        return objectName;
     }
 
     @NotNull

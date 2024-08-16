@@ -59,6 +59,11 @@ public class ActionType<E extends Event, O> {
         return this.objectFormatter.getName(object).toLowerCase();
     }
 
+//    @NotNull
+//    public String getObjectName(@NotNull String object) {
+//        return this.objectFormatter.getName(object).toLowerCase();
+//    }
+
     @NotNull
     public String getObjectLocalizedName(@NotNull O object) {
         return this.objectFormatter.getLocalizedName(object);

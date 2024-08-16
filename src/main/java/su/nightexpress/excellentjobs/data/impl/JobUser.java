@@ -6,6 +6,7 @@ import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.booster.impl.ExpirableBooster;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.job.impl.JobState;
+import su.nightexpress.excellentjobs.stats.impl.JobStats;
 import su.nightexpress.nightcore.database.AbstractUser;
 
 import java.util.Collection;
@@ -18,6 +19,7 @@ public class JobUser extends AbstractUser<JobsPlugin> {
 
     private final Map<String, JobData>          dataMap;
     private final Map<String, ExpirableBooster> boosterMap;
+    private final Map<String, JobStats>         statsMap;
     private final UserSettings                  settings;
 
     @NotNull
@@ -26,9 +28,10 @@ public class JobUser extends AbstractUser<JobsPlugin> {
 
         Map<String, JobData> dataMap = new HashMap<>();
         Map<String, ExpirableBooster> boosterMap = new HashMap<>();
+        Map<String, JobStats> statsMap = new HashMap<>();
         UserSettings settings = new UserSettings();
 
-        return new JobUser(plugin, uuid, name, creationDate, creationDate, dataMap, boosterMap, settings);
+        return new JobUser(plugin, uuid, name, creationDate, creationDate, dataMap, boosterMap, statsMap, settings);
     }
 
     public JobUser(
@@ -39,11 +42,13 @@ public class JobUser extends AbstractUser<JobsPlugin> {
         long dateCreated,
         @NotNull Map<String, JobData> dataMap,
         @NotNull Map<String, ExpirableBooster> boosterMap,
+        @NotNull Map<String, JobStats> statsMap,
         @NotNull UserSettings settings
     ) {
         super(plugin, uuid, name, dateCreated, lastOnline);
         this.dataMap = new HashMap<>(dataMap);
         this.boosterMap = new ConcurrentHashMap<>(boosterMap);
+        this.statsMap = new HashMap<>(statsMap);
         this.settings = settings;
 
         // Update missing jobs.
@@ -52,7 +57,11 @@ public class JobUser extends AbstractUser<JobsPlugin> {
 
     @NotNull
     public UserSettings getSettings() {
-        return settings;
+        return this.settings;
+    }
+
+    public void loadStats(@NotNull Map<String, JobStats> statsMap) {
+        this.statsMap.putAll(statsMap);
     }
 
     public int countJobs(@NotNull JobState state) {
@@ -65,7 +74,7 @@ public class JobUser extends AbstractUser<JobsPlugin> {
 
     @NotNull
     public Map<String, JobData> getDataMap() {
-        return dataMap;
+        return this.dataMap;
     }
 
     @NotNull
@@ -98,5 +107,20 @@ public class JobUser extends AbstractUser<JobsPlugin> {
     @Nullable
     public ExpirableBooster getBooster(@NotNull String jobId) {
         return this.getBoosterMap().get(jobId.toLowerCase());
+    }
+
+    @NotNull
+    public Map<String, JobStats> getStatsMap() {
+        return this.statsMap;
+    }
+
+    @NotNull
+    public JobStats getStats(@NotNull Job job) {
+        return this.getStats(job.getId());
+    }
+
+    @NotNull
+    public JobStats getStats(@NotNull String jobId) {
+        return this.statsMap.computeIfAbsent(jobId.toLowerCase(), k -> new JobStats());
     }
 }

@@ -19,4 +19,10 @@ public interface ObjectFormatter<O> {
         O object = this.parseObject(name);
         return object == null ? name : this.getLocalizedName(object);
     }
+
+//    @NotNull
+//    default String getName(@NotNull String name) {
+//        O object = this.parseObject(name);
+//        return object == null ? name : this.getName(object);
+//    }
 }

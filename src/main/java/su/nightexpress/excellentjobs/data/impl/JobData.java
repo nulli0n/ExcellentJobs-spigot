@@ -47,7 +47,8 @@ public class JobData implements Placeholder {
 
     public JobData(@NotNull Job job,
                    @NotNull JobState state,
-                   int level, int xp,
+                   int level,
+                   int xp,
                    @NotNull JobLimitData limitData,
                    @NotNull JobOrderData orderData,
                    long nextOrderDate,

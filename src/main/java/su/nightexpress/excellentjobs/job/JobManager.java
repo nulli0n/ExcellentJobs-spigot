@@ -289,6 +289,10 @@ public class JobManager extends AbstractManager<JobsPlugin> {
 
     }
 
+    public void handleJoin(@NotNull Player player) {
+        this.validateJobs(player);
+    }
+
     public void validateJobs(@NotNull Player player) {
         if (!Config.JOBS_FORCE_LEAVE_WHEN_LOST_PERMISSION.get()) return;
 
@@ -578,11 +582,12 @@ public class JobManager extends AbstractManager<JobsPlugin> {
             JobObjective jobObjective = job.getObjectiveByObject(type, object);
             if (jobObjective == null || !jobObjective.isUnlocked(player, jobData)) return;
 
+            String objectId = type.getObjectName(object);
+
             JobOrderData orderData = jobData.getOrderData();
             Label_Order:
             if (!orderData.isEmpty()) {
                 if (!orderData.isCompleted()) {
-                    String objectId = type.getObjectName(object);
                     JobOrderObjective orderObjective = orderData.getObjectiveMap().get(jobObjective.getId());
                     if (orderObjective == null) break Label_Order;
 
@@ -625,7 +630,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
                 paymentMultiplier += multiplier;
 
                 JobObjectiveIncomeEvent event = new JobObjectiveIncomeEvent(
-                    player, user, jobData, jobObjective, type, object, currency, payment, paymentMultiplier
+                    player, user, jobData, jobObjective, type, object, objectId, currency, payment, paymentMultiplier
                 );
                 this.plugin.getPluginManager().callEvent(event);
                 if (event.isCancelled()) return;
@@ -729,6 +734,8 @@ public class JobManager extends AbstractManager<JobsPlugin> {
                 .replace(Placeholders.GENERIC_AMOUNT, NumberUtil.format(amount))
                 .send(player);
         }
+
+        this.plugin.getUserManager().scheduleSave(user);
 
         // Call events for level up/down.
         if (levelHas > jobData.getLevel()) {

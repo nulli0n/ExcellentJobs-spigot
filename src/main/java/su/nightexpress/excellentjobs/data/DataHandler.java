@@ -10,11 +10,15 @@ import su.nightexpress.excellentjobs.data.impl.*;
 import su.nightexpress.excellentjobs.data.serialize.*;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.job.impl.JobState;
+import su.nightexpress.excellentjobs.stats.impl.DayStats;
+import su.nightexpress.excellentjobs.stats.impl.JobStats;
 import su.nightexpress.nightcore.database.AbstractUserDataHandler;
 import su.nightexpress.nightcore.database.sql.SQLColumn;
+import su.nightexpress.nightcore.database.sql.SQLCondition;
 import su.nightexpress.nightcore.database.sql.SQLValue;
 import su.nightexpress.nightcore.database.sql.column.ColumnType;
 import su.nightexpress.nightcore.database.sql.executor.SelectQueryExecutor;
+import su.nightexpress.nightcore.util.Lists;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -26,6 +30,7 @@ public class DataHandler extends AbstractUserDataHandler<JobsPlugin, JobUser> {
     private static final SQLColumn COLUMN_DATA     = SQLColumn.of("data", ColumnType.STRING);
     private static final SQLColumn COLUMN_BOOSTERS = SQLColumn.of("boosters", ColumnType.STRING);
     private static final SQLColumn COLUMN_SETTINGS = SQLColumn.of("settings", ColumnType.STRING);
+    private static final SQLColumn COLUMN_STATS = SQLColumn.of("stats", ColumnType.STRING);
 
     private final Function<ResultSet, JobUser> userFunction;
 
@@ -45,10 +50,12 @@ public class DataHandler extends AbstractUserDataHandler<JobsPlugin, JobUser> {
                 Map<String, ExpirableBooster> boosters = this.gson.fromJson(resultSet.getString(COLUMN_BOOSTERS.getName()), new TypeToken<Map<String, ExpirableBooster>>(){}.getType());
                 if (boosters == null) boosters = new HashMap<>();
 
+                Map<String, JobStats> statsMap = new HashMap<>(); // Lazy load
+
                 //UserSettings settings = this.gson.fromJson(resultSet.getString(COLUMN_SETTINGS.getName()), new TypeToken<UserSettings>(){}.getType());
                 //if (settings == null) settings = new UserSettings();
 
-                return new JobUser(plugin, uuid, name, dateCreated, lastOnline, jobDataMap, boosters, new UserSettings());
+                return new JobUser(plugin, uuid, name, dateCreated, lastOnline, jobDataMap, boosters, statsMap, new UserSettings());
             }
             catch (SQLException ex) {
                 return null;
@@ -59,8 +66,12 @@ public class DataHandler extends AbstractUserDataHandler<JobsPlugin, JobUser> {
     @Override
     public void onSynchronize() {
         this.plugin.getUserManager().getLoaded().forEach(user -> {
+            if (plugin.getUserManager().isScheduledToSave(user)) return;
+
             JobUser fetched = this.getUser(user.getId());
             if (fetched == null) return;
+
+            if (!user.isSyncReady()) return;
 
             user.getBoosterMap().clear();
             user.getDataMap().clear();
@@ -82,13 +93,22 @@ public class DataHandler extends AbstractUserDataHandler<JobsPlugin, JobUser> {
             .registerTypeAdapter(JobOrderCount.class, new JobOrderCountSerializer())
             .registerTypeAdapter(JobOrderObjective.class, new JobOrderObjectiveSerializer())
             .registerTypeAdapter(JobOrderData.class, new JobOrderDataSerializer())
+            .registerTypeAdapter(DayStats.class, new DayStatsSerializer())
+            .registerTypeAdapter(JobStats.class, new JobStatsSerializer())
         );
+    }
+
+    @Override
+    protected void createUserTable() {
+        super.createUserTable();
+
+        this.addColumn(this.tableUsers, COLUMN_STATS.toValue("{}"));
     }
 
     @Override
     @NotNull
     protected List<SQLColumn> getExtraColumns() {
-        return Arrays.asList(COLUMN_DATA, COLUMN_SETTINGS, COLUMN_BOOSTERS);
+        return Arrays.asList(COLUMN_DATA, COLUMN_SETTINGS, COLUMN_BOOSTERS, COLUMN_STATS);
     }
 
     @Override
@@ -97,7 +117,8 @@ public class DataHandler extends AbstractUserDataHandler<JobsPlugin, JobUser> {
         return Arrays.asList(
             COLUMN_DATA.toValue(this.gson.toJson(user.getDataMap())),
             COLUMN_BOOSTERS.toValue(this.gson.toJson(user.getBoosterMap())),
-            COLUMN_SETTINGS.toValue(this.gson.toJson(user.getSettings()))
+            COLUMN_SETTINGS.toValue(this.gson.toJson(user.getSettings())),
+            COLUMN_STATS.toValue(this.gson.toJson(user.getStatsMap()))
         );
     }
 
@@ -105,6 +126,21 @@ public class DataHandler extends AbstractUserDataHandler<JobsPlugin, JobUser> {
     @NotNull
     protected Function<ResultSet, JobUser> getUserFunction() {
         return this.userFunction;
+    }
+
+    @NotNull
+    public Map<String, JobStats> getStats(@NotNull UUID playerId) {
+        Function<ResultSet, Map<String, JobStats>> function = resultSet -> {
+            try {
+                return gson.fromJson(resultSet.getString(COLUMN_STATS.getName()), new TypeToken<Map<String, JobStats>>(){}.getType());
+            }
+            catch (SQLException exception) {
+                exception.printStackTrace();
+            }
+            return null;
+        };
+
+        return this.load(this.tableUsers, function, Lists.newList(COLUMN_STATS), Lists.newList(SQLCondition.equal(COLUMN_USER_ID.toValue(playerId)))).orElse(new HashMap<>());
     }
 
     @NotNull

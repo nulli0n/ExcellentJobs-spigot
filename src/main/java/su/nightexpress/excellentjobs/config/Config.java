@@ -298,4 +298,12 @@ public class Config {
         "But keep in mind that only one personal booster per job can be active at the same time.",
         "If player already has a booster for as job, it will be replaced with a new one."
     );
+
+    public static boolean isStatisticEnabled() {
+        return STATISTIC_ENABLED.get();
+    }
+
+    public static boolean isSpecialOrdersEnabled() {
+        return SPECIAL_ORDERS_ENABLED.get();
+    }
 }
