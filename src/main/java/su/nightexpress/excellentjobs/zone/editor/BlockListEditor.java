@@ -9,20 +9,17 @@ import su.nightexpress.excellentjobs.zone.ZoneManager;
 import su.nightexpress.excellentjobs.zone.impl.BlockList;
 import su.nightexpress.excellentjobs.zone.impl.Zone;
 import su.nightexpress.nightcore.menu.MenuOptions;
+import su.nightexpress.nightcore.menu.MenuSize;
 import su.nightexpress.nightcore.menu.MenuViewer;
 import su.nightexpress.nightcore.menu.impl.EditorMenu;
 import su.nightexpress.nightcore.util.BukkitThing;
 import su.nightexpress.nightcore.util.ItemReplacer;
 import su.nightexpress.nightcore.util.Pair;
 
-import static su.nightexpress.excellentjobs.Placeholders.BLOCK_LIST_ID;
-import static su.nightexpress.nightcore.util.text.tag.Tags.BLACK;
-import static su.nightexpress.nightcore.util.text.tag.Tags.BLUE;
+public class BlockListEditor extends EditorMenu<JobsPlugin, Pair<Zone, BlockList>> {
 
-public class ZoneBlockListEditor extends EditorMenu<JobsPlugin, Pair<Zone, BlockList>> {
-
-    public ZoneBlockListEditor(@NotNull JobsPlugin plugin, @NotNull ZoneManager zoneManager) {
-        super(plugin, BLACK.enclose("Block List Editor [" + BLUE.enclose(BLOCK_LIST_ID) + "]"), 36);
+    public BlockListEditor(@NotNull JobsPlugin plugin, @NotNull ZoneManager zoneManager) {
+        super(plugin, Lang.EDITOR_TITLE_ZONE_BLOCK_SETTINGS.getString(), MenuSize.CHEST_36);
 
         this.addReturn(31, (viewer, event, pair) -> {
             this.runNextTick(() -> {
@@ -73,21 +70,19 @@ public class ZoneBlockListEditor extends EditorMenu<JobsPlugin, Pair<Zone, Block
         });
 
         this.getItems().forEach(menuItem -> menuItem.getOptions().addDisplayModifier((viewer, item) -> {
-            BlockList blockList = this.getObject(viewer).getSecond();
+            BlockList blockList = this.getLink(viewer).getSecond();
             ItemReplacer.replace(item, blockList.replacePlaceholders());
         }));
     }
 
     private void save(@NotNull MenuViewer viewer) {
-        this.editObject(viewer, pair -> pair.getFirst().save());
+        this.getLink(viewer).getFirst().save();
         this.runNextTick(() -> this.open(viewer));
     }
 
     @Override
     protected void onPrepare(@NotNull MenuViewer viewer, @NotNull MenuOptions options) {
-        this.editObject(viewer, pair -> {
-            options.setTitle(pair.getSecond().replacePlaceholders().apply(options.getTitle()));
-        });
+
     }
 
     @Override

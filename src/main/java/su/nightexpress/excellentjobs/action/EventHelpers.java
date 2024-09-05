@@ -99,11 +99,13 @@ public class EventHelpers {
         if (damageSource == damageResult) return false;
 
         Player player = (Player) event.getWhoClicked();
+        Material material = result.getType();
+
         plugin.runTask(task -> {
             ItemStack result2 = anvil.getItem(2);
             if (result2 != null && !result2.getType().isAir()) return;
 
-            processor.progressObjective(player, result.getType(), 1);
+            processor.progressObjective(player, material, 1);
         });
         return true;
     };

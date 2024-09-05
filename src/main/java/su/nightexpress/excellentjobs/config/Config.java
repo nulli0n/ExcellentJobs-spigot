@@ -2,9 +2,9 @@ package su.nightexpress.excellentjobs.config;
 
 import org.bukkit.GameMode;
 import org.bukkit.Material;
-import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.inventory.ItemStack;
 import su.nightexpress.excellentjobs.Placeholders;
 import su.nightexpress.excellentjobs.action.ActionTypes;
 import su.nightexpress.excellentjobs.booster.BoosterMultiplier;
@@ -13,6 +13,7 @@ import su.nightexpress.excellentjobs.booster.config.RankBoosterInfo;
 import su.nightexpress.excellentjobs.booster.config.TimedBoosterInfo;
 import su.nightexpress.excellentjobs.currency.handler.VaultEconomyHandler;
 import su.nightexpress.excellentjobs.job.impl.OrderReward;
+import su.nightexpress.excellentjobs.util.JobUtils;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.util.Lists;
 import su.nightexpress.nightcore.util.Plugins;
@@ -66,13 +67,6 @@ public class Config {
         GRAY.enclose(LIGHT_YELLOW.enclose(BOLD.enclose(JOB_NAME + " Job")) + " (Lv. " + WHITE.enclose(JOB_DATA_LEVEL) + ") | " + LIGHT_RED.enclose("+" + GENERIC_XP + " XP") + " | " + LIGHT_GREEN.enclose("+" + GENERIC_INCOME)),
         "Sets title for job progress bar.",
         "You can use 'Job' placeholders (not all of them): " + URL_WIKI_PLACEHOLDERS
-    );
-
-    @Deprecated
-    public static final ConfigValue<BarColor> GENERAL_PROGRESS_BAR_COLOR = ConfigValue.create("General.ProgressBar.Color",
-        BarColor.class, BarColor.GREEN,
-        "Sets color for job progress bar.",
-        "Allowed values: " + StringUtil.inlineEnum(BarColor.class, ", ")
     );
 
     public static final ConfigValue<BarStyle> GENERAL_PROGRESS_BAR_STYLE = ConfigValue.create("General.ProgressBar.Style",
@@ -138,22 +132,31 @@ public class Config {
     public static final ConfigValue<Boolean> ZONES_ENABLED = ConfigValue.create("Zones.Enabled",
         true,
         "Enables the Zones feature.",
-        "When disabled, all Zones commands & features will be unavailable.");
+        "When disabled, all zones related commands & features will be unavailable."
+    );
 
     public static final ConfigValue<Boolean> ZONES_STRICT_MODE = ConfigValue.create("Zones.Strict_Mode",
         false,
-        "When enabled, players will only get payments & Job XP when working inside Job Zones.");
+        "When enabled, players will only get payments & Job XP when working inside Job Zones."
+    );
 
     public static final ConfigValue<Boolean> ZONES_CONTROL_ENTRANCE = ConfigValue.create("Zones.Control_Entrance",
         true,
-        "When enabled, prevents players when entering zones currently available for them.",
+        "When enabled, prevents players from entering zones that are not available for them.",
         "Examples: When player don't have permission to specific zone; when current server time is out of zone open times, etc.",
-        "You can disable this setting if you're experiencing performance issues related to 'PlayerMoveEvent' from this plugin.",
-        "Even if disabled, it still won't allow players to have zone bonuses and the whole ability to work there unless all conditions are met.");
+        "You can disable this setting if you're experiencing performance issues related to the 'PlayerMoveEvent' from this plugin.",
+        "Even if disabled, it still won't allow players to have zone bonuses and the whole ability to work there unless all conditions are met."
+    );
+
+    public static final ConfigValue<ItemStack> ZONES_WAND_ITEM = ConfigValue.create("Zones.WandItem",
+        JobUtils.getDefaultZoneWand(),
+        "Item used to define zone's cuboid."
+    );
 
     public static final ConfigValue<Integer> ZONES_REGENERATION_TASK_INTERVAL = ConfigValue.create("Zones.RegenerationTask.Interval",
         5,
-        "Sets how often (in seconds) plugin will attempt to regnerate blocks in job zones.");
+        "Sets how often (in seconds) plugin will attempt to regnerate blocks in job zones."
+    );
 
     public static final ConfigValue<Boolean> SPECIAL_ORDERS_ENABLED = ConfigValue.create("SpecialOrders.Enabled",
         true,

@@ -16,6 +16,8 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.player.*;
+import org.bukkit.event.world.WorldLoadEvent;
+import org.bukkit.event.world.WorldUnloadEvent;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.api.currency.Currency;
@@ -30,19 +32,31 @@ import su.nightexpress.excellentjobs.zone.impl.BlockList;
 import su.nightexpress.excellentjobs.zone.impl.Zone;
 import su.nightexpress.nightcore.manager.AbstractListener;
 
-public class ZoneGenericListener extends AbstractListener<JobsPlugin> {
+public class GenericListener extends AbstractListener<JobsPlugin> {
 
-    private final ZoneManager zoneManager;
+    private final ZoneManager manager;
 
-    public ZoneGenericListener(@NotNull JobsPlugin plugin, @NotNull ZoneManager zoneManager) {
+    public GenericListener(@NotNull JobsPlugin plugin, @NotNull ZoneManager manager) {
         super(plugin);
-        this.zoneManager = zoneManager;
+        this.manager = manager;
+    }
+
+    @EventHandler(priority = EventPriority.NORMAL)
+    public void onWorldLoad(WorldLoadEvent event) {
+        World world = event.getWorld();
+        this.manager.getZones(world).forEach(zone -> zone.activate(world));
+    }
+
+    @EventHandler(priority = EventPriority.NORMAL)
+    public void onWorldUnload(WorldUnloadEvent event) {
+        World world = event.getWorld();
+        this.manager.getZones(world).forEach(zone -> zone.deactivate(world));
     }
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onZoneJobIncome(JobObjectiveIncomeEvent event) {
         Player player = event.getPlayer();
-        Zone zone = this.zoneManager.getZone(player);
+        Zone zone = this.manager.getZone(player);
         if (zone == null && Config.ZONES_STRICT_MODE.get()) {
             event.setCancelled(true);
             return;
@@ -69,7 +83,7 @@ public class ZoneGenericListener extends AbstractListener<JobsPlugin> {
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onZoneJobIncome(JobObjectiveXPEvent event) {
         Player player = event.getPlayer();
-        Zone zone = this.zoneManager.getZone(player);
+        Zone zone = this.manager.getZone(player);
         if ((zone == null && Config.ZONES_STRICT_MODE.get()) || (zone != null && !zone.isAvailable(player))) {
             event.setCancelled(true);
             return;
@@ -93,11 +107,11 @@ public class ZoneGenericListener extends AbstractListener<JobsPlugin> {
         Location from = event.getFrom();
         if (from.getX() == to.getX() && from.getY() == to.getY() && from.getZ() == to.getZ()) return;
 
-        Zone zone = this.zoneManager.getZoneByLocation(to);
+        Zone zone = this.manager.getZoneByLocation(to);
         if (zone == null) return;
 
         Player player = event.getPlayer();
-        if (!zone.isAvailable(player) && !this.zoneManager.isInZone(player)) {
+        if (!zone.isAvailable(player) && !this.manager.isInZone(player)) {
             event.setCancelled(true);
         }
     }
@@ -106,7 +120,7 @@ public class ZoneGenericListener extends AbstractListener<JobsPlugin> {
     public void onZoneEntityDamage(EntityDamageByEntityEvent event) {
         Entity attacker = event.getDamager();
         Entity victim = event.getEntity();
-        Zone zone = this.zoneManager.getZone(victim);
+        Zone zone = this.manager.getZone(victim);
         if (zone == null) return;
 
         Player damager;
@@ -135,7 +149,7 @@ public class ZoneGenericListener extends AbstractListener<JobsPlugin> {
         if (!(event.getRemover() instanceof Player player)) return;
         if (player.hasPermission(Perms.BYPASS_ZONE_PROTECTION)) return;
 
-        event.setCancelled(this.zoneManager.isInZone(player));
+        event.setCancelled(this.manager.isInZone(player));
     }
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
@@ -143,7 +157,7 @@ public class ZoneGenericListener extends AbstractListener<JobsPlugin> {
         if (event.getPlayer().hasPermission(Perms.BYPASS_ZONE_PROTECTION)) return;
 
         Block block = event.getBlock();
-        Zone zone = this.zoneManager.getZone(block);
+        Zone zone = this.manager.getZone(block);
         if (zone == null) return;
 
         event.setCancelled(true);
@@ -154,7 +168,7 @@ public class ZoneGenericListener extends AbstractListener<JobsPlugin> {
         if (event.getPlayer().hasPermission(Perms.BYPASS_ZONE_PROTECTION)) return;
 
         Block block = event.getBlock();
-        Zone zone = this.zoneManager.getZone(block);
+        Zone zone = this.manager.getZone(block);
         if (zone == null) return;
 
         Player player = event.getPlayer();
@@ -172,7 +186,7 @@ public class ZoneGenericListener extends AbstractListener<JobsPlugin> {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onZoneBlockBreak(BlockBreakEvent event) {
         Block block = event.getBlock();
-        Zone zone = this.zoneManager.getZone(block);
+        Zone zone = this.manager.getZone(block);
         if (zone == null) return;
 
         //Player player = event.getPlayer();
@@ -189,34 +203,22 @@ public class ZoneGenericListener extends AbstractListener<JobsPlugin> {
     }
 
     @EventHandler(priority = EventPriority.NORMAL)
-    public void onProtectionSignChange(PlayerInteractEvent event) {
-        Player player = event.getPlayer();
-        Action action = event.getAction();
+    public void onProtectionSignChangeAndBlockUsage(PlayerInteractEvent event) {
+        if (event.useInteractedBlock() == Event.Result.DENY) return;
 
-        Zone zone = this.zoneManager.getZone(player);
+        Action action = event.getAction();
+        if (action != Action.RIGHT_CLICK_BLOCK) return;
+
+        Block block = event.getClickedBlock();
+        if (block == null) return;
+
+        Player player = event.getPlayer();
+        if (player.hasPermission(Perms.BYPASS_ZONE_PROTECTION)) return;
+
+        Zone zone = this.manager.getZone(player);
         if (zone == null) return;
 
-//        if (event.useItemInHand() != Event.Result.DENY) {
-//            EquipmentSlot slot = event.getHand();
-//            if (slot == null) return;
-//
-//            ItemStack itemStack = player.getInventory().getItem(slot);
-//            if (itemStack == null || itemStack.getType().isAir()) return;
-//
-//            Material type = itemStack.getType();
-//            if (type == Material.WATER_BUCKET || type == Material.LAVA_BUCKET || type == Material.BUCKET) {
-//                event.setUseItemInHand(Event.Result.DENY);
-//            }
-//        }
-
-        if (event.useInteractedBlock() != Event.Result.DENY) {
-            if (action != Action.RIGHT_CLICK_BLOCK) return;
-
-            Block block = event.getClickedBlock();
-            if (block == null) return;
-
-            if (!(block.getState() instanceof Sign sign)) return;
-
+        if (block.getState() instanceof Sign sign || zone.isDisabledInteraction(block)) {
             event.setUseInteractedBlock(Event.Result.DENY);
         }
     }
@@ -240,24 +242,24 @@ public class ZoneGenericListener extends AbstractListener<JobsPlugin> {
         Player player = event.getPlayer();
         if (player.hasPermission(Perms.BYPASS_ZONE_PROTECTION)) return false;
 
-        Zone zone = this.zoneManager.getZone(player);
+        Zone zone = this.manager.getZone(player);
         return zone != null;
     }
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onBlockExplode(BlockExplodeEvent event) {
-        event.blockList().removeIf(block -> zoneManager.getZone(block) != null);
+        event.blockList().removeIf(block -> manager.getZone(block) != null);
     }
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onEntityExplode(EntityExplodeEvent event) {
-        event.blockList().removeIf(block -> zoneManager.getZone(block) != null);
+        event.blockList().removeIf(block -> manager.getZone(block) != null);
     }
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onEntityBlockForm(EntityBlockFormEvent event) {
         if (event.getEntity().hasPermission(Perms.BYPASS_ZONE_PROTECTION)) return;
-        if (this.zoneManager.isInZone(event.getBlock())) {
+        if (this.manager.isInZone(event.getBlock())) {
             event.setCancelled(true);
         }
     }
@@ -265,7 +267,7 @@ public class ZoneGenericListener extends AbstractListener<JobsPlugin> {
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onZoneBlockChange(EntityChangeBlockEvent event) {
         if (event.getEntity().hasPermission(Perms.BYPASS_ZONE_PROTECTION)) return;
-        if (this.zoneManager.isInZone(event.getBlock())) {
+        if (this.manager.isInZone(event.getBlock())) {
             event.setCancelled(true);
         }
     }

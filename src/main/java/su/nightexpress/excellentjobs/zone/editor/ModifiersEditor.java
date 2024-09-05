@@ -13,27 +13,22 @@ import su.nightexpress.excellentjobs.util.Modifier;
 import su.nightexpress.excellentjobs.zone.ZoneManager;
 import su.nightexpress.excellentjobs.zone.impl.Zone;
 import su.nightexpress.nightcore.menu.MenuOptions;
+import su.nightexpress.nightcore.menu.MenuSize;
 import su.nightexpress.nightcore.menu.MenuViewer;
 import su.nightexpress.nightcore.menu.api.AutoFill;
 import su.nightexpress.nightcore.menu.api.AutoFilled;
-import su.nightexpress.nightcore.menu.click.ClickAction;
 import su.nightexpress.nightcore.menu.impl.EditorMenu;
 import su.nightexpress.nightcore.util.ItemReplacer;
-import su.nightexpress.nightcore.util.Lists;
 
 import java.util.Comparator;
 import java.util.stream.IntStream;
 
-import static su.nightexpress.excellentjobs.Placeholders.ZONE_ID;
-import static su.nightexpress.nightcore.util.text.tag.Tags.BLACK;
-import static su.nightexpress.nightcore.util.text.tag.Tags.BLUE;
-
-public class ZoneModifiersEditor extends EditorMenu<JobsPlugin, Zone> implements AutoFilled<Currency> {
+public class ModifiersEditor extends EditorMenu<JobsPlugin, Zone> implements AutoFilled<Currency> {
 
     private final ZoneManager zoneManager;
 
-    public ZoneModifiersEditor(@NotNull JobsPlugin plugin, @NotNull ZoneManager zoneManager) {
-        super(plugin, BLACK.enclose("Zone Modifiers [" + BLUE.enclose(ZONE_ID) + "]"), 45);
+    public ModifiersEditor(@NotNull JobsPlugin plugin, @NotNull ZoneManager zoneManager) {
+        super(plugin, Lang.EDITOR_TITLE_ZONE_MODIFIER_LIST.getString(), MenuSize.CHEST_45);
         this.zoneManager = zoneManager;
 
         this.addNextPage(44);
@@ -41,6 +36,7 @@ public class ZoneModifiersEditor extends EditorMenu<JobsPlugin, Zone> implements
         this.addReturn(39, (viewer, event, zone) -> {
             this.runNextTick(() -> this.zoneManager.openEditor(viewer.getPlayer(), zone));
         });
+
         this.addCreation(Lang.EDITOR_ZONE_MODIFIER_CURRENCY_CREATE, 41, (viewer, event, zone) -> {
             this.handleInput(viewer, Lang.EDITOR_GENERIC_ENTER_CURRENCY, (dialog, input) -> {
                 Currency currency = this.plugin.getCurrencyManager().getCurrency(input.getTextRaw());
@@ -52,20 +48,16 @@ public class ZoneModifiersEditor extends EditorMenu<JobsPlugin, Zone> implements
             }).setSuggestions(plugin.getCurrencyManager().getCurrencyIds(), true);
         });
 
-        this.addItem(Material.EXPERIENCE_BOTTLE, Lang.EDITOR_ZONE_MODIFIER_XP_OBJECT, 37, (viewer, event, zone) -> {
-            this.getModifierClick(zone.getXPModifier()).onClick(viewer, event);
+        this.addItem(Material.EXPERIENCE_BOTTLE, Lang.EDITOR_ZONE_MODIFIER_XP_OBJECT, 4, (viewer, event, zone) -> {
+            this.runNextTick(() -> this.zoneManager.openModifierEditor(viewer.getPlayer(), zone, zone.getXPModifier()));
         }).getOptions().addDisplayModifier((viewer, item) -> {
-            Zone zone = this.getObject(viewer);
+            Zone zone = this.getLink(viewer);
             ItemReplacer.replace(item, zone.getXPModifier().replacePlaceholders());
         });
     }
 
     @Override
     protected void onPrepare(@NotNull MenuViewer viewer, @NotNull MenuOptions options) {
-        this.editObject(viewer, zone -> {
-            options.setTitle(zone.replacePlaceholders().apply(options.getTitle()));
-        });
-
         this.autoFill(viewer);
     }
 
@@ -77,9 +69,9 @@ public class ZoneModifiersEditor extends EditorMenu<JobsPlugin, Zone> implements
     @Override
     public void onAutoFill(@NotNull MenuViewer viewer, @NotNull AutoFill<Currency> autoFill) {
         Player player = viewer.getPlayer();
-        Zone zone = this.getObject(player);
+        Zone zone = this.getLink(player);
 
-        autoFill.setSlots(IntStream.range(0, 36).toArray());
+        autoFill.setSlots(IntStream.range(9, 36).toArray());
         autoFill.setItems(zone.getPaymentModifierMap().keySet().stream().sorted(Comparator.comparing(Currency::getId)).toList());
         autoFill.setItemCreator(currency -> {
             ItemStack item = new ItemStack(Material.GOLD_NUGGET);
@@ -104,36 +96,11 @@ public class ZoneModifiersEditor extends EditorMenu<JobsPlugin, Zone> implements
             if (event.getClick() == ClickType.DROP) {
                 zone.getPaymentModifierMap().remove(currency);
                 zone.save();
-                this.runNextTick(() -> this.open(viewer));
+                this.runNextTick(() -> this.flush(viewer));
                 return;
             }
 
-            this.getModifierClick(modifier).onClick(viewer, event);
+            this.runNextTick(() -> this.zoneManager.openModifierEditor(player, zone, modifier));
         });
-    }
-
-    @NotNull
-    private ClickAction getModifierClick(@NotNull Modifier modifier) {
-        return (viewer, event) -> {
-            this.editObject(viewer, zone -> {
-                if (event.isShiftClick() && event.isShiftClick()) {
-                    modifier.setAction(Lists.next(modifier.getAction()));
-                    zone.save();
-                    this.runNextTick(() -> this.open(viewer));
-                    return;
-                }
-
-                this.handleInput(viewer, Lang.EDITOR_GENERIC_ENTER_NUMBER, (dialog, input) -> {
-                    double value = input.asAnyDouble(0D);
-                    if (event.isShiftClick() && event.isLeftClick()) modifier.setStep(value);
-                    else if (event.isLeftClick()) modifier.setBase(value);
-                    else if (event.isRightClick()) modifier.setPerLevel(value);
-
-                    zone.save();
-
-                    return true;
-                });
-            });
-        };
     }
 }

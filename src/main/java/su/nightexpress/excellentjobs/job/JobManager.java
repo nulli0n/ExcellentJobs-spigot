@@ -368,7 +368,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
             if (!this.canGetMoreJobs(player, state)) {
                 Lang.JOB_JOIN_ERROR_LIMIT_STATE.getMessage()
                     .replace(Placeholders.GENERIC_AMOUNT, NumberUtil.format(getJobsLimit(player, state)))
-                    .replace(Placeholders.GENERIC_STATE, Lang.getJobState(state))
+                    .replace(Placeholders.GENERIC_STATE, Lang.JOB_STATE.getLocalized(state))
                     .replace(job.replacePlaceholders())
                     .send(player);
                 return false;
@@ -586,7 +586,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
 
             JobOrderData orderData = jobData.getOrderData();
             Label_Order:
-            if (!orderData.isEmpty()) {
+            if (jobData.hasOrder()) {
                 if (!orderData.isCompleted()) {
                     JobOrderObjective orderObjective = orderData.getObjectiveMap().get(jobObjective.getId());
                     if (orderObjective == null) break Label_Order;

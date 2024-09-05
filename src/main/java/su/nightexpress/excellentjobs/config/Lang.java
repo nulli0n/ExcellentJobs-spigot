@@ -1,9 +1,11 @@
 package su.nightexpress.excellentjobs.config;
 
 import org.bukkit.Sound;
-import org.jetbrains.annotations.NotNull;
 import su.nightexpress.excellentjobs.job.impl.JobState;
+import su.nightexpress.excellentjobs.util.report.ReportType;
+import su.nightexpress.excellentjobs.zone.command.ZoneCommands;
 import su.nightexpress.nightcore.core.CoreLang;
+import su.nightexpress.nightcore.language.entry.LangEnum;
 import su.nightexpress.nightcore.language.entry.LangItem;
 import su.nightexpress.nightcore.language.entry.LangString;
 import su.nightexpress.nightcore.language.entry.LangText;
@@ -15,11 +17,20 @@ import static su.nightexpress.nightcore.util.text.tag.Tags.*;
 
 public class Lang extends CoreLang {
 
+    public static final LangEnum<JobState> JOB_STATE = LangEnum.of("Job.State", JobState.class);
+
+    public static final LangString COMMAND_ARGUMENT_NAME_ZONE = LangString.of("Command.Argument.Name.Zone", "zone");
+
+    public static final LangString COMMAND_ZONE_DESC        = LangString.of("Command.Zone.Desc", "Zone commands.");
+    public static final LangString COMMAND_ZONE_CREATE_DESC = LangString.of("Command.Zone.Create.Desc", "Create a new zone from selection.");
+    public static final LangString COMMAND_ZONE_WAND_DESC   = LangString.of("Command.Zone.Wand.Desc", "Get zone selection tool.");
+    public static final LangString COMMAND_ZONE_EDITOR_DESC = LangString.of("Command.Zone.Editor.Desc", "Open zones editor.");
+
     public static final LangString COMMAND_STATS_DESC  = LangString.of("Command.Stats.Desc", "Show [player's] job stats.");
     public static final LangString COMMAND_STATS_USAGE = LangString.of("Command.Stats.Usage", "[player]");
 
     public static final LangText COMMAND_STATS_DISPLAY = LangText.of("Command.Stats.Display.Info",
-        NO_PREFIX.getFullName(),
+        TAG_NO_PREFIX,
         " ",
         LIGHT_YELLOW.enclose(ORANGE.enclose(PLAYER_NAME) + "'s Job Stats:"),
         " ",
@@ -49,7 +60,7 @@ public class Lang extends CoreLang {
     );
 
     public static final LangText COMMAND_BOOSTER_CREATE_NOTIFY = LangText.of("Command.Booster.Create.Notify.Info",
-        NO_PREFIX.getFullName() + SOUND.enclose(Sound.BLOCK_NOTE_BLOCK_BELL),
+        TAG_NO_PREFIX + SOUND.enclose(Sound.BLOCK_NOTE_BLOCK_BELL),
         " ",
         LIGHT_GRAY.enclose("You received a " + LIGHT_YELLOW.enclose(BOLD.enclose("Job Booster")) + "!"),
         " ",
@@ -172,7 +183,7 @@ public class Lang extends CoreLang {
         "List most levelled players.");
 
     public static final LangText COMMAND_TOP_LIST = LangText.of("Command.Top.List",
-        NO_PREFIX.getFullName(),
+        TAG_NO_PREFIX,
         " ",
         LIGHT_YELLOW.enclose(BOLD.enclose(JOB_NAME + " Level Top:")),
         " ",
@@ -185,12 +196,6 @@ public class Lang extends CoreLang {
     public static final LangString COMMAND_TOP_ENTRY = LangString.of("Command.Top.Entry",
         LIGHT_GRAY.enclose(LIGHT_YELLOW.enclose(GENERIC_POS + ". ") + PLAYER_NAME + ": " + LIGHT_YELLOW.enclose(GENERIC_AMOUNT) + " Levels")
     );
-
-    public static final LangString COMMAND_ZONE_DESC  = LangString.of("Command.Zone.Desc", "Zone commands.");
-    public static final LangString COMMAND_ZONE_USAGE = LangString.of("Command.Zone.Usage", "[help]");
-
-    public static final LangString COMMAND_ZONE_EDITOR_DESC = LangString.of("Command.Zone.Editor.Desc",
-        "Open zones editor.");
 
     public static final LangText BOOSTER_ERROR_INVALID = LangText.of("Booster.Error.Invalid",
         LIGHT_RED.enclose("Invalid booster!")
@@ -242,7 +247,7 @@ public class Lang extends CoreLang {
     );
 
     public static final LangText JOB_PAYMENT_RECEIPT = LangText.of("Job.Payment.Receipt.General",
-        NO_PREFIX.getFullName(),
+        TAG_NO_PREFIX,
         " ",
         LIGHT_YELLOW.enclose(BOLD.enclose("Work Payment for " + LIGHT_GREEN.enclose(GENERIC_TIME) + ":")),
         " ",
@@ -253,21 +258,11 @@ public class Lang extends CoreLang {
     );
 
     public static final LangString JOB_PAYMENT_RECEIPT_ENTRY_JOB = LangString.of("Job.Payment.Receipt.Entry.Job",
-        LIGHT_YELLOW.enclose(BOLD.enclose(JOB_NAME) + " " + HOVER.enclose("[" + LIGHT_GREEN.enclose("Details") + "]", GENERIC_CURRENCY))
+        LIGHT_YELLOW.enclose(BOLD.enclose(JOB_NAME) + " " + HOVER.encloseHint("[" + LIGHT_GREEN.enclose("Details") + "]", GENERIC_CURRENCY))
     );
 
     public static final LangString JOB_PAYMENT_RECEIPT_ENTRY_CURRENCY = LangString.of("Job.Payment.Receipt.Entry.Currency",
         LIGHT_GREEN.enclose(GENERIC_AMOUNT)
-    );
-
-    public static final LangText ZONE_NOT_AVAILABLE = LangText.of("Zone.Info.NotAvailable",
-        OUTPUT.enclose(OutputType.ACTION_BAR) +
-            RED.enclose("You can't work in this zone currently!")
-    );
-
-    public static final LangText ZONE_NO_PVP = LangText.of("Zone.Info.NoPvP",
-        OUTPUT.enclose(OutputType.ACTION_BAR) +
-            RED.enclose("PvP is disabled in this zone!")
     );
 
     public static final LangText SPECIAL_ORDER_ERROR_DISABLED_SERVER = LangText.of("SpecialOrder.Error.DisabledByServer",
@@ -292,7 +287,7 @@ public class Lang extends CoreLang {
         GRAY.enclose(LIGHT_RED.enclose("Whoops!") + " Unable to create Special Order."));
 
     public static final LangText SPECIAL_ORDER_TAKEN_INFO = LangText.of("SpecialOrder.Taken.Info",
-        NO_PREFIX.getFullName(),
+        TAG_NO_PREFIX,
         " ",
         LIGHT_YELLOW.enclose("You took a " + ORANGE.enclose("Special Order") + " for " + ORANGE.enclose(JOB_NAME) + " job!"),
         " ",
@@ -310,7 +305,7 @@ public class Lang extends CoreLang {
         LIGHT_YELLOW.enclose(ORANGE.enclose("▪ ") + GENERIC_NAME));
 
     public static final LangString SPECIAL_ORDER_TAKEN_ENTRY = LangString.of("SpecialOrder.Taken.Entry",
-        LIGHT_YELLOW.enclose(ORANGE.enclose("▪ ") + GENERIC_NAME + ": " + ORANGE.enclose("x" + GENERIC_AMOUNT) + " " + LIGHT_GREEN.enclose(HOVER.enclose("[Details]", GENERIC_ENTRY)))
+        LIGHT_YELLOW.enclose(ORANGE.enclose("▪ ") + GENERIC_NAME + ": " + ORANGE.enclose("x" + GENERIC_AMOUNT) + " " + LIGHT_GREEN.enclose(HOVER.encloseHint("[Details]", GENERIC_ENTRY)))
     );
 
     public static final LangString SPECIAL_ORDER_TAKEN_DETAIL = LangString.of("SpecialOrder.Taken.Detail",
@@ -357,7 +352,7 @@ public class Lang extends CoreLang {
     );
 
     public static final LangText BOOSTER_NOTIFY_GLOBAL = LangText.of("Booster.Notify.Global",
-        NO_PREFIX.getFullName() + SOUND.enclose(Sound.BLOCK_NOTE_BLOCK_BELL),
+        TAG_NO_PREFIX + SOUND.enclose(Sound.BLOCK_NOTE_BLOCK_BELL),
         "",
         LIGHT_YELLOW.enclose("Jobs Booster Activated!"),
         LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Jobs: ") + JOB_NAME),
@@ -368,7 +363,7 @@ public class Lang extends CoreLang {
     );
 
     public static final LangText BOOSTER_NOTIFY_TOTAL = LangText.of("Booster.Notify.Total",
-        NO_PREFIX.getFullName(),
+        TAG_NO_PREFIX,
         "",
         LIGHT_YELLOW.enclose("Hey! T"),
         LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Jobs: ") + JOB_NAME),
@@ -382,23 +377,64 @@ public class Lang extends CoreLang {
         LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose(CURRENCY_NAME + " Bonus: ") + "+" + CURRENCY_BOOST_PERCENT + "%")
     );
 
-    public static final LangString JOB_STATE_PRIMARY   = LangString.of("Job.State.Primary", "Primary");
-    public static final LangString JOB_STATE_SECONDARY = LangString.of("Job.State.Primary", "Secondary");
-    public static final LangString JOB_STATE_INACTIVE  = LangString.of("Job.State.Primary", "Inactive");
 
-    @NotNull
-    public static String getJobState(@NotNull JobState state) {
-        return (switch (state) {
-            case PRIMARY -> JOB_STATE_PRIMARY;
-            case SECONDARY -> JOB_STATE_SECONDARY;
-            case INACTIVE -> JOB_STATE_INACTIVE;
-        }).getString();
-    }
+    public static final LangText ZONE_NOT_AVAILABLE = LangText.of("Zone.Info.NotAvailable",
+        OUTPUT.enclose(OutputType.ACTION_BAR),
+        LIGHT_RED.enclose("You can't work in this zone currently!")
+    );
 
-    public static final LangItem EDITOR_ZONE_WAND_ITEM = LangItem.of("Editor.Zone.Item.Wand",
-        YELLOW.enclose(BOLD.enclose("Zone Cuboid Selector")),
-        LIGHT_GRAY.enclose(WHITE.enclose("Left-Click") + " to set 1st corner."),
-        LIGHT_GRAY.enclose(WHITE.enclose("Right-Click") + " to set 2nd corner."));
+    public static final LangText ZONE_NO_PVP = LangText.of("Zone.Info.NoPvP",
+        OUTPUT.enclose(OutputType.ACTION_BAR),
+        LIGHT_RED.enclose("PvP is disabled in this zone!")
+    );
+
+    public static final LangText ZONE_CREATE_SUCCESS = LangText.of("Zone.Creation.Success",
+        LIGHT_GRAY.enclose("Successfully created job zone: " + LIGHT_GREEN.enclose(ZONE_NAME) + "!")
+    );
+
+    public static final LangText ZONE_CREATE_INFO = LangText.of("Zone.Creation.Info",
+        LIGHT_GRAY.enclose("Select two corners and use " + LIGHT_GREEN.enclose("/" + ZoneCommands.DEF_ROOT_NAME + " " + ZoneCommands.DEF_CREATE_NAME) + " to create a new zone.")
+    );
+
+    public static final LangText ZONE_SELECTION_INFO = LangText.of("Zone.Selection.Info",
+        LIGHT_GRAY.enclose("Selected " + LIGHT_YELLOW.enclose("#" + GENERIC_VALUE) + " zone position.")
+    );
+
+    public static final LangText ZONE_ERROR_EXISTS = LangText.of("Zone.Error.AlreadyExists",
+        LIGHT_GRAY.enclose("Zone with name " + LIGHT_RED.enclose(GENERIC_NAME) + " is already created!")
+    );
+
+    public static final LangText ZONE_ERROR_NO_SELECTION = LangText.of("Zone.Error.NoSelection",
+        LIGHT_GRAY.enclose("You must select zone corners first: " + LIGHT_RED.enclose("/" + ZoneCommands.DEF_ROOT_NAME + " " + ZoneCommands.DEF_WAND_NAME))
+    );
+
+    public static final LangText ZONE_ERROR_INCOMPLETE_SELECTION = LangText.of("Zone.Error.IncompleteSelection",
+        LIGHT_GRAY.enclose("You must select 2 zone corners!")
+    );
+
+    public static final LangText ERROR_COMMAND_INVALID_ZONE_ARGUMENT = LangText.of("Error.Command.Argument.InvalidZone",
+        LIGHT_GRAY.enclose(LIGHT_RED.enclose(GENERIC_VALUE) + " is not a valid zone!")
+    );
+
+
+
+    public static final LangString EDITOR_TITLE_ZONES = LangString.of("Editor.Title.Zone.List",
+        BLACK.enclose("Job Zones"));
+
+    public static final LangString EDITOR_TITLE_ZONE_SETTINGS = LangString.of("Editor.Title.Zone.Settings",
+        BLACK.enclose("Zone Settings"));
+
+    public static final LangString EDITOR_TITLE_ZONE_BLOCK_LIST = LangString.of("Editor.Title.Zone.BlockList",
+        BLACK.enclose("Zone Block Lists"));
+
+    public static final LangString EDITOR_TITLE_ZONE_BLOCK_SETTINGS = LangString.of("Editor.Title.Zone.BlockSettings",
+        BLACK.enclose("Block List Settings"));
+
+    public static final LangString EDITOR_TITLE_ZONE_MODIFIER_LIST = LangString.of("Editor.Title.Zone.ModifierList",
+        BLACK.enclose("Zone Modifiers"));
+
+    public static final LangString EDITOR_TITLE_ZONE_MODIFIER_SETTINGS = LangString.of("Editor.Title.Zone.ModifierSettings",
+        BLACK.enclose("Modifier Settings"));
 
     public static final LangString EDITOR_GENERIC_ENTER_ID = LangString.of("Editor.Generic.Enter.Id",
         LIGHT_GRAY.enclose("Enter " + LIGHT_GREEN.enclose("[Unique Identifier]")));
@@ -408,6 +444,9 @@ public class Lang extends CoreLang {
 
     public static final LangString EDITOR_GENERIC_ENTER_NUMBER = LangString.of("Editor.Generic.Enter.Number",
         LIGHT_GRAY.enclose("Enter " + LIGHT_GREEN.enclose("[Number]")));
+
+    public static final LangString EDITOR_GENERIC_ENTER_MIN_MAX = LangString.of("Editor.Generic.Enter.MinMax",
+        LIGHT_GRAY.enclose("Enter " + LIGHT_GREEN.enclose("[Min] [Max]")));
 
     public static final LangString EDITOR_GENERIC_ENTER_TIMES = LangString.of("Editor.Generic.Enter.Times",
         LIGHT_GRAY.enclose("Enter " + LIGHT_GREEN.enclose("[Time1 Time2] [12:00 17:00]")));
@@ -424,92 +463,102 @@ public class Lang extends CoreLang {
     public static final LangString EDITOR_ZONE_ENTER_JOB_ID = LangString.of("Editor.Zone.Enter.JobId",
         LIGHT_GRAY.enclose("Enter " + LIGHT_GREEN.enclose("[Job Identifier]")));
 
-    public static final LangString EDITOR_ERROR_ZONE_EXIST = LangString.of("Editor.Error.Zone.Exist",
-        "Zone already exists!");
-
     public static final LangItem EDITOR_ZONE_OBJECT = LangItem.builder("Editor.Zone.Object")
-        .name(ZONE_NAME + RESET.enclose(GRAY.enclose(" (ID: " + WHITE.enclose(ZONE_ID) + ")")))
+        .name(ZONE_NAME + RESET.getBracketsName() + GRAY.enclose(" (ID: " + WHITE.enclose(ZONE_ID) + ")"))
         .text(ZONE_REPORT)
         .emptyLine()
-        .current("Job", ZONE_JOB_NAME)
+        .current("Linked Job", ZONE_JOB_NAME)
         .emptyLine()
         .leftClick("edit")
         .dragAndDrop("set icon")
-        .shiftRight("delete " + RED.enclose("(no undo)"))
+        .shiftRight("delete " + LIGHT_RED.enclose("(no undo)"))
         .build();
 
     public static final LangItem EDITOR_ZONE_CREATE = LangItem.builder("Editor.Zone.Create")
         .name("New Zone")
-        .text("Click to create a new zone.").build();
+        .click("create a zone")
+        .build();
 
     public static final LangItem EDITOR_ZONE_SELECTION = LangItem.builder("Editor.Zone.Selection")
         .name("Selection")
-        .text(ZONE_INSPECT_SELECTION)
+        .text(ZONE_INSPECT.apply(ReportType.ZONE_SELECTION))
         .emptyLine()
-        .text("Sets zone cuboid arena.")
+        .text("Sets zone bounds (with a cuboid shape).")
         .emptyLine()
-        .leftClick("get a wand").build();
+        .click("get a wand").build();
 
     public static final LangItem EDITOR_ZONE_NAME = LangItem.builder("Editor.Zone.Name")
-        .name("Name")
-        .text("Zone display name.")
+        .name("Display Name")
+        .current("Current", ZONE_NAME)
         .emptyLine()
-        .currentHeader().current("Name", ZONE_NAME + GRAY.enclose(" (" + WHITE.enclose(LangItem.LMB) + ")"))
+        .click("change")
         .build();
 
     public static final LangItem EDITOR_ZONE_DESCRIPTION = LangItem.builder("Editor.Zone.Description")
         .name("Description")
-        .text("Zone description.")
-        .emptyLine()
-        .currentHeader().textRaw(ZONE_DESCRIPTION)
+        .textRaw(ZONE_DESCRIPTION)
         .emptyLine()
         .leftClick("add line")
         .rightClick("remove latest")
-        .dropKey("clear list")
+        .dropKey("clear all")
         .build();
 
     public static final LangItem EDITOR_ZONE_LINKED_JOB = LangItem.builder("Editor.Zone.LinkedJob")
         .name("Linked Job")
-        .text(ZONE_INSPECT_JOB)
+        .textRaw(ZONE_INSPECT.apply(ReportType.ZONE_JOB))
         .emptyLine()
-        .text("Sets job linked to this zone.")
+        .current("Current", ZONE_JOB_NAME)
         .emptyLine()
-        .currentHeader().current("Job", ZONE_JOB_NAME + GRAY.enclose(" (" + WHITE.enclose(LangItem.LMB) + ")"))
+        .text("Links job with the zone.")
+        .emptyLine()
+        .click("change")
         .build();
 
     public static final LangItem EDITOR_ZONE_JOB_LEVEL = LangItem.builder("Editor.Zone.JobLevel")
         .name("Job Levels")
-        .text("Sets job levels required to be", "able to access this zone.")
+        .current("Min", ZONE_JOB_MIN_LEVEL)
+        .current("Max", ZONE_JOB_MAX_LEVEL)
         .emptyLine()
-        .currentHeader()
-        .current("Min", ZONE_JOB_MIN_LEVEL + GRAY.enclose(" (" + WHITE.enclose(LangItem.LMB) + ")"))
-        .current("Max", ZONE_JOB_MAX_LEVEL + GRAY.enclose(" (" + WHITE.enclose(LangItem.RMB) + ")"))
+        .text("Sets job levels required to", "have access to this zone.")
         .emptyLine()
+        .click("change")
         .dropKey("disable")
         .build();
 
     public static final LangItem EDITOR_ZONE_PERMISSION_REQUIRED = LangItem.builder("Editor.Zone.PermissionRequired")
-        .name("Permission Required")
-        .text("Sets whether or not players", "must have permission to", "access this zone.")
-        .emptyLine()
-        .currentHeader()
-        .current("Enabled", ZONE_PERMISSION_REQUIRED + GRAY.enclose(" (" + WHITE.enclose(LangItem.LMB) + ")"))
+        .name("Permission Requirement")
+        .current("Enabled", ZONE_PERMISSION_REQUIRED)
         .current("Node", ZONE_PERMISSION)
+        .emptyLine()
+        .text("Sets whether or not players", "must have permission to", "have access to this zone.")
+        .emptyLine()
+        .click("toggle")
         .build();
 
     public static final LangItem EDITOR_ZONE_PVP_ALLOWED = LangItem.builder("Editor.Zone.PvPAllowed")
         .name("PvP Allowed")
+        .current("Enabled", ZONE_PVP_ALLOWED)
+        .emptyLine()
         .text("Sets whether or not players", "can damage each other in", "this zone.")
         .emptyLine()
-        .currentHeader()
-        .current("Enabled", ZONE_PVP_ALLOWED + GRAY.enclose(" (" + WHITE.enclose(LangItem.LMB) + ")"))
+        .click("toggle")
+        .build();
+
+    public static final LangItem EDITOR_ZONE_DISABLED_BLOCKS = LangItem.builder("Editor.Zone.DisabledBlockInteractions")
+        .name("Disabled Block Interactions")
+        .textRaw(ZONE_DISABLED_BLOCK_INTERACTIONS)
+        .emptyLine()
+        .text("Prevents players from interacting", "with specified block types.")
+        .emptyLine()
+        .leftClick("add block")
+        .dropKey("remove all")
         .build();
 
     public static final LangItem EDITOR_ZONE_OPEN_TIMES = LangItem.builder("Editor.Zone.OpenTimes")
         .name("Open Times")
         .text("Sets day times when this zone", "is available for players.")
         .emptyLine()
-        .leftClick("navigate")
+        .click("navigate")
         .dropKey("disable")
         .build();
 
@@ -517,7 +566,7 @@ public class Lang extends CoreLang {
         .name("Modifiers")
         .text("Adjust amount of job XP & payments", "players get when working", "in this zone.")
         .emptyLine()
-        .leftClick("navigate")
+        .click("navigate")
         .build();
 
     public static final LangItem EDITOR_ZONE_TIME_OBJECT = LangItem.builder("Editor.Zone.Time.Object")
@@ -526,34 +575,82 @@ public class Lang extends CoreLang {
         .emptyLine()
         .leftClick("add time")
         .rightClick("remove latest")
-        .dropKey("clear all")
+        .dropKey("remove all")
         .build();
 
     public static final LangItem EDITOR_ZONE_MODIFIER_CURRENCY_CREATE = LangItem.builder("Editor.Zone.Modifier.Currency_Create")
-        .name("New Currency Modifier").build();
+        .name("New Currency Modifier")
+        .build();
 
     public static final LangItem EDITOR_ZONE_MODIFIER_XP_OBJECT = LangItem.builder("Editor.Zone.Modifier.XP_Object")
         .name("Job XP Modifier")
-        .text("Adjusts job XP amount a player", "can get for their work", "in this zone.").emptyLine()
-        .text("Final value should be plain multipier.", "Like: 0.5 = +50%, -0.25 = -25%.").emptyLine()
-        .currentHeader()
-        .current("Base Modifier", MODIFIER_BASE + GRAY.enclose(" (" + WHITE.enclose(LangItem.LMB) + ")"))
-        .current("Per Job Level", MODIFIER_PER_LEVEL + GRAY.enclose(" (" + WHITE.enclose(LangItem.RMB) + ")"))
-        .current("Level Step", MODIFIER_STEP + GRAY.enclose(" (" + WHITE.enclose(LangItem.SHIFT_LMB) + ")"))
-        .current("Action", MODIFIER_ACTION + GRAY.enclose(" (" + WHITE.enclose(LangItem.SHIFT_RMB) + ")"))
+        .current("Base Value", MODIFIER_BASE)
+        .current("Per Job Level", MODIFIER_PER_LEVEL)
+        .current("Level Step", MODIFIER_STEP)
+        .current("Action", MODIFIER_ACTION)
+        .emptyLine()
+        .text("Adjusts job XP amount a player", "can get for their work in this zone.")
+        .emptyLine()
+        .text("Final value should be plain multipier:")
+        .text(LIGHT_YELLOW.enclose("0.5") + " = " + LIGHT_GREEN.enclose("+50%"))
+        .text(LIGHT_YELLOW.enclose("-0.25") + " = " + LIGHT_RED.enclose("-25%"))
+        .emptyLine()
+        .click("edit")
         .build();
 
     public static final LangItem EDITOR_ZONE_MODIFIER_CURRENCY_OBJECT = LangItem.builder("Editor.Zone.Modifier.Currency_Object")
         .name(CURRENCY_NAME + " Payment Modifier")
-        .text("Adjusts payment amount for this", "currency a player can get", "for their work in", "this zone.").emptyLine()
-        .text("Final value should be plain multipier.", "Like: 0.5 = +50%, -0.25 = -25%.").emptyLine()
-        .currentHeader()
-        .current("Base Modifier", MODIFIER_BASE + GRAY.enclose(" (" + WHITE.enclose(LangItem.LMB) + ")"))
-        .current("Per Job Level", MODIFIER_PER_LEVEL + GRAY.enclose(" (" + WHITE.enclose(LangItem.RMB) + ")"))
-        .current("Level Step", MODIFIER_STEP + GRAY.enclose(" (" + WHITE.enclose(LangItem.SHIFT_LMB) + ")"))
-        .current("Action", MODIFIER_ACTION + GRAY.enclose(" (" + WHITE.enclose(LangItem.SHIFT_RMB) + ")"))
+        .current("Base Value", MODIFIER_BASE)
+        .current("Per Job Level", MODIFIER_PER_LEVEL)
+        .current("Level Step", MODIFIER_STEP)
+        .current("Action", MODIFIER_ACTION)
         .emptyLine()
-        .dropKey("delete " + RED.enclose("(no undo)"))
+        .text("Adjusts " + LIGHT_YELLOW.enclose(CURRENCY_NAME) + " amount a player", "can get for their work in this zone.")
+        .emptyLine()
+        .text("Final value should be plain multipier:")
+        .text(LIGHT_YELLOW.enclose("0.5") + " = " + LIGHT_GREEN.enclose("+50%"))
+        .text(LIGHT_YELLOW.enclose("-0.25") + " = " + LIGHT_RED.enclose("-25%"))
+        .emptyLine()
+        .click("edit")
+        .dropKey("delete " + LIGHT_RED.enclose("(no undo)"))
+        .build();
+
+    public static final LangItem EDITOR_MODIFIER_BASE = LangItem.builder("Editor.Modifier.Base")
+        .name("Base Value")
+        .current("Current", MODIFIER_BASE)
+        .emptyLine()
+        .text("Base (start) modifier value.")
+        .emptyLine()
+        .click("change")
+        .build();
+
+    public static final LangItem EDITOR_MODIFIER_PER_LEVEL = LangItem.builder("Editor.Modifier.PerLevel")
+        .name("Per Level Value")
+        .current("Current", MODIFIER_PER_LEVEL)
+        .emptyLine()
+        .text("The number increases by itself", "for each " + LIGHT_YELLOW.enclose("<Step>") + " job levels.")
+        .emptyLine()
+        .text("Where " + LIGHT_YELLOW.enclose("<Step>") + " is the " + LIGHT_YELLOW.enclose("Level Step") + ".")
+        .emptyLine()
+        .click("change")
+        .build();
+
+    public static final LangItem EDITOR_MODIFIER_STEP = LangItem.builder("Editor.Modifier.Step")
+        .name("Level Step")
+        .current("Current", MODIFIER_STEP)
+        .emptyLine()
+        .text("Determines how often " + LIGHT_YELLOW.enclose("Per Level Value"), "should increase in job levels.")
+        .emptyLine()
+        .click("change")
+        .build();
+
+    public static final LangItem EDITOR_MODIFIER_ACTION = LangItem.builder("Editor.Modifier.Action")
+        .name("Action")
+        .current("Current", MODIFIER_ACTION)
+        .emptyLine()
+        .text("Determines math action", "between " + LIGHT_YELLOW.enclose("Base") + " and " + LIGHT_YELLOW.enclose("Per Level") + " values.")
+        .emptyLine()
+        .click("toggle")
         .build();
 
     public static final LangItem EDITOR_ZONE_BLOCK_LISTS = LangItem.builder("Editor.Zone.BlockLists")
@@ -562,19 +659,19 @@ public class Lang extends CoreLang {
         .text("allowed for breaking by players")
         .text("and with regeneration interval.")
         .emptyLine()
-        .leftClick("navigate")
+        .click("navigate")
         .build();
 
     public static final LangItem EDITOR_ZONE_BLOCK_LIST_CREATE = LangItem.builder("Editor.Zone.BlockList.Create")
         .name("New Block List").build();
 
     public static final LangItem EDITOR_ZONE_BLOCK_LIST_OBJECT = LangItem.builder("Editor.Zone.BlockList.Object")
-        .name("Block List: " + RESET.enclose(WHITE.enclose(BLOCK_LIST_ID)))
-        .text(YELLOW.enclose(BOLD.enclose("Blocks:")))
+        .name("Block List: " + RESET.getBracketsName() + WHITE.enclose(BLOCK_LIST_ID))
+        .text(LIGHT_YELLOW.enclose(BOLD.enclose("Blocks:")))
         .textRaw(BLOCK_LIST_MATERIALS)
         .emptyLine()
-        .leftClick("edit")
-        .shiftRight("delete " + RED.enclose("(no undo)"))
+        .click("edit")
+        .shiftRight("delete " + LIGHT_RED.enclose("(no undo)"))
         .build();
 
     public static final LangItem EDITOR_ZONE_BLOCK_LIST_MATERIALS = LangItem.builder("Editor.Zone.BlockList.Materials")
@@ -610,6 +707,6 @@ public class Lang extends CoreLang {
         .emptyLine()
         .textRaw(BLOCK_LIST_DROP_ITEMS)
         .emptyLine()
-        .leftClick("toggle")
+        .click("toggle")
         .build();
 }

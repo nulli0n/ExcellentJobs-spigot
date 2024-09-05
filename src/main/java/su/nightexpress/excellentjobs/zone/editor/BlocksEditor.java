@@ -11,6 +11,7 @@ import su.nightexpress.excellentjobs.zone.ZoneManager;
 import su.nightexpress.excellentjobs.zone.impl.BlockList;
 import su.nightexpress.excellentjobs.zone.impl.Zone;
 import su.nightexpress.nightcore.menu.MenuOptions;
+import su.nightexpress.nightcore.menu.MenuSize;
 import su.nightexpress.nightcore.menu.MenuViewer;
 import su.nightexpress.nightcore.menu.api.AutoFill;
 import su.nightexpress.nightcore.menu.api.AutoFilled;
@@ -23,16 +24,12 @@ import su.nightexpress.nightcore.util.random.Rnd;
 import java.util.Comparator;
 import java.util.stream.IntStream;
 
-import static su.nightexpress.excellentjobs.Placeholders.ZONE_ID;
-import static su.nightexpress.nightcore.util.text.tag.Tags.BLACK;
-import static su.nightexpress.nightcore.util.text.tag.Tags.BLUE;
-
-public class ZoneBlocksEditor extends EditorMenu<JobsPlugin, Zone> implements AutoFilled<BlockList> {
+public class BlocksEditor extends EditorMenu<JobsPlugin, Zone> implements AutoFilled<BlockList> {
 
     private final ZoneManager zoneManager;
 
-    public ZoneBlocksEditor(@NotNull JobsPlugin plugin, @NotNull ZoneManager zoneManager) {
-        super(plugin, BLACK.enclose("Zone Blocks [" + BLUE.enclose(ZONE_ID) + "]"), 45);
+    public BlocksEditor(@NotNull JobsPlugin plugin, @NotNull ZoneManager zoneManager) {
+        super(plugin, Lang.EDITOR_TITLE_ZONE_BLOCK_LIST.getString(), MenuSize.CHEST_45);
         this.zoneManager = zoneManager;
 
         this.addNextPage(44);
@@ -55,10 +52,6 @@ public class ZoneBlocksEditor extends EditorMenu<JobsPlugin, Zone> implements Au
     @Override
     protected void onPrepare(@NotNull MenuViewer viewer, @NotNull MenuOptions options) {
         this.autoFill(viewer);
-
-        this.editObject(viewer, zone -> {
-            options.setTitle(zone.replacePlaceholders().apply(options.getTitle()));
-        });
     }
 
     @Override
@@ -69,7 +62,7 @@ public class ZoneBlocksEditor extends EditorMenu<JobsPlugin, Zone> implements Au
     @Override
     public void onAutoFill(@NotNull MenuViewer viewer, @NotNull AutoFill<BlockList> autoFill) {
         Player player = viewer.getPlayer();
-        Zone zone = this.getObject(player);
+        Zone zone = this.getLink(player);
 
         autoFill.setSlots(IntStream.range(0, 36).toArray());
         autoFill.setItems(zone.getBlockListMap().values().stream().sorted(Comparator.comparing(BlockList::getId)).toList());

@@ -32,7 +32,7 @@ public class JobOrderObjective {
     }
 
     public boolean countObject(@NotNull String id, int amount) {
-        JobOrderCount count = this.objectCountMap.get(id.toLowerCase());
+        JobOrderCount count = this.getCount(id);
         if (count == null) return false;
 
         int required = count.getRequired();

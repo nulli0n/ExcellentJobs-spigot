@@ -7,6 +7,7 @@ import su.nightexpress.excellentjobs.booster.BoosterManager;
 import su.nightexpress.excellentjobs.command.base.*;
 import su.nightexpress.excellentjobs.command.booster.BoosterCommand;
 import su.nightexpress.excellentjobs.config.Config;
+import su.nightexpress.excellentjobs.config.Keys;
 import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.config.Perms;
 import su.nightexpress.excellentjobs.currency.CurrencyManager;
@@ -47,6 +48,8 @@ public class JobsPlugin extends NightDataPlugin<JobUser> {
 
     @Override
     public void enable() {
+        Keys.load(this);
+
         this.registerCommands();
 
         this.currencyManager = new CurrencyManager(this);

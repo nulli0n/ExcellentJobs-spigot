@@ -36,6 +36,9 @@ public class Perms {
     public static final UniPermission COMMAND_TOP          = new UniPermission(PREFIX_COMMAND + "top");
     public static final UniPermission COMMAND_RELOAD       = new UniPermission(PREFIX_COMMAND + "reload");
     public static final UniPermission COMMAND_ZONE         = new UniPermission(PREFIX_COMMAND + "zone");
+    public static final UniPermission COMMAND_ZONE_CREATE  = new UniPermission(PREFIX_COMMAND + "zone.create");
+    public static final UniPermission COMMAND_ZONE_WAND    = new UniPermission(PREFIX_COMMAND + "zone.wand");
+    public static final UniPermission COMMAND_ZONE_EDITOR  = new UniPermission(PREFIX_COMMAND + "zone.editor");
 
     public static final UniPermission BYPASS_ZONE_ACCESS            = new UniPermission(PREFIX_BYPASS + "zone.access");
     public static final UniPermission BYPASS_ZONE_PROTECTION        = new UniPermission(PREFIX_BYPASS + "zone.protection");
@@ -58,13 +61,17 @@ public class Perms {
             COMMAND_SET_STATE,
             COMMAND_BOOSTER,
             COMMAND_STATS, COMMAND_STATS_OTHERS,
-            COMMAND_ZONE
+            COMMAND_ZONE,
+            COMMAND_ZONE_CREATE,
+            COMMAND_ZONE_EDITOR,
+            COMMAND_ZONE_WAND
         );
 
         BYPASS.addChildren(
             BYPASS_ZONE_ACCESS,
             BYPASS_ZONE_PROTECTION,
-            BYPASS_JOB_LIMIT_CURRENCY, BYPASS_JOB_LIMIT_XP,
+            BYPASS_JOB_LIMIT_CURRENCY,
+            BYPASS_JOB_LIMIT_XP,
             BYPASS_OBJECTIVE_UNLOCK_LEVEL
         );
     }

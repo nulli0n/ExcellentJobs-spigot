@@ -233,7 +233,7 @@ public class JobMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
                 LIGHT_GRAY.enclose("Note: all job progress will"),
                 LIGHT_GRAY.enclose("be lost " + LIGHT_RED.enclose("forever") + "!"),
                 " ",
-                LIGHT_RED.enclose("[▶] " + LIGHT_GRAY.enclose("Click to " + LIGHT_RED.enclose("leave") + LIGHT_GRAY.enclose(".")))
+                LIGHT_RED.enclose("[▶] " + LIGHT_GRAY.enclose("Click to " + LIGHT_RED.enclose("leave") + "."))
             ));
         });
         list.add(new MenuItem(leaveItem).setPriority(10).setSlots(16).setHandler(this.leaveHandler));
@@ -253,7 +253,7 @@ public class JobMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
             "",
             LIGHT_ORANGE.enclose(BOLD.enclose("Cost: ") + LIGHT_RED.enclose(GENERIC_CURRENCY)),
             "",
-            LIGHT_ORANGE.enclose("[▶] " + LIGHT_GRAY.enclose("Click to ") + "get order" + LIGHT_GRAY.enclose("."))
+            LIGHT_ORANGE.enclose("[▶] " + LIGHT_GRAY.enclose("Click to " + LIGHT_ORANGE.enclose("get order") + "."))
         )).read(cfg);
 
         this.orderCooldownLore = ConfigValue.create("Format.SpecialOrder.Cooldown", Lists.newList(

@@ -1,7 +1,9 @@
 package su.nightexpress.excellentjobs.config;
 
 import org.bukkit.NamespacedKey;
+import org.jetbrains.annotations.NotNull;
 import su.nightexpress.excellentjobs.JobsAPI;
+import su.nightexpress.excellentjobs.JobsPlugin;
 
 public class Keys {
 
@@ -11,5 +13,11 @@ public class Keys {
 
     public static final NamespacedKey LEVEL_FIREWORK = new NamespacedKey(JobsAPI.PLUGIN, "job.firework");
 
-    public static final NamespacedKey WAND_ITEM_ZONE_ID = new NamespacedKey(JobsAPI.PLUGIN, "wand_item.zone_id");
+    public static NamespacedKey wandItem;
+    public static NamespacedKey wandZoneId;
+
+    public static void load(@NotNull JobsPlugin plugin) {
+        wandItem = new NamespacedKey(plugin, "wand.item");
+        wandZoneId = new NamespacedKey(plugin, "wand.zone_id");
+    }
 }

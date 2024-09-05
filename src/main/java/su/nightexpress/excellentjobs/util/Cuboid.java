@@ -2,6 +2,7 @@ package su.nightexpress.excellentjobs.util;
 
 import org.bukkit.Location;
 import org.jetbrains.annotations.NotNull;
+import su.nightexpress.excellentjobs.util.pos.BlockPos;
 
 public class Cuboid {
 
@@ -9,27 +10,27 @@ public class Cuboid {
     private final BlockPos max;
     private final BlockPos center;
 
-    public Cuboid(@NotNull BlockPos first, @NotNull BlockPos second) {
-        int minX = (int) Math.min(first.getX(), second.getX());
-        int minY = (int) Math.min(first.getY(), second.getY());
-        int minZ = (int) Math.min(first.getZ(), second.getZ());
+    public Cuboid(@NotNull BlockPos min, @NotNull BlockPos max) {
+        int minX = Math.min(min.getX(), max.getX());
+        int minY = Math.min(min.getY(), max.getY());
+        int minZ = Math.min(min.getZ(), max.getZ());
 
-        int maxX = (int) Math.max(first.getX(), second.getX());
-        int maxY = (int) Math.max(first.getY(), second.getY());
-        int maxZ = (int) Math.max(first.getZ(), second.getZ());
+        int maxX = Math.max(min.getX(), max.getX());
+        int maxY = Math.max(min.getY(), max.getY());
+        int maxZ = Math.max(min.getZ(), max.getZ());
 
         this.min = new BlockPos(minX, minY, minZ);
         this.max = new BlockPos(maxX, maxY, maxZ);
 
-        double cx = minX + (maxX - minX) / 2D;
-        double cy = minY + (maxY - minY) / 2D;
-        double cz = minZ + (maxZ - minZ) / 2D;
+        int cx = (int) (minX + (maxX - minX) / 2D);
+        int cy = (int) (minY + (maxY - minY) / 2D);
+        int cz = (int) (minZ + (maxZ - minZ) / 2D);
 
         this.center = new BlockPos(cx, cy, cz);
     }
 
     public boolean isEmpty() {
-        return this.getMin().isEmpty() || this.getMax().isEmpty();
+        return this.getMin().isEmpty() && this.getMax().isEmpty();
     }
 
     public boolean contains(@NotNull Location location) {
@@ -37,13 +38,29 @@ public class Cuboid {
     }
 
     public boolean contains(@NotNull BlockPos pos) {
-        int x = (int) pos.getX();
-        int y = (int) pos.getY();
-        int z = (int) pos.getZ();
+        int x = pos.getX();
+        int y = pos.getY();
+        int z = pos.getZ();
 
-        return x >= (int) min.getX() && x <= (int) max.getX() &&
-            y >= (int) min.getY() && y <= (int) max.getY() &&
-            z >= (int) min.getZ() && z <= (int) max.getZ();
+        return x >= min.getX() && x <= max.getX() &&
+            y >= min.getY() && y <= max.getY() &&
+            z >= min.getZ() && z <= max.getZ();
+    }
+
+    public boolean isIntersectingWith(@NotNull Cuboid other) {
+        return other.includedIn(this) || this.includedIn(other);
+    }
+
+    boolean checkIntersect(float min1, float max1, float min2, float max2) {
+        return min1 <= max2 && max1 >= min2;
+    }
+
+    public boolean includedIn(@NotNull Cuboid other) {
+        if (!this.checkIntersect(this.min.getX(), this.max.getX(), other.getMin().getX(), other.getMax().getX())) return false;
+        if (!this.checkIntersect(this.min.getY(), this.max.getY(), other.getMin().getY(), other.getMax().getY())) return false;
+        if (!this.checkIntersect(this.min.getZ(), this.max.getZ(), other.getMin().getZ(), other.getMax().getZ())) return false;
+
+        return true;
     }
 
     @NotNull

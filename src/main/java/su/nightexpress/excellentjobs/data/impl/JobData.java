@@ -67,7 +67,7 @@ public class JobData implements Placeholder {
         }
 
         this.placeholderMap = new PlaceholderMap(job.getPlaceholders())
-            .add(Placeholders.JOB_DATA_STATE, () -> Lang.getJobState(this.getState()))
+            .add(Placeholders.JOB_DATA_STATE, () -> Lang.JOB_STATE.getLocalized(this.getState()))
             .add(Placeholders.JOB_DATA_LEVEL, () -> NumberUtil.format(this.getLevel()))
             .add(Placeholders.JOB_DATA_LEVEL_MAX, () -> NumberUtil.format(this.getMaxLevel()))
             .add(Placeholders.JOB_DATA_XP, () -> NumberUtil.format(this.getXP()))

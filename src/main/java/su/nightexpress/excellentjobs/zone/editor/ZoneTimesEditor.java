@@ -8,7 +8,6 @@ import org.jetbrains.annotations.NotNull;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.util.JobUtils;
-import su.nightexpress.excellentjobs.util.Report;
 import su.nightexpress.excellentjobs.zone.ZoneManager;
 import su.nightexpress.excellentjobs.zone.impl.Zone;
 import su.nightexpress.nightcore.menu.MenuOptions;
@@ -80,7 +79,7 @@ public class ZoneTimesEditor extends EditorMenu<JobsPlugin, Zone> implements Aut
             int index = day.ordinal() + 1;
             Zone zone = this.getObject(player);
             List<String> times = zone.getOpenTimes(day).stream()
-                .map(pair -> Report.good(pair.getFirst().format(DateTimeFormatter.ISO_LOCAL_TIME) + " - " + pair.getSecond().format(DateTimeFormatter.ISO_LOCAL_TIME)))
+                .map(pair -> good(pair.getFirst().format(DateTimeFormatter.ISO_LOCAL_TIME) + " - " + pair.getSecond().format(DateTimeFormatter.ISO_LOCAL_TIME)))
                 .toList();
 
             ItemStack item = ItemUtil.getSkinHead(DAY_TEXTURES.get(index));

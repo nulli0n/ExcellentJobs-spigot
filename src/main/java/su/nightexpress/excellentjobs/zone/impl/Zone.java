@@ -12,14 +12,17 @@ import org.jetbrains.annotations.Nullable;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.Placeholders;
 import su.nightexpress.excellentjobs.api.currency.Currency;
-import su.nightexpress.excellentjobs.config.Keys;
-import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.config.Perms;
 import su.nightexpress.excellentjobs.data.impl.JobData;
 import su.nightexpress.excellentjobs.data.impl.JobUser;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.job.impl.JobState;
-import su.nightexpress.excellentjobs.util.*;
+import su.nightexpress.excellentjobs.util.Cuboid;
+import su.nightexpress.excellentjobs.util.JobUtils;
+import su.nightexpress.excellentjobs.util.Modifier;
+import su.nightexpress.excellentjobs.util.pos.BlockPos;
+import su.nightexpress.excellentjobs.util.report.Report;
+import su.nightexpress.excellentjobs.util.report.Reports;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.manager.AbstractFileData;
@@ -34,47 +37,50 @@ import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-public class Zone extends AbstractFileData<JobsPlugin> implements Placeholder, Inspectable {
+public class Zone extends AbstractFileData<JobsPlugin> implements Placeholder {
 
     private final Map<DayOfWeek, List<Pair<LocalTime, LocalTime>>> openTimes;
     private final Map<String, BlockList>                           blockListMap;
     private final Map<Currency, Modifier>                          paymentModifierMap;
+    private final Report report;
     private final PlaceholderMap                                   placeholderMap;
 
-    private World    world;
-    private Cuboid   cuboid;
-    private Job      linkedJob;
-    private int      minJobLevel;
-    private int      maxJobLevel;
-    private String   name;
+    private String       worldName;
+    private Cuboid       cuboid;
+    private Job          linkedJob;
+    private int          minJobLevel;
+    private int          maxJobLevel;
+    private String       name;
     private List<String> description;
-    private ItemStack icon;
-    private boolean  permissionRequired;
-    private boolean pvpAllowed;
-    private Modifier xpModifier;
+    private ItemStack    icon;
+    private boolean      permissionRequired;
+    private boolean      pvpAllowed;
+    private Modifier     xpModifier;
+    private Set<Material> disabledInteractions;
+
+    private World world;
+    boolean active;
 
     public Zone(@NotNull JobsPlugin plugin, @NotNull File file) {
         super(plugin, file);
         this.openTimes = new HashMap<>();
         this.blockListMap = new HashMap<>();
         this.paymentModifierMap = new HashMap<>();
+        this.disabledInteractions = new HashSet<>();
         this.xpModifier = Modifier.add(0, 0, 0);
         this.icon = new ItemStack(Material.MAP);
 
+        this.report = Reports.forZone(this);
         this.placeholderMap = Placeholders.forZone(this);
     }
 
     @Override
     protected boolean onLoad(@NotNull FileConfig config) {
-        this.world = plugin.getServer().getWorld(config.getString("Bounds.World", "null"));
-        if (this.world == null) {
-            this.plugin.warn("Invalid world in zone '" + this.getFile().getName() + "'!");
-            //return false;
-        }
+        this.setWorldName(config.getString("Bounds.World", "null"));
 
-        BlockPos pos1 = BlockPos.read(config, "Bounds.P1");
-        BlockPos pos2 = BlockPos.read(config, "Bounds.P2");
-        this.setCuboid(new Cuboid(pos1, pos2));
+        BlockPos minPos = BlockPos.read(config, "Bounds.P1");
+        BlockPos maxPos = BlockPos.read(config, "Bounds.P2");
+        this.setCuboid(new Cuboid(minPos, maxPos));
 
         String jobId = ConfigValue.create("Job.Id", "null").read(config);
         Job job = this.plugin.getJobManager().getJobById(jobId);
@@ -123,21 +129,22 @@ public class Zone extends AbstractFileData<JobsPlugin> implements Placeholder, I
 
         this.setXPModifier(Modifier.read(config, "XP_Modifier"));
 
+        this.disabledInteractions = Lists.modify(config.getStringSet("Disabled_Block_Interactions"), BukkitThing::getMaterial);
+
         return true;
     }
 
     @Override
     protected void onSave(@NotNull FileConfig config) {
-        if (this.world != null) {
-            config.set("Bounds.World", this.getWorld().getName());
-        }
-        this.getCuboid().getMin().write(config, "Bounds.P1");
-        this.getCuboid().getMax().write(config, "Bounds.P2");
+        config.set("Bounds.World", this.worldName);
+        this.cuboid.getMin().write(config, "Bounds.P1");
+        this.cuboid.getMax().write(config, "Bounds.P2");
         config.set("Name", this.getName());
         config.set("Description", this.getDescription());
         config.setItem("Icon", this.getIcon());
         config.set("Permission_Required", this.isPermissionRequired());
         config.set("PvP_Allowed", this.isPvPAllowed());
+        config.set("Disabled_Block_Interactions", Lists.modify(this.disabledInteractions, BukkitThing::toString));
         config.remove("Open_Times");
         this.getOpenTimes().forEach((day, times) -> {
             config.set("Open_Times." + day.name(), times.stream().map(JobUtils::serializeTimes).toList());
@@ -162,29 +169,9 @@ public class Zone extends AbstractFileData<JobsPlugin> implements Placeholder, I
         return this.placeholderMap;
     }
 
-    @Override
     @NotNull
     public Report getReport() {
-        Report report = new Report();
-
-        if (!this.hasSelection()) {
-            report.addProblem("Invalid or incomplete selection!");
-        }
-        if (this.linkedJob == null) {
-            report.addProblem("Invalid job assigned!");
-        }
-
-        return report;
-    }
-
-    public boolean hasSelection() {
-        return this.world != null && !this.getCuboid().isEmpty();
-    }
-
-    public void highlightPoints(@NotNull Player player) {
-        if (this.world == null) return;
-
-        Visuals.highlightPoints(player, this.world, new BlockPos[]{this.getCuboid().getMin(), this.getCuboid().getMax()});
+        return this.report;
     }
 
     @Nullable
@@ -200,12 +187,11 @@ public class Zone extends AbstractFileData<JobsPlugin> implements Placeholder, I
     }
 
     public boolean contains(@NotNull Location location) {
-        if (!this.hasSelection()) return false;
-
-        return this.getCuboid().contains(BlockPos.from(location));
+        return this.cuboid.contains(location);
     }
 
     public boolean isAvailable(@NotNull Player player) {
+        if (!this.isActive()) return false;
         if (player.hasPermission(Perms.BYPASS_ZONE_ACCESS)) return true;
         if (!this.isGoodTime()) return false;
         if (!this.hasPermission(player)) return false;
@@ -241,19 +227,18 @@ public class Zone extends AbstractFileData<JobsPlugin> implements Placeholder, I
         if (this.getOpenTimes().isEmpty()) return true;
 
         return this.getCurrentOpenTimes() != null;
-
-        /*if (this.getOpenTimes().isEmpty()) return true;
-
-        DayOfWeek day = LocalDate.now().getDayOfWeek();
-        var times = this.getOpenTimes().getOrDefault(day, Collections.emptySet());
-        if (times.isEmpty()) return false;
-
-        LocalTime time = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
-        return times.stream().anyMatch(pair -> time.isAfter(pair.getFirst()) && time.isBefore(pair.getSecond()));*/
     }
 
     public boolean hasPermission(@NotNull Player player) {
         return !this.isPermissionRequired() || (player.hasPermission(this.getPermission()) || player.hasPermission(Perms.ZONE));
+    }
+
+    public boolean isDisabledInteraction(@NotNull Block block) {
+        return this.isDisabledInteraction(block.getType());
+    }
+
+    public boolean isDisabledInteraction(@NotNull Material material) {
+        return this.disabledInteractions.contains(material);
     }
 
     @Nullable
@@ -291,31 +276,61 @@ public class Zone extends AbstractFileData<JobsPlugin> implements Placeholder, I
         return Perms.PREFIX_ZONE + this.getId();
     }
 
-    @NotNull
-    public ItemStack getCuboidSelector() {
-        ItemStack item = new ItemStack(Material.GOLDEN_AXE);
-        ItemReplacer.create(item).trimmed().hideFlags().readLocale(Lang.EDITOR_ZONE_WAND_ITEM).writeMeta();
-        PDCUtil.set(item, Keys.WAND_ITEM_ZONE_ID, this.getId());
-        return item;
-    }
-
     @Nullable
     public Modifier getPaymentModifier(@NotNull Currency currency) {
         return this.getPaymentModifierMap().get(currency);
     }
 
-    /*public Location getLocation(@NotNull BlockPos pos) {
-        if (this.world == null) return null;
-
-        return pos.toLocation(this.getWorld());
-    }*/
-
-    public World getWorld() {
-        return world;
+    public boolean isActive() {
+        return this.active && this.world != null;
     }
 
-    public void setWorld(@Nullable World world) {
-        this.world = world;
+    public boolean isInactive() {
+        return !this.isActive();
+    }
+
+    @Nullable
+    public World getWorld() {
+        return this.isActive() ? this.world : null;
+    }
+
+    public void reactivate() {
+        World world = this.plugin.getServer().getWorld(this.worldName);
+        if (world == null) {
+            this.deactivate();
+        }
+        else if (this.isInactive()) {
+            this.activate(world);
+        }
+    }
+
+    public void activate(@NotNull World world) {
+        if (this.worldName.equalsIgnoreCase(world.getName())) {
+            this.world = world;
+            this.active = true;
+            //this.plugin.debug("Zone activated: " + this.getId() + " in " + this.worldName);
+        }
+    }
+
+    public void deactivate(@NotNull World world) {
+        if (this.worldName.equalsIgnoreCase(world.getName())) {
+            this.deactivate();
+        }
+    }
+
+    public void deactivate() {
+        this.world = null;
+        this.active = false;
+        //this.plugin.debug("Zone deactivated: " + this.getId() + " in " + this.worldName);
+    }
+
+    @NotNull
+    public String getWorldName() {
+        return worldName;
+    }
+
+    public void setWorldName(@NotNull String worldName) {
+        this.worldName = worldName;
     }
 
     @NotNull
@@ -369,6 +384,11 @@ public class Zone extends AbstractFileData<JobsPlugin> implements Placeholder, I
 
     public void setPvPAllowed(boolean pvpAllowed) {
         this.pvpAllowed = pvpAllowed;
+    }
+
+    @NotNull
+    public Set<Material> getDisabledInteractions() {
+        return disabledInteractions;
     }
 
     @NotNull

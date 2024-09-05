@@ -492,6 +492,9 @@ public class JobCreator {
             EntityType.CREEPER, EntityType.DROWNED, EntityType.PHANTOM, EntityType.VEX,
             EntityType.SILVERFISH
         );
+        if (Version.isAtLeast(Version.MC_1_21)) {
+            hostileItems.add(EntityType.valueOf("BREEZE"));
+        }
 
         objectives.add(createObjective("hostile", entityKill, hostileItems,
             new ItemStack(Material.SKELETON_SKULL),
@@ -509,6 +512,10 @@ public class JobCreator {
         if (Version.isAtLeast(Version.V1_20_R3)) {
             animalItems.add(EntityType.CAMEL);
             animalItems.add(EntityType.FROG);
+        }
+        if (Version.isAtLeast(Version.MC_1_21)) {
+            animalItems.add(EntityType.valueOf("ARMADILLO"));
+            animalItems.add(EntityType.valueOf("SNIFFER"));
         }
 
         objectives.add(createObjective("animals", entityKill, animalItems,

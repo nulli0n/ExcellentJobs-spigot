@@ -37,13 +37,13 @@ public class Modifier implements Placeholder {
     }
 
     @NotNull
-    public static Modifier read(@NotNull FileConfig cfg, @NotNull String path, @NotNull Modifier def, String ... comments) {
-        return new ConfigValue<>(path,
-            (cfg2, path2, def2) -> Modifier.read(cfg2, path2),
-            (cfg2, path2, mod) -> mod.write(cfg2, path2),
-            def,
+    public static Modifier read(@NotNull FileConfig config, @NotNull String path, @NotNull Modifier defaultValue, String ... comments) {
+        return ConfigValue.create(path,
+            (cfg, path2, modifier) -> Modifier.read(cfg, path2),
+            (cfg, path2, mod) -> mod.write(cfg, path2),
+            () -> defaultValue,
             comments
-        ).read(cfg);
+        ).read(config);
     }
 
     @NotNull

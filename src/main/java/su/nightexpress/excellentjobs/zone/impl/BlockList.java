@@ -8,7 +8,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.excellentjobs.Placeholders;
-import su.nightexpress.excellentjobs.util.BlockPos;
+import su.nightexpress.excellentjobs.util.pos.BlockPos;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.util.BukkitThing;
 import su.nightexpress.nightcore.util.LocationUtil;
