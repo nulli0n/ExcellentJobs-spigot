@@ -473,7 +473,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
                 return false;
             }
 
-            if (jobData.hasOrder()) {
+            if (jobData.hasOrder() && !jobData.isOrderCompleted()) {
                 Lang.SPECIAL_ORDER_ERROR_ALREADY_HAVE.getMessage().replace(job.replacePlaceholders()).send(player);
                 return false;
             }

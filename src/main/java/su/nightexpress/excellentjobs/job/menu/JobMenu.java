@@ -78,7 +78,7 @@ public class JobMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
             JobData jobData = user.getData(job);
 
             //if (!event.isShiftClick()) {
-                if (jobData.hasOrder() || !jobData.isReadyForNextOrder()) return;
+                if (!jobData.isReadyForNextOrder()) return;
             //}
 
             this.plugin.getJobManager().createSpecialOrder(player, job, false);

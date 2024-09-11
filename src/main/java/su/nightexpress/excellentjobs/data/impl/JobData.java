@@ -157,7 +157,10 @@ public class JobData implements Placeholder {
     }
 
     public boolean isReadyForNextOrder() {
-        return System.currentTimeMillis() >= this.getNextOrderDate() && this.getOrderData().isExpired();
+        if (this.orderData.isExpired() || !this.hasOrder() || this.orderData.isCompleted()) {
+            return System.currentTimeMillis() >= this.getNextOrderDate();
+        }
+        return false;
     }
 
     public void removeXP(int amount) {
