@@ -1,16 +1,12 @@
 package su.nightexpress.excellentjobs.zone.visual;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.World;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import su.nightexpress.excellentjobs.JobsPlugin;
-import su.nightexpress.excellentjobs.util.Cuboid;
-import su.nightexpress.excellentjobs.util.pos.BlockPos;
-import su.nightexpress.excellentjobs.zone.impl.Selection;
 import su.nightexpress.nightcore.util.EntityUtil;
-import su.nightexpress.nightcore.util.LocationUtil;
 
 import java.util.*;
 
@@ -28,27 +24,6 @@ public abstract class BlockHighlighter {
         return EntityUtil.nextEntityId();
     }
 
-    public void highlightPoints(@NotNull Player player, @NotNull Selection selection) {
-        highlightPoints(player, selection.getFirst(), selection.getSecond());
-    }
-
-    public void highlightPoints(@NotNull Player player, @NotNull Cuboid cuboid) {
-        highlightPoints(player, cuboid.getMin(), cuboid.getMax());
-    }
-
-    private void highlightPoints(@NotNull Player player, @Nullable BlockPos min, @Nullable BlockPos max) {
-        this.removeVisuals(player);
-
-        World world = player.getWorld();
-
-        for (BlockPos blockPos : new BlockPos[]{min, max}) {
-            if (blockPos == null || blockPos.isEmpty()) continue;
-
-            Location location = blockPos.toLocation(world);
-            this.addVisualBlock(player, location);
-        }
-    }
-
     public void removeVisuals(@NotNull Player player) {
         List<Integer> list = this.entityIdMap.remove(player.getUniqueId());
         if (list == null) return;
@@ -56,17 +31,28 @@ public abstract class BlockHighlighter {
         this.destroyEntity(player, list);
     }
 
-    public void addVisualBlock(@NotNull Player player, @NotNull Location location) {
+    public void addVisualBlock(@NotNull Player player, @NotNull Location location, @NotNull BlockData blockData, @NotNull ChatColor color, float size) {
+        //List<FakeEntity> entities = this.getEntityMap(player.getUniqueId()).computeIfAbsent(type, k -> new ArrayList<>());
         List<Integer> idList = this.entityIdMap.computeIfAbsent(player.getUniqueId(), k -> new ArrayList<>());
 
-        Location center = LocationUtil.setCenter3D(location);
+        // To shift scaled down/up displays to the center of a block location.
+        float offset = 1f - size;
+        // Half-sized (0.5f) block displays got shifted on 1/2 of the size difference, so 0.5f modifier comes from here.
+        float shift = 0.5f * offset;
+
+        location.setX(location.getBlockX() + shift);
+        location.setY(location.getBlockY() + shift);
+        location.setZ(location.getBlockZ() + shift);
+
         int entityID = this.nextEntityId();
 
-        this.spawnVisualBlock(entityID, player, center);
+        /*FakeEntity entity = */this.spawnVisualBlock(entityID, player, location, blockData, color, size);
+        //entities.add(entity);
+
         idList.add(entityID);
     }
 
-    protected abstract void spawnVisualBlock(int entityID, @NotNull Player player, @NotNull Location location);
+    protected abstract void spawnVisualBlock(int entityID, @NotNull Player player, @NotNull Location location, @NotNull BlockData blockData, @NotNull ChatColor color, float size);
 
     protected abstract void destroyEntity(@NotNull Player player, @NotNull List<Integer> idList);
 }

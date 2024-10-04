@@ -76,13 +76,6 @@ public class JobCreator {
         job.setXPMultiplier(Modifier.add(0D, 0.01, 3D));
         job.getDailyPaymentLimits().put(VaultEconomyHandler.ID, Modifier.add(-1D, 0D, 0D));
         job.setXPDailyLimits(Modifier.add(-1D, 0D, 0D));
-        //job.setSpecialOrdersAllowed(true);
-        //job.setSpecialOrdersAllowedRewards(new TreeMap<>(Map.of(1, Lists.newList(Placeholders.WILDCARD))));
-        //job.setSpecialOrdersCompleteTime(UniInt.of(14400, 43200));
-        //job.setSpecialOrdersObjectivesAmount(UniInt.of(1, 2));
-        //job.setSpecialOrdersRewardsAmount(UniInt.of(1, 3));
-        //job.setSpecialOrdersCost(new HashMap<>());
-        //job.getSpecialOrdersCost().put(JobsAPI.PLUGIN.getCurrencyManager().getCurrencyOrAny(CurrencyManager.ID_MONEY), 3500D);
         job.save();
     }
 
@@ -422,7 +415,8 @@ public class JobCreator {
         ActionType<?, Material> blockBreak = ActionTypes.ITEM_FISH;
         List<JobObjective> objectives = new ArrayList<>();
 
-        objectives.add(createObjective("craft_fishing_rod", ActionTypes.ITEM_CRAFT, Lists.newSet(),
+        objectives.add(createObjective("craft_fishing_rod", ActionTypes.ITEM_CRAFT,
+            Lists.newSet(Material.FISHING_ROD),
             new ItemStack(Material.FISHING_ROD),
             MONEY_MEDIUM.multiply(0.5), XP_LOW, 1)
         );
@@ -650,10 +644,6 @@ public class JobCreator {
         generateObjectives(jobId, objectives);
     }
 
-    private static void generateObjectives(@NotNull String jobId, @NotNull JobObjective... objectives) {
-        generateObjectives(jobId, Arrays.asList(objectives));
-    }
-
     private static void generateObjectives(@NotNull String jobId, @NotNull Collection<JobObjective> objectives) {
         File file = new File(JobsAPI.PLUGIN.getDataFolder() + Config.DIR_JOBS + jobId, Job.OBJECTIVES_CONFIG_NAME);
         if (file.exists()) return;
@@ -673,18 +663,7 @@ public class JobCreator {
                                                    @NotNull ObjectiveReward money,
                                                    @NotNull ObjectiveReward xp,
                                                    int unlockLevel) {
-
-        //Currency currency = JobsAPI.PLUGIN.getCurrencyManager().getCurrencyOrAny(VaultEconomyHandler.ID);
         Set<String> objects = items.stream().map(type::getObjectName).sorted(String::compareTo).collect(Collectors.toCollection(LinkedHashSet::new));
-
-        /*Map<Currency, ObjectiveReward> paymentMap = new HashMap<>();
-        paymentMap.put(currency, money);
-
-        return new JobObjective(
-            id, type, StringUtil.capitalizeUnderscored(id), icon,
-            objects, paymentMap, xp, unlockLevel,
-            true, UniInt.of(1, 3), UniInt.of(1, 100)
-        );*/
 
         return buildObjective(id, type, objects, icon, money, xp, unlockLevel);
     }

@@ -85,8 +85,10 @@ public class JobsPlugin extends NightDataPlugin<JobUser> {
         this.boosterManager = new BoosterManager(this);
         this.boosterManager.setup();
 
-        PlayerBlockTracker.initialize();
-        PlayerBlockTracker.BLOCK_FILTERS.add(block -> true);
+        if (Config.ABUSE_TRACK_PLAYER_BLOCKS.get()) {
+            PlayerBlockTracker.initialize();
+            PlayerBlockTracker.BLOCK_FILTERS.add(block -> true);
+        }
 
         if (Plugins.hasPlaceholderAPI()) {
             PlaceholderHook.setup(this);

@@ -5,6 +5,7 @@ import org.bukkit.Material;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 import su.nightexpress.excellentjobs.Placeholders;
 import su.nightexpress.excellentjobs.action.ActionTypes;
 import su.nightexpress.excellentjobs.booster.BoosterMultiplier;
@@ -15,10 +16,7 @@ import su.nightexpress.excellentjobs.currency.handler.VaultEconomyHandler;
 import su.nightexpress.excellentjobs.job.impl.OrderReward;
 import su.nightexpress.excellentjobs.util.JobUtils;
 import su.nightexpress.nightcore.config.ConfigValue;
-import su.nightexpress.nightcore.util.Lists;
-import su.nightexpress.nightcore.util.Plugins;
-import su.nightexpress.nightcore.util.RankMap;
-import su.nightexpress.nightcore.util.StringUtil;
+import su.nightexpress.nightcore.util.*;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
@@ -158,6 +156,20 @@ public class Config {
         "Sets how often (in seconds) plugin will attempt to regnerate blocks in job zones."
     );
 
+    public static final ConfigValue<Material> ZONES_HIGHLIGHT_BLOCK_CORNER = ConfigValue.create("Zones.Highlighting.CornerBlock",
+        Material.class,
+        Material.WHITE_STAINED_GLASS,
+        "Block type used for a fake block display entity for zone selection's corners.",
+        "[Default is " + BukkitThing.toString(Material.WHITE_STAINED_GLASS) + "]"
+    );
+
+    public static final ConfigValue<Material> ZONES_HIGHLIGHT_BLOCK_WIRE = ConfigValue.create("Zones.Highlighting.WireBlock",
+        Material.class,
+        Material.CHAIN,
+        "Block type used for a fake block display entity for zone selection's corners connections.",
+        "[Default is " + BukkitThing.toString(Material.CHAIN) + "]"
+    );
+
     public static final ConfigValue<Boolean> SPECIAL_ORDERS_ENABLED = ConfigValue.create("SpecialOrders.Enabled",
         true,
         "Sets whether or not Special Orders feature is enabled.",
@@ -193,6 +205,11 @@ public class Config {
 
     public static final ConfigValue<Boolean> LEVELING_FIREWORKS = ConfigValue.create("Leveling.Fireworks", true,
         "Sets whether or not a random firework will be spawned above the player on job level up.");
+
+    public static final ConfigValue<Boolean> ABUSE_TRACK_PLAYER_BLOCKS = ConfigValue.create("Abuse_Protection.Track_Player_Blocks",
+        true,
+        "Sets whether or not plugin will track player placed blocks. Player placed blocks will give no rewards when mined."
+    );
 
     public static final ConfigValue<Set<CreatureSpawnEvent.SpawnReason>> ABUSE_IGNORE_SPAWN_REASONS = ConfigValue.forSet("Abuse_Protection.Ignore_SpawnReasons",
         raw -> StringUtil.getEnum(raw, CreatureSpawnEvent.SpawnReason.class).orElse(null),
@@ -308,5 +325,15 @@ public class Config {
 
     public static boolean isSpecialOrdersEnabled() {
         return SPECIAL_ORDERS_ENABLED.get();
+    }
+
+    @NotNull
+    public static Material getHighlightCorner() {
+        return ZONES_HIGHLIGHT_BLOCK_CORNER.get();
+    }
+
+    @NotNull
+    public static Material getHighlightWire() {
+        return ZONES_HIGHLIGHT_BLOCK_WIRE.get();
     }
 }

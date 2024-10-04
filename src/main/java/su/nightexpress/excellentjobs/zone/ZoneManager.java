@@ -1,8 +1,9 @@
 package su.nightexpress.excellentjobs.zone;
 
-import org.bukkit.Location;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.Orientable;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.Action;
@@ -47,7 +48,7 @@ public class ZoneManager extends AbstractManager<JobsPlugin> {
     private BlockListEditor blockListEditor;
     private ModifierEditor  modifierEditor;
 
-    private BlockHighlighter blockHighlighter;
+    private BlockHighlighter highlighter;
 
     public ZoneManager(@NotNull JobsPlugin plugin) {
         super(plugin);
@@ -82,7 +83,7 @@ public class ZoneManager extends AbstractManager<JobsPlugin> {
 
         this.zoneMap.clear();
 
-        if (this.blockHighlighter != null) this.blockHighlighter = null;
+        if (this.highlighter != null) this.highlighter = null;
 
         ZoneCommands.unload(this.plugin);
     }
@@ -92,11 +93,13 @@ public class ZoneManager extends AbstractManager<JobsPlugin> {
     }
 
     private void loadHighlighter() {
+        if (Version.isBehind(Version.V1_20_R3)) return;
+
         if (Plugins.isInstalled(HookId.PACKET_EVENTS)) {
-            this.blockHighlighter = new BlockPacketsHighlighter(this.plugin);
+            this.highlighter = new BlockPacketsHighlighter(this.plugin);
         }
         else if (Plugins.isInstalled(HookId.PROTOCOL_LIB)) {
-            this.blockHighlighter = new BlockProtocolHighlighter(this.plugin);
+            this.highlighter = new BlockProtocolHighlighter(this.plugin);
         }
     }
 
@@ -321,8 +324,8 @@ public class ZoneManager extends AbstractManager<JobsPlugin> {
 
         Players.addItem(player, this.getCuboidWand(zone));
 
-        if (zone != null && this.blockHighlighter != null) {
-            this.blockHighlighter.highlightPoints(player, zone.getCuboid());
+        if (zone != null) {
+            this.highlightCuboid(player, zone.getCuboid());
         }
         if (zone == null) {
             Lang.ZONE_CREATE_INFO.getMessage().send(player);
@@ -336,9 +339,7 @@ public class ZoneManager extends AbstractManager<JobsPlugin> {
             Players.takeItem(player, this::isCuboidWand);
             this.selectionMap.remove(player.getUniqueId());
         }
-        if (this.blockHighlighter != null) {
-            this.blockHighlighter.removeVisuals(player);
-        }
+        this.removeVisuals(player);
     }
 
     public void selectPosition(@NotNull Player player, @NotNull ItemStack itemStack, @NotNull Location location, @NotNull Action action) {
@@ -371,9 +372,79 @@ public class ZoneManager extends AbstractManager<JobsPlugin> {
             this.openEditor(player, zone);
         }
         else {
-            if (this.blockHighlighter != null) {
-                this.blockHighlighter.highlightPoints(player, selection);
-            }
+            this.highlightCuboid(player, selection);
         }
+    }
+
+    public void removeVisuals(@NotNull Player player) {
+        if (this.highlighter != null) {
+            this.highlighter.removeVisuals(player);
+        }
+    }
+
+    public void highlightCuboid(@NotNull Player player, @NotNull Selection selection) {
+        this.highlightCuboid(player, selection.getFirst(), selection.getSecond());
+    }
+
+    private void highlightCuboid(@NotNull Player player, @Nullable BlockPos min, @Nullable BlockPos max) {
+        if (min == null) min = BlockPos.empty();
+        if (max == null) max = BlockPos.empty();
+        if (min.isEmpty() && !max.isEmpty()) min = max;
+        if (max.isEmpty() && !min.isEmpty()) max = min;
+
+        this.highlightCuboid(player, new Cuboid(min, max));
+    }
+
+    public void highlightCuboid(@NotNull Player player, @NotNull Cuboid cuboid) {
+        this.highlightCuboid(player, cuboid, true);
+    }
+
+    public void highlightCuboid(@NotNull Player player, @NotNull Cuboid cuboid, boolean reset) {
+        if (this.highlighter == null) return;
+
+        if (reset) {
+            this.removeVisuals(player);
+        }
+
+        World world = player.getWorld();
+        Material cornerType = Config.getHighlightCorner();
+        Material wireType = Config.getHighlightWire();
+        Set<Pair<BlockPos, BlockData>> dataSet = new HashSet<>();
+
+        // Draw corners of the chunk/region all the time.
+        this.collectBlockData(cuboid.getCorners(), dataSet, cornerType.createBlockData());
+        this.collectBlockData(cuboid.getCornerWiresY(), dataSet, wireType.createBlockData());
+
+        // Draw connections only for regions or when player is inside a chunk.
+        BlockData dataX = this.createBlockData(wireType, Axis.X);
+        BlockData dataZ = this.createBlockData(wireType, Axis.Z);
+
+        this.collectBlockData(cuboid.getCornerWiresX(), dataSet, dataX);
+        this.collectBlockData(cuboid.getCornerWiresZ(), dataSet, dataZ);
+
+        // Draw all visual blocks at prepated positions with prepared block data.
+        dataSet.forEach(pair -> {
+            BlockPos blockPos = pair.getFirst();
+            Location location = blockPos.toLocation(world);
+            ChatColor color = ChatColor.AQUA;//this.getBlockColor(player, world, blockPos, cuboid);
+            float size = 0.98f; // Size 1f will cause texture glitch when inside a block.
+
+            this.highlighter.addVisualBlock(player, location, pair.getSecond(), color, size);
+        });
+    }
+
+    private void collectBlockData(@NotNull Collection<BlockPos> source, @NotNull Set<Pair<BlockPos, BlockData>> target, @NotNull BlockData data) {
+        if (data.getMaterial().isAir()) return;
+
+        source.stream().filter(blockPos -> blockPos != null && !blockPos.isEmpty()).map(blockPos -> Pair.of(blockPos, data)).forEach(target::add);
+    }
+
+    @NotNull
+    private BlockData createBlockData(@NotNull Material material, @NotNull Axis axis) {
+        BlockData data = material.createBlockData();
+        if (data instanceof Orientable orientable) {
+            orientable.setAxis(axis);
+        }
+        return data;
     }
 }

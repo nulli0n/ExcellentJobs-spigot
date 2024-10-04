@@ -3,10 +3,14 @@ package su.nightexpress.excellentjobs;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Lang;
+import su.nightexpress.excellentjobs.job.impl.Job;
+import su.nightexpress.excellentjobs.job.impl.JobState;
+import su.nightexpress.excellentjobs.job.reward.LevelReward;
 import su.nightexpress.excellentjobs.util.Modifier;
 import su.nightexpress.excellentjobs.util.report.ReportType;
 import su.nightexpress.excellentjobs.zone.impl.Zone;
 import su.nightexpress.excellentjobs.zone.impl.BlockList;
+import su.nightexpress.nightcore.core.CoreLang;
 import su.nightexpress.nightcore.language.LangAssets;
 import su.nightexpress.nightcore.util.*;
 import su.nightexpress.nightcore.util.placeholder.PlaceholderMap;
@@ -116,6 +120,36 @@ public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
     public static final String OBJECTIVE_XP_MAX          = "%objective_xp_max%";
     public static final String OBJECTIVE_XP_CHANCE       = "%objective_xp_chance%";
     public static final String OBJECTIVE_UNLOCK_LEVEL    = "%objective_unlock_level%";
+
+    public static final String                   REWARD_NAME        = "%reward_name%";
+    public static final String                   REWARD_DESCRIPTION = "%reward_description%";
+    public static final String                   REWARD_LEVEL       = "%reward_level%";
+    public static final String                   REWARD_REPEATABLE  = "%reward_repeatable%";
+    public static final Function<String, String> REWARD_MODIFIER    = id -> "%mod_" + id + "%";
+
+    @NotNull
+    public static PlaceholderMap forJob(@NotNull Job job) {
+        return new PlaceholderMap()
+            .add(JOB_ID, job::getId)
+            .add(JOB_NAME, job::getName)
+            .add(JOB_DESCRIPTION, () -> String.join("\n", job.getDescription()))
+            .add(JOB_PERMISSION_REQUIRED, () -> CoreLang.getYesOrNo(job.isPermissionRequired()))
+            .add(JOB_PERMISSION_NODE, job::getPermission)
+            .add(JOB_MAX_LEVEL, () -> NumberUtil.format(job.getMaxLevel()))
+            .add(JOB_MAX_SECONDARY_LEVEL, () -> NumberUtil.format(job.getMaxSecondaryLevel()))
+            .add(JOB_EMPLOYEES_TOTAL, () -> NumberUtil.format(job.getEmployees()))
+            .add(JOB_EMPLOYEES_PRIMARY, () -> NumberUtil.format(job.getEmployeesAmount(JobState.PRIMARY)))
+            .add(JOB_EMPLOYEES_SECONDARY, () -> NumberUtil.format(job.getEmployeesAmount(JobState.SECONDARY)));
+    }
+
+    @NotNull
+    public static PlaceholderMap forReward(@NotNull LevelReward reward) {
+        return new PlaceholderMap()
+            .add(REWARD_NAME, reward::getName)
+            .add(REWARD_DESCRIPTION, () -> String.join("\n", reward.getDescription()))
+            .add(REWARD_LEVEL, () -> NumberUtil.format(reward.getLevel()))
+            .add(REWARD_REPEATABLE, () -> Lang.getYesOrNo(reward.isRepeatable()));
+    }
 
     @NotNull
     public static PlaceholderMap forZoneAll(@NotNull Zone zone) {

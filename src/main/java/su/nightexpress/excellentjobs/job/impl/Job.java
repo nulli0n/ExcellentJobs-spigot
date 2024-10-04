@@ -17,10 +17,10 @@ import su.nightexpress.excellentjobs.currency.handler.VaultEconomyHandler;
 import su.nightexpress.excellentjobs.data.impl.JobOrderCount;
 import su.nightexpress.excellentjobs.data.impl.JobOrderData;
 import su.nightexpress.excellentjobs.data.impl.JobOrderObjective;
+import su.nightexpress.excellentjobs.job.reward.JobRewards;
 import su.nightexpress.excellentjobs.util.Modifier;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
-import su.nightexpress.nightcore.core.CoreLang;
 import su.nightexpress.nightcore.manager.AbstractFileData;
 import su.nightexpress.nightcore.util.Lists;
 import su.nightexpress.nightcore.util.NumberUtil;
@@ -67,6 +67,7 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
     private final Map<JobState, Integer>     employeesAmount;
     private final TreeMap<Integer, Integer>  xpTable;
     private final Map<Integer, List<String>> levelUpCommands;
+    private final JobRewards rewards;
     private final Map<String, Modifier>      paymentMultiplier;
     private final Map<String, Modifier>      paymentDailyLimits;
     private final Map<String, JobObjective>  objectiveMap;
@@ -79,20 +80,11 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
         this.employeesAmount = new ConcurrentHashMap<>();
         this.xpTable = new TreeMap<>();
         this.levelUpCommands = new HashMap<>();
+        this.rewards = new JobRewards();
         this.paymentMultiplier = new HashMap<>();
         this.paymentDailyLimits = new HashMap<>();
         this.objectiveMap = new HashMap<>();
-        this.placeholderMap = new PlaceholderMap()
-            .add(Placeholders.JOB_ID, this::getId)
-            .add(Placeholders.JOB_NAME, this::getName)
-            .add(Placeholders.JOB_DESCRIPTION, () -> String.join("\n", this.getDescription()))
-            .add(Placeholders.JOB_PERMISSION_REQUIRED, () -> CoreLang.getYesOrNo(this.isPermissionRequired()))
-            .add(Placeholders.JOB_PERMISSION_NODE, this::getPermission)
-            .add(Placeholders.JOB_MAX_LEVEL, () -> NumberUtil.format(this.getMaxLevel()))
-            .add(Placeholders.JOB_MAX_SECONDARY_LEVEL, () -> NumberUtil.format(this.getMaxSecondaryLevel()))
-            .add(Placeholders.JOB_EMPLOYEES_TOTAL, () -> NumberUtil.format(this.getEmployees()))
-            .add(Placeholders.JOB_EMPLOYEES_PRIMARY, () -> NumberUtil.format(this.getEmployeesAmount(JobState.PRIMARY)))
-            .add(Placeholders.JOB_EMPLOYEES_SECONDARY, () -> NumberUtil.format(this.getEmployeesAmount(JobState.SECONDARY)));
+        this.placeholderMap = Placeholders.forJob(this);
     }
 
     @Override
@@ -179,6 +171,8 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
             int xpToLevel = level == 1 ? this.getInitialXP() : (int) (xpPrevious * this.getXPFactor());
             this.xpTable.put(level, xpToLevel);
         }
+
+        this.rewards.load(config, "Leveling.Rewards");
 
         this.levelUpCommands.putAll(ConfigValue.forMap("Leveling.LevelUp_Commands",
             (key) -> NumberUtil.getInteger(key, 0),
@@ -314,6 +308,7 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
         config.set("Leveling.Max_Secondary_Level", this.getMaxSecondaryLevel());
         config.set("Leveling.XP_Initial", this.getInitialXP());
         config.set("Leveling.XP_Factor", this.getXPFactor());
+        this.rewards.write(config, "Leveling.Rewards");
         config.remove("Leveling.LevelUp_Commands");
         this.getLevelUpCommands().forEach((level, list) -> {
             config.set("Leveling.LevelUp_Commands." + level, list);
@@ -682,6 +677,11 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
     @NotNull
     public TreeMap<Integer, Integer> getXPTable() {
         return xpTable;
+    }
+
+    @NotNull
+    public JobRewards getRewards() {
+        return this.rewards;
     }
 
     @NotNull

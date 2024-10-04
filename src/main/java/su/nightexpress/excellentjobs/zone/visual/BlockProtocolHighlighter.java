@@ -4,18 +4,19 @@ import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import com.comphenix.protocol.events.PacketContainer;
-import com.comphenix.protocol.wrappers.WrappedDataValue;
-import com.comphenix.protocol.wrappers.WrappedDataWatcher;
+import com.comphenix.protocol.wrappers.*;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.scoreboard.Team;
 import org.jetbrains.annotations.NotNull;
+import org.joml.Vector3f;
 import su.nightexpress.excellentjobs.JobsPlugin;
+import su.nightexpress.nightcore.util.Lists;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 
 public class BlockProtocolHighlighter extends BlockHighlighter {
@@ -28,17 +29,43 @@ public class BlockProtocolHighlighter extends BlockHighlighter {
     }
 
     @Override
-    protected void spawnVisualBlock(int entityID, @NotNull Player player, @NotNull Location location) {
-        EntityType type = EntityType.SHULKER;
-        PacketContainer spawnPacket = this.createSpawnPacket(type, location, entityID);
+    protected void spawnVisualBlock(int entityID, @NotNull Player player, @NotNull Location location, @NotNull BlockData blockData, @NotNull ChatColor color, float size) {
+        EntityType type = EntityType.BLOCK_DISPLAY;
+        UUID uuid = UUID.randomUUID();
+        String entityUID = uuid.toString();
+
+        PacketContainer spawnPacket = this.createSpawnPacket(type, location, entityID, uuid);
 
         PacketContainer dataPacket = this.createMetadataPacket(entityID, metadata -> {
             metadata.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(0, WrappedDataWatcher.Registry.get(Byte.class)), (byte) (0x20 | 0x40)); //invis
-            metadata.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(5, WrappedDataWatcher.Registry.get(Boolean.class)), true); //no gravity
+            metadata.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(12, WrappedDataWatcher.Registry.get(Vector3f.class)), new Vector3f(size, size, size)); // scale
+            // TODO Check
+            metadata.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(23, WrappedDataWatcher.Registry.getBlockDataSerializer(false)), WrappedBlockData.createData(blockData)); // slot
         });
 
+
+        PacketContainer teamPacket = new PacketContainer(PacketType.Play.Server.SCOREBOARD_TEAM);
+        teamPacket.getStrings().write(0, entityUID); // Name
+        teamPacket.getIntegers().write(0, 0); // Mode. 1 - Remove, 0 - Create
+        teamPacket.getSpecificModifier(Collection.class).write(0, Lists.newList(entityUID));
+
+        WrappedTeamParameters parameters = WrappedTeamParameters.newBuilder()
+            .displayName(WrappedChatComponent.fromText(entityUID))
+            .prefix(WrappedChatComponent.fromText(""))
+            .suffix(WrappedChatComponent.fromText(""))
+            .color(EnumWrappers.ChatFormatting.fromBukkit(color))
+            .nametagVisibility(Team.OptionStatus.ALWAYS.name())
+            .collisionRule(Team.OptionStatus.ALWAYS.name())
+            .options(0)
+            .build();
+        teamPacket.getOptionalTeamParameters().write(0, Optional.of(parameters));
+
+
         this.manager.sendServerPacket(player, spawnPacket);
+        this.manager.sendServerPacket(player, teamPacket);
         this.manager.sendServerPacket(player, dataPacket);
+
+        //return new FakeEntity(entityID, uuid);
     }
 
     @Override
@@ -49,10 +76,10 @@ public class BlockProtocolHighlighter extends BlockHighlighter {
     }
 
     @NotNull
-    private PacketContainer createSpawnPacket(@NotNull EntityType entityType, @NotNull Location location, int entityID) {
+    private PacketContainer createSpawnPacket(@NotNull EntityType entityType, @NotNull Location location, int entityID, @NotNull UUID uuid) {
         PacketContainer spawnPacket = new PacketContainer(PacketType.Play.Server.SPAWN_ENTITY);
         spawnPacket.getIntegers().write(0, entityID);
-        spawnPacket.getUUIDs().write(0, UUID.randomUUID());
+        spawnPacket.getUUIDs().write(0, uuid);
         spawnPacket.getEntityTypeModifier().write(0, entityType);
         spawnPacket.getDoubles().write(0, location.getX());
         spawnPacket.getDoubles().write(1, location.getY());

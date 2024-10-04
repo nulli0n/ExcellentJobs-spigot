@@ -4,20 +4,25 @@ import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.manager.player.PlayerManager;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityData;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityDataTypes;
+import com.github.retrooper.packetevents.protocol.world.states.WrappedBlockState;
 import com.github.retrooper.packetevents.util.Vector3d;
 import com.github.retrooper.packetevents.util.Vector3f;
 import com.github.retrooper.packetevents.wrapper.PacketWrapper;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerDestroyEntities;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityMetadata;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSpawnEntity;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerTeams;
 import io.github.retrooper.packetevents.util.SpigotConversionUtil;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.excellentjobs.JobsPlugin;
-import su.nightexpress.nightcore.util.Version;
+import su.nightexpress.nightcore.util.Lists;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,24 +39,41 @@ public class BlockPacketsHighlighter extends BlockHighlighter {
     }
 
     @Override
-    protected void spawnVisualBlock(int entityID, @NotNull Player player, @NotNull Location location) {
-        EntityType type = Version.isAtLeast(Version.V1_20_R3) ? EntityType.ITEM_DISPLAY : EntityType.SHULKER;
-        var spawnPacket = this.createSpawnPacket(type, location, entityID);
+    protected void spawnVisualBlock(int entityID, @NotNull Player player, @NotNull Location location, @NotNull BlockData blockData, @NotNull ChatColor color, float size) {
+        EntityType type = EntityType.BLOCK_DISPLAY;// Version.isAtLeast(Version.V1_20_R3) ? EntityType.BLOCK_DISPLAY : EntityType.SHULKER;
+
+        UUID uuid = UUID.randomUUID();
+        String entityUID = uuid.toString();
+        WrappedBlockState state = WrappedBlockState.getByString(blockData.getAsString());
+
+        var spawnPacket = this.createSpawnPacket(type, location, entityID, uuid);
 
         var dataPacket = this.createMetadataPacket(entityID, dataList -> {
-            if (type == EntityType.ITEM_DISPLAY) {
-                dataList.add(new EntityData(0, EntityDataTypes.BYTE, (byte) 0x40)); // glow
-                dataList.add(new EntityData(12, EntityDataTypes.VECTOR3F, new Vector3f(0.99f, 0.99f, 0.99f))); // scale
-                dataList.add(new EntityData(23, EntityDataTypes.ITEMSTACK, SpigotConversionUtil.fromBukkitItemStack(new ItemStack(location.getBlock().getType())))); // slot
-                dataList.add(new EntityData(24, EntityDataTypes.BYTE, (byte) 5)); // mode HEAD
-            }
-            else {
-                dataList.add(new EntityData(0, EntityDataTypes.BYTE, (byte) 0x20 | 0x40)); // invisible
-                dataList.add(new EntityData(5, EntityDataTypes.BOOLEAN, true)); // no gravity
-            }
+//            if (type == EntityType.BLOCK_DISPLAY) {
+                dataList.add(new EntityData(0, EntityDataTypes.BYTE, (byte) (0x20 | 0x40))); // glow
+                dataList.add(new EntityData(12, EntityDataTypes.VECTOR3F, new Vector3f(size, size, size))); // scale
+                dataList.add(new EntityData(23, EntityDataTypes.BLOCK_STATE, state.getGlobalId())); // block ID
+//            }
+//            else {
+//                dataList.add(new EntityData(0, EntityDataTypes.BYTE, (byte) 0x20 | 0x40)); // invisible
+//                dataList.add(new EntityData(5, EntityDataTypes.BOOLEAN, true)); // no gravity
+//            }
+
         });
 
+        WrapperPlayServerTeams.ScoreBoardTeamInfo info = new WrapperPlayServerTeams.ScoreBoardTeamInfo(
+            Component.text(entityUID),
+            Component.text(""),
+            Component.text(""),
+            WrapperPlayServerTeams.NameTagVisibility.ALWAYS,
+            WrapperPlayServerTeams.CollisionRule.ALWAYS,
+            NamedTextColor.NAMES.valueOr(color.name().toLowerCase(), NamedTextColor.WHITE),
+            WrapperPlayServerTeams.OptionData.NONE
+        );
+        var teamPacket = new WrapperPlayServerTeams(entityUID, WrapperPlayServerTeams.TeamMode.CREATE, info, Lists.newList(entityUID));
+
         this.manager.sendPacket(player, spawnPacket);
+        this.manager.sendPacket(player, teamPacket);
         this.manager.sendPacket(player, dataPacket);
     }
 
@@ -62,11 +84,11 @@ public class BlockPacketsHighlighter extends BlockHighlighter {
     }
 
     @NotNull
-    private WrapperPlayServerSpawnEntity createSpawnPacket(@NotNull EntityType type, @NotNull Location location, int entityID) {
+    private WrapperPlayServerSpawnEntity createSpawnPacket(@NotNull EntityType type, @NotNull Location location, int entityID, @NotNull UUID uuid) {
         com.github.retrooper.packetevents.protocol.entity.type.EntityType wrappedType = SpigotConversionUtil.fromBukkitEntityType(type);
         com.github.retrooper.packetevents.protocol.world.Location wrappedLocation = SpigotConversionUtil.fromBukkitLocation(location);
 
-        return new WrapperPlayServerSpawnEntity(entityID, UUID.randomUUID(), wrappedType, wrappedLocation, 0f, 0, new Vector3d());
+        return new WrapperPlayServerSpawnEntity(entityID, uuid, wrappedType, wrappedLocation, 0f, 0, new Vector3d());
     }
 
     @NotNull

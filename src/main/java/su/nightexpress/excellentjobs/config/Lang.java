@@ -343,6 +343,20 @@ public class Lang extends CoreLang {
         LIGHT_GRAY.enclose(LIGHT_RED.enclose(JOB_NAME) + " is now level " + LIGHT_RED.enclose(JOB_DATA_LEVEL) + "!")
     );
 
+    public static final LangText JOB_LEVEL_REWARDS_LIST = LangText.of("Job.Level.Rewards.List",
+        TAG_NO_PREFIX,
+        " ",
+        LIGHT_YELLOW.enclose(BOLD.enclose("Level Rewards:")),
+        DARK_GRAY.enclose("Hover over reward name for details."),
+        " ",
+        GENERIC_ENTRY,
+        " "
+    );
+
+    public static final LangString JOB_LEVEL_REWARDS_ENTRY = LangString.of("Job.Level.Rewards.Entry",
+        LIGHT_YELLOW.enclose("✔ " + HOVER.encloseHint(LIGHT_GRAY.enclose(REWARD_NAME), LIGHT_GRAY.enclose(REWARD_DESCRIPTION)))
+    );
+
     public static final LangText JOB_LIMIT_XP_NOTIFY = LangText.of("Job.Limit.XP.Notify",
         LIGHT_GRAY.enclose("You have reached daily " + LIGHT_RED.enclose("XP") + " limit for " + LIGHT_RED.enclose(JOB_NAME) + " job. You can't get more today.")
     );

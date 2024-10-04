@@ -54,6 +54,8 @@ public class ProgressBar {
     }
 
     public void updateDisplay() {
+        if (this.xp == 0 && this.moneyMap.isEmpty()) return;
+
         String xp = NumberUtil.format(this.getXP());
         String money = moneyMap.entrySet().stream().map(e -> e.getKey().format(e.getValue())).collect(Collectors.joining(", "));
 

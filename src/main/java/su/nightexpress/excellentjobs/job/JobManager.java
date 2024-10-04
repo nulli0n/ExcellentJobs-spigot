@@ -26,6 +26,7 @@ import su.nightexpress.excellentjobs.job.impl.*;
 import su.nightexpress.excellentjobs.job.listener.JobExploitListener;
 import su.nightexpress.excellentjobs.job.listener.JobGenericListener;
 import su.nightexpress.excellentjobs.job.menu.*;
+import su.nightexpress.excellentjobs.job.reward.LevelReward;
 import su.nightexpress.excellentjobs.job.util.JobCreator;
 import su.nightexpress.nightcore.manager.AbstractManager;
 import su.nightexpress.nightcore.util.FileUtil;
@@ -52,6 +53,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
     private JobMenu             jobMenu;
     private JobResetMenu        jobResetMenu;
     private JobObjectivesMenu   objectivesMenu;
+    private RewardsMenu rewardsMenu;
     private JobJoinConfirmMenu  joinConfirmMenu;
     private JobLeaveConfirmMenu leaveConfirmMenu;
 
@@ -104,6 +106,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         this.joinConfirmMenu = new JobJoinConfirmMenu(this.plugin);
         this.leaveConfirmMenu = new JobLeaveConfirmMenu(this.plugin);
         this.objectivesMenu = new JobObjectivesMenu(this.plugin);
+        this.rewardsMenu = new RewardsMenu(this.plugin);
 
         this.addListener(new JobGenericListener(this.plugin, this));
         this.addListener(new JobExploitListener(this.plugin));
@@ -120,6 +123,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         this.progressBarMap.values().forEach(map -> map.values().forEach(ProgressBar::discard));
 
         if (this.jobMenu != null) this.jobMenu.clear();
+        if (this.rewardsMenu != null) this.rewardsMenu.clear();
         if (this.objectivesMenu != null) this.objectivesMenu.clear();
         if (this.jobListMenu != null) this.jobListMenu.clear();
         if (this.jobResetMenu != null) this.jobResetMenu.clear();
@@ -257,6 +261,10 @@ public class JobManager extends AbstractManager<JobsPlugin> {
 
     public void openObjectivesMenu(@NotNull Player player, @NotNull Job job) {
         this.objectivesMenu.open(player, job);
+    }
+
+    public void openRewardsMenu(@NotNull Player player, @NotNull Job job) {
+        this.rewardsMenu.openAtLevel(player, job);
     }
 
     public void openJoinConfirmMenu(@NotNull Player player, @NotNull Job job) {
@@ -478,7 +486,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
                 return false;
             }
 
-            int totalOrders = user.countSpecialOrders();
+            int totalOrders = user.countActiveSpecialOrders();
             int maxAmount = Config.SPECIAL_ORDERS_MAX_AMOUNT.get();
             if (maxAmount >= 0 && totalOrders >= maxAmount) {
                 Lang.SPECIAL_ORDER_ERROR_MAX_AMOUNT.getMessage()
@@ -655,6 +663,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
 
 
 
+            XP:
             if (!jobData.isXPLimitReached()) {
                 double xpRoll = jobObjective.getXPReward().rollAmountNaturally() * amount;
                 double xpMultiplier = 1D;
@@ -667,10 +676,10 @@ public class JobManager extends AbstractManager<JobsPlugin> {
                     player, user, jobData, jobObjective, type, object, xpRoll, xpMultiplier
                 );
                 this.plugin.getPluginManager().callEvent(event);
-                if (event.isCancelled()) return;
+                if (event.isCancelled()) break XP;
 
                 xpRoll = event.getXPAmount() * event.getXPMultiplier();
-                if (xpRoll == 0D || Double.isNaN(xpRoll) || Double.isInfinite(xpRoll)) return;
+                if (xpRoll == 0D || Double.isNaN(xpRoll) || Double.isInfinite(xpRoll)) break XP;
 
                 if (this.addXP(player, job, /*type.getObjectLocalizedName(object),*/ xpRoll, false)) {
                     if (progressBar != null) progressBar.addXP((int) xpRoll);
@@ -748,6 +757,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
             JobLevelUpEvent event = new JobLevelUpEvent(player, user, jobData);
             plugin.getPluginManager().callEvent(event);
 
+            // TODO force permission
             this.triggerLevelRewards(player, job, jobData.getLevel(), false);
 
             Lang.JOB_LEVEL_UP.getMessage().replace(jobData.replacePlaceholders()).send(player);
@@ -771,13 +781,29 @@ public class JobManager extends AbstractManager<JobsPlugin> {
     public void triggerLevelRewards(@NotNull Player player, @NotNull Job job, int level, boolean force) {
         JobUser user = this.plugin.getUserManager().getUserData(player);
         JobData jobData = user.getData(job);
-        if (!force && jobData.isLevelRewardObtained(level)) return;
 
-        job.getLevelUpCommands(level).forEach(command -> {
-            plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), Placeholders.forPlayer(player).apply(command));
-        });
+        if (force || !jobData.isLevelRewardObtained(level)) {
+            job.getLevelUpCommands(level).forEach(command -> {
+                plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), Placeholders.forPlayer(player).apply(command));
+            });
+        }
+
+        List<LevelReward> rewards = job.getRewards().getRewards(level);
+        rewards.removeIf(reward -> !force && jobData.isLevelRewardObtained(reward.getLevel()) && !reward.isRepeatable());
+
+        if (!rewards.isEmpty()) {
+            rewards.forEach(reward -> reward.run(player));
+
+            Lang.JOB_LEVEL_REWARDS_LIST.getMessage()
+                .replace(Placeholders.GENERIC_ENTRY, list -> {
+                    rewards.forEach(reward -> {
+                        list.add(reward.replacePlaceholders().apply(Lang.JOB_LEVEL_REWARDS_ENTRY.getString()));
+                    });
+                })
+                .send(player);
+        }
+
         jobData.setLevelRewardObtained(level);
-        this.plugin.getUserManager().scheduleSave(user);
     }
 
     @NotNull

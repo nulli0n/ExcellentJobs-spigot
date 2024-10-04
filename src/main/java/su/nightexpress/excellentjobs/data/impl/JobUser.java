@@ -72,6 +72,10 @@ public class JobUser extends AbstractUser<JobsPlugin> {
         return (int) this.getDatas().stream().filter(JobData::hasOrder).count();
     }
 
+    public int countActiveSpecialOrders() {
+        return (int) this.getDatas().stream().filter(data -> data.hasOrder() && !data.isOrderCompleted() && !data.getOrderData().isExpired()).count();
+    }
+
     @NotNull
     public Map<String, JobData> getDataMap() {
         return this.dataMap;

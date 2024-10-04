@@ -39,6 +39,7 @@ public class JobMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
     private static final String PLACEHOLDER_ORDER = "%order%";
 
     private final ItemHandler objectivesHandler;
+    private final ItemHandler rewardsHandler;
     private final ItemHandler leaveHandler;
     private final ItemHandler orderHandler;
     private final ItemHandler statsHandler;
@@ -62,6 +63,13 @@ public class JobMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
             Player player = viewer.getPlayer();
 
             this.runNextTick(() -> this.plugin.getJobManager().openObjectivesMenu(player, job));
+        }));
+
+        this.addHandler(this.rewardsHandler = new ItemHandler("rewards", (viewer, event) -> {
+            Job job = this.getLink().get(viewer);
+            Player player = viewer.getPlayer();
+
+            this.runNextTick(() -> this.plugin.getJobManager().openRewardsMenu(player, job));
         }));
 
         this.addHandler(this.leaveHandler = new ItemHandler("leave_job", (viewer, event) -> {
@@ -207,12 +215,21 @@ public class JobMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
 
 
 
+        ItemStack rewardsItem = ItemUtil.getSkinHead("c8c758ab08cbe59730972c9c2941f95475804858ce4b0a2b49f5b5c5027d66c");
+        ItemUtil.editMeta(rewardsItem, meta -> {
+            meta.setDisplayName(LIGHT_YELLOW.enclose(BOLD.enclose("Level Rewards")));
+            meta.setLore(Lists.newList(LIGHT_GRAY.enclose("Click to browse job rewards!")));
+        });
+        list.add(new MenuItem(rewardsItem).setPriority(10).setSlots(12).setHandler(this.rewardsHandler));
+
+
+
         ItemStack statsItem = ItemUtil.getSkinHead("a8d5cb12219a3f5e9bb68c8914c443c2de160eff00cf3e730fbaccd8db6918fe");
         ItemUtil.editMeta(statsItem, meta -> {
             meta.setDisplayName(LIGHT_CYAN.enclose(BOLD.enclose("Stats")));
             meta.setLore(Lists.newList(LIGHT_GRAY.enclose("Click to view personal job stats!")));
         });
-        list.add(new MenuItem(statsItem).setPriority(10).setSlots(12).setHandler(this.statsHandler));
+        list.add(new MenuItem(statsItem).setPriority(10).setSlots(14).setHandler(this.statsHandler));
 
 
 
@@ -221,7 +238,7 @@ public class JobMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
             meta.setDisplayName(LIGHT_ORANGE.enclose(BOLD.enclose("Special Order")));
             meta.setLore(Lists.newList(PLACEHOLDER_ORDER));
         });
-        list.add(new MenuItem(orderItem).setPriority(10).setSlots(14).setHandler(this.orderHandler));
+        list.add(new MenuItem(orderItem).setPriority(10).setSlots(16).setHandler(this.orderHandler));
 
 
         ItemStack leaveItem = ItemUtil.getSkinHead("94f90c7bd60bfd0dfc31808d0484d8c2db9959f68df91fbf29423a3da62429a6");
@@ -236,7 +253,7 @@ public class JobMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
                 LIGHT_RED.enclose("[▶] " + LIGHT_GRAY.enclose("Click to " + LIGHT_RED.enclose("leave") + "."))
             ));
         });
-        list.add(new MenuItem(leaveItem).setPriority(10).setSlots(16).setHandler(this.leaveHandler));
+        list.add(new MenuItem(leaveItem).setPriority(10).setSlots(8).setHandler(this.leaveHandler));
 
         return list;
     }
