@@ -49,11 +49,12 @@ public class JobManager extends AbstractManager<JobsPlugin> {
     private final Map<UUID, Map<String, JobIncome>>   incomeMap;
     private final Map<UUID, Map<String, ProgressBar>> progressBarMap;
 
-    private JobListMenu         jobListMenu;
-    private JobMenu             jobMenu;
-    private JobResetMenu        jobResetMenu;
-    private JobObjectivesMenu   objectivesMenu;
-    private RewardsMenu rewardsMenu;
+    private JobsMenu jobsMenu;
+    private JobMenu      jobMenu;
+    private PreviewMenu  previewMenu;
+    private JobResetMenu   jobResetMenu;
+    private ObjectivesMenu objectivesMenu;
+    private RewardsMenu    rewardsMenu;
     private JobJoinConfirmMenu  joinConfirmMenu;
     private JobLeaveConfirmMenu leaveConfirmMenu;
 
@@ -100,12 +101,13 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         });
         this.plugin.info("Loaded " + this.jobMap.size() + " jobs.");
 
-        this.jobListMenu = new JobListMenu(this.plugin);
+        this.jobsMenu = new JobsMenu(this.plugin);
         this.jobMenu = new JobMenu(this.plugin);
+        this.previewMenu = new PreviewMenu(this.plugin);
         this.jobResetMenu = new JobResetMenu(this.plugin);
         this.joinConfirmMenu = new JobJoinConfirmMenu(this.plugin);
         this.leaveConfirmMenu = new JobLeaveConfirmMenu(this.plugin);
-        this.objectivesMenu = new JobObjectivesMenu(this.plugin);
+        this.objectivesMenu = new ObjectivesMenu(this.plugin);
         this.rewardsMenu = new RewardsMenu(this.plugin);
 
         this.addListener(new JobGenericListener(this.plugin, this));
@@ -123,9 +125,10 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         this.progressBarMap.values().forEach(map -> map.values().forEach(ProgressBar::discard));
 
         if (this.jobMenu != null) this.jobMenu.clear();
+        if (this.previewMenu != null) this.previewMenu.clear();
         if (this.rewardsMenu != null) this.rewardsMenu.clear();
         if (this.objectivesMenu != null) this.objectivesMenu.clear();
-        if (this.jobListMenu != null) this.jobListMenu.clear();
+        if (this.jobsMenu != null) this.jobsMenu.clear();
         if (this.jobResetMenu != null) this.jobResetMenu.clear();
         if (this.joinConfirmMenu != null) this.joinConfirmMenu.clear();
         if (this.leaveConfirmMenu != null) this.leaveConfirmMenu.clear();
@@ -141,8 +144,8 @@ public class JobManager extends AbstractManager<JobsPlugin> {
     }
 
     @NotNull
-    public Collection<Job> getJobs() {
-        return this.jobMap.values();
+    public Set<Job> getJobs() {
+        return new HashSet<>(this.jobMap.values());
     }
 
     @NotNull
@@ -252,11 +255,15 @@ public class JobManager extends AbstractManager<JobsPlugin> {
     }
 
     public void openJobsMenu(@NotNull Player player) {
-        this.jobListMenu.open(player);
+        this.jobsMenu.open(player);
     }
 
     public void openJobMenu(@NotNull Player player, @NotNull Job job) {
         this.jobMenu.open(player, job);
+    }
+
+    public void openPreviewMenu(@NotNull Player player, @NotNull Job job) {
+        this.previewMenu.open(player, job);
     }
 
     public void openObjectivesMenu(@NotNull Player player, @NotNull Job job) {
@@ -350,6 +357,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         }
     }
 
+    @Deprecated
     public boolean joinJob(@NotNull Player player, @NotNull Job job, boolean forced) {
         if (forced || (this.canGetMoreJobs(player, JobState.PRIMARY) && job.isAllowedState(JobState.PRIMARY))) {
             return this.joinJob(player, job, JobState.PRIMARY, forced);
@@ -373,6 +381,11 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         }
 
         if (!forced) {
+            if (!job.hasPermission(player)) {
+                Lang.ERROR_NO_PERMISSION.getMessage().send(player);
+                return false;
+            }
+
             if (!this.canGetMoreJobs(player, state)) {
                 Lang.JOB_JOIN_ERROR_LIMIT_STATE.getMessage()
                     .replace(Placeholders.GENERIC_AMOUNT, NumberUtil.format(getJobsLimit(player, state)))

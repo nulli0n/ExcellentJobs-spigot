@@ -47,6 +47,6 @@ public class JoinCommand extends AbstractCommand<JobsPlugin> {
 
         Player player = (Player) sender;
 
-        this.plugin.getJobManager().joinJob(player, job, false);
+        this.plugin.getJobManager().openPreviewMenu(player, job);
     }
 }

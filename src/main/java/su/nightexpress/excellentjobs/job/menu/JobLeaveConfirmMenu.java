@@ -1,7 +1,6 @@
 package su.nightexpress.excellentjobs.job.menu;
 
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -11,6 +10,7 @@ import su.nightexpress.excellentjobs.data.impl.JobData;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.menu.MenuOptions;
+import su.nightexpress.nightcore.menu.MenuSize;
 import su.nightexpress.nightcore.menu.MenuViewer;
 import su.nightexpress.nightcore.menu.impl.ConfigMenu;
 import su.nightexpress.nightcore.menu.item.ItemHandler;
@@ -29,6 +29,7 @@ import static su.nightexpress.excellentjobs.Placeholders.JOB_DATA_LEVEL_MAX;
 import static su.nightexpress.nightcore.util.text.tag.Tags.*;
 import static su.nightexpress.nightcore.util.text.tag.Tags.LIGHT_GRAY;
 
+@Deprecated
 public class JobLeaveConfirmMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
 
     private static final String FILE_NAME = "job_leave_confirm.yml";
@@ -85,7 +86,7 @@ public class JobLeaveConfirmMenu extends ConfigMenu<JobsPlugin> implements Linke
     @Override
     @NotNull
     protected MenuOptions createDefaultOptions() {
-        return new MenuOptions(BLACK.enclose("Leave " + JOB_NAME + " Job?"), 9, InventoryType.CHEST);
+        return new MenuOptions(BLACK.enclose("Leave " + JOB_NAME + " Job?"), MenuSize.CHEST_9);
     }
 
     @Override

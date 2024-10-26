@@ -1,7 +1,6 @@
 package su.nightexpress.excellentjobs.job.menu;
 
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -11,13 +10,16 @@ import su.nightexpress.excellentjobs.action.ActionType;
 import su.nightexpress.excellentjobs.api.currency.Currency;
 import su.nightexpress.excellentjobs.booster.impl.Booster;
 import su.nightexpress.excellentjobs.config.Config;
+import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.data.impl.JobData;
 import su.nightexpress.excellentjobs.data.impl.JobUser;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.job.impl.JobObjective;
+import su.nightexpress.excellentjobs.job.impl.JobState;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.menu.MenuOptions;
+import su.nightexpress.nightcore.menu.MenuSize;
 import su.nightexpress.nightcore.menu.MenuViewer;
 import su.nightexpress.nightcore.menu.api.AutoFill;
 import su.nightexpress.nightcore.menu.api.AutoFilled;
@@ -30,7 +32,6 @@ import su.nightexpress.nightcore.util.ItemReplacer;
 import su.nightexpress.nightcore.util.ItemUtil;
 import su.nightexpress.nightcore.util.Lists;
 import su.nightexpress.nightcore.util.NumberUtil;
-import su.nightexpress.nightcore.util.text.NightMessage;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -42,7 +43,7 @@ import java.util.stream.IntStream;
 import static su.nightexpress.excellentjobs.Placeholders.*;
 import static su.nightexpress.nightcore.util.text.tag.Tags.*;
 
-public class JobObjectivesMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<JobObjective>, Linked<Job> {
+public class ObjectivesMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<JobObjective>, Linked<Job> {
 
     private static final String FILE_NAME = "job_obectives.yml";
 
@@ -63,11 +64,19 @@ public class JobObjectivesMenu extends ConfigMenu<JobsPlugin> implements AutoFil
     private List<String> rewardXPLimitLore;
     private int[]        objSlots;
 
-    public JobObjectivesMenu(@NotNull JobsPlugin plugin) {
+    public ObjectivesMenu(@NotNull JobsPlugin plugin) {
         super(plugin, FileConfig.loadOrExtract(plugin, Config.DIR_MENU, FILE_NAME));
         this.link = new ViewLink<>();
 
         this.addHandler(this.returnHandler = ItemHandler.forReturn(this, (viewer, event) -> {
+            Player player = viewer.getPlayer();
+            Job job = this.getLink().get(player);
+            JobUser user = plugin.getUserManager().getUserData(player);
+            if (user.getData(job).getState() == JobState.INACTIVE) {
+                this.runNextTick(player::closeInventory);
+                return;
+            }
+
             this.runNextTick(() -> plugin.getJobManager().openJobMenu(viewer.getPlayer(), this.getLink().get(viewer)));
         }));
 
@@ -77,7 +86,7 @@ public class JobObjectivesMenu extends ConfigMenu<JobsPlugin> implements AutoFil
     @Override
     @NotNull
     protected MenuOptions createDefaultOptions() {
-        return new MenuOptions(BLACK.enclose(JOB_NAME + " Job Objectives"), 45, InventoryType.CHEST);
+        return new MenuOptions(BLACK.enclose(JOB_NAME + " Job Objectives"), MenuSize.CHEST_45);
     }
 
     @Override
@@ -85,21 +94,21 @@ public class JobObjectivesMenu extends ConfigMenu<JobsPlugin> implements AutoFil
     protected List<MenuItem> createDefaultItems() {
         List<MenuItem> list = new ArrayList<>();
 
-        ItemStack prevPage = ItemUtil.getSkinHead("86971dd881dbaf4fd6bcaa93614493c612f869641ed59d1c9363a3666a5fa6");
+        ItemStack prevPage = ItemUtil.getSkinHead(SKIN_ARROW_LEFT);
         ItemUtil.editMeta(prevPage, meta -> {
-            meta.setDisplayName(NightMessage.asLegacy(LIGHT_GRAY.enclose("← Previous Page")));
+            meta.setDisplayName(Lang.EDITOR_ITEM_PREVIOUS_PAGE.getLocalizedName());
         });
         list.add(new MenuItem(prevPage).setSlots(36).setPriority(10).setHandler(ItemHandler.forPreviousPage(this)));
 
-        ItemStack nextPage = ItemUtil.getSkinHead("f32ca66056b72863e98f7f32bd7d94c7a0d796af691c9ac3a9136331352288f9");
+        ItemStack nextPage = ItemUtil.getSkinHead(SKIN_ARROW_RIGHT);
         ItemUtil.editMeta(nextPage, meta -> {
-            meta.setDisplayName(NightMessage.asLegacy(LIGHT_GRAY.enclose("Next Page →")));
+            meta.setDisplayName(Lang.EDITOR_ITEM_NEXT_PAGE.getLocalizedName());
         });
         list.add(new MenuItem(nextPage).setSlots(44).setPriority(10).setHandler(ItemHandler.forNextPage(this)));
 
-        ItemStack back = ItemUtil.getSkinHead("be9ae7a4be65fcbaee65181389a2f7d47e2e326db59ea3eb789a92c85ea46");
+        ItemStack back = ItemUtil.getSkinHead(SKIN_ARROW_DOWN);
         ItemUtil.editMeta(back, meta -> {
-            meta.setDisplayName(NightMessage.asLegacy(LIGHT_GRAY.enclose("↓ Back")));
+            meta.setDisplayName(Lang.EDITOR_ITEM_RETURN.getLocalizedName());
         });
         list.add(new MenuItem(back).setSlots(40).setPriority(10).setHandler(this.returnHandler));
 
@@ -225,9 +234,9 @@ public class JobObjectivesMenu extends ConfigMenu<JobsPlugin> implements AutoFil
             ItemReplacer.create(item).trimmed().hideFlags()
                 .setDisplayName(name)
                 .setLore(lore)
-                .replaceLoreExact(PLACEHOLDER_OBJECTS, objects)
-                .replaceLoreExact(PLACEHOLDER_REWARD_XP, rewardXP)
-                .replaceLoreExact(PLACEHOLDER_REWARD_CURRENCY, rewardCurrency)
+                .replace(PLACEHOLDER_OBJECTS, objects)
+                .replace(PLACEHOLDER_REWARD_XP, rewardXP)
+                .replace(PLACEHOLDER_REWARD_CURRENCY, rewardCurrency)
                 .writeMeta();
 
             return item;

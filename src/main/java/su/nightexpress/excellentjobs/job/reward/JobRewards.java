@@ -83,7 +83,7 @@ public class JobRewards {
     public List<LevelReward> getRewards(int jobLevel) {
         UnaryOperator<String> replacer = this.getModifierReplacer(jobLevel);
 
-        return this.getRewards().stream().filter(reward -> reward.isGoodLevel(jobLevel)).map(reward -> reward.parse(replacer)).toList();
+        return new ArrayList<>(this.getRewards().stream().filter(reward -> reward.isGoodLevel(jobLevel)).map(reward -> reward.parse(replacer)).toList());
     }
 
     @NotNull

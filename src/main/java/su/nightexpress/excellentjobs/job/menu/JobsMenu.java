@@ -1,7 +1,6 @@
 package su.nightexpress.excellentjobs.job.menu;
 
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -19,6 +18,7 @@ import su.nightexpress.excellentjobs.job.impl.JobState;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.menu.MenuOptions;
+import su.nightexpress.nightcore.menu.MenuSize;
 import su.nightexpress.nightcore.menu.MenuViewer;
 import su.nightexpress.nightcore.menu.api.AutoFill;
 import su.nightexpress.nightcore.menu.api.AutoFilled;
@@ -36,7 +36,7 @@ import java.util.stream.IntStream;
 import static su.nightexpress.excellentjobs.Placeholders.*;
 import static su.nightexpress.nightcore.util.text.tag.Tags.*;
 
-public class JobListMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<Job> {
+public class JobsMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<Job> {
 
     private static final String FILE_NAME = "job_list.yml";
 
@@ -49,9 +49,9 @@ public class JobListMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<Jo
     private String       jobNameAvailable;
     private List<String> jobLoreAvailable;
     private List<String> jobAvailJoinPrimLore;
-    private List<String> jobAvailJoinSeconLore;
+    //private List<String> jobAvailJoinSeconLore;
     private List<String> jobAvailSettingsLore;
-    private List<String> jobAvailLimitLore;
+    //private List<String> jobAvailLimitLore;
     private List<String> jobSpecOrderLore;
     private List<String> jobBoosterLore;
     private List<String> jobPrimStateLore;
@@ -64,7 +64,7 @@ public class JobListMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<Jo
     private List<String> jobLoreLockedPerm;
     private int[]        jobSlots;
 
-    public JobListMenu(@NotNull JobsPlugin plugin) {
+    public JobsMenu(@NotNull JobsPlugin plugin) {
         super(plugin, FileConfig.loadOrExtract(plugin, Config.DIR_MENU, FILE_NAME));
 
         this.load();
@@ -110,14 +110,17 @@ public class JobListMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<Jo
             if (jobData.getState() != JobState.INACTIVE) {
                 status = new ArrayList<>(this.jobAvailSettingsLore);
             }
-            else if (this.plugin.getJobManager().canGetMoreJobs(player, JobState.PRIMARY) && job.isAllowedState(JobState.PRIMARY)) {
-                status = new ArrayList<>(this.jobAvailJoinPrimLore);
-            }
-            else if (this.plugin.getJobManager().canGetMoreJobs(player, JobState.SECONDARY) && job.isAllowedState(JobState.SECONDARY)) {
-                status = new ArrayList<>(this.jobAvailJoinSeconLore);
-            }
+//            else if (this.plugin.getJobManager().canGetMoreJobs(player, JobState.PRIMARY) && job.isAllowedState(JobState.PRIMARY)) {
+//                status = new ArrayList<>(this.jobAvailJoinPrimLore);
+//            }
+//            else if (this.plugin.getJobManager().canGetMoreJobs(player, JobState.SECONDARY) && job.isAllowedState(JobState.SECONDARY)) {
+//                status = new ArrayList<>(this.jobAvailJoinSeconLore);
+//            }
+//            else {
+//                status = new ArrayList<>(this.jobAvailLimitLore);
+//            }
             else {
-                status = new ArrayList<>(this.jobAvailLimitLore);
+                status = new ArrayList<>(this.jobAvailJoinPrimLore);
             }
 
             List<String> dailyLimits = new ArrayList<>();
@@ -209,11 +212,11 @@ public class JobListMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<Jo
             ItemStack item = job.getIcon();
             ItemReplacer.create(item).trimmed().hideFlags()
                 .setDisplayName(name).setLore(loreFinal)
-                .replaceLoreExact(DAILY_LIMITS, dailyLimits)
-                .replaceLoreExact(PLACEHOLDER_STATE, state)
-                .replaceLoreExact(PLACEHOLDER_BOOSTER, boosterInfo)
-                .replaceLoreExact(PLACEHOLDER_STATUS, status)
-                .replaceLoreExact(PLACEHOLDER_ORDER, order)
+                .replace(DAILY_LIMITS, dailyLimits)
+                .replace(PLACEHOLDER_STATE, state)
+                .replace(PLACEHOLDER_BOOSTER, boosterInfo)
+                .replace(PLACEHOLDER_STATUS, status)
+                .replace(PLACEHOLDER_ORDER, order)
                 .replace(jobData.getPlaceholders())
                 .replace(job.getPlaceholders())
                 .writeMeta();
@@ -235,16 +238,16 @@ public class JobListMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<Jo
                 return;
             }
 
-            if (this.plugin.getJobManager().canGetMoreJobs(player1)) {
-                this.runNextTick(() -> this.plugin.getJobManager().openJoinConfirmMenu(player1, job));
-            }
+            //if (this.plugin.getJobManager().canGetMoreJobs(player1)) {
+                this.runNextTick(() -> this.plugin.getJobManager().openPreviewMenu(player1, job));
+            //}
         });
     }
 
     @Override
     @NotNull
     protected MenuOptions createDefaultOptions() {
-        return new MenuOptions(BLACK.enclose(BOLD.enclose("Jobs")), 27, InventoryType.CHEST);
+        return new MenuOptions(BLACK.enclose(BOLD.enclose("Jobs")), MenuSize.CHEST_27);
     }
 
     @Override
@@ -252,21 +255,21 @@ public class JobListMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<Jo
     protected List<MenuItem> createDefaultItems() {
         List<MenuItem> list = new ArrayList<>();
 
-        ItemStack prevPage = ItemUtil.getSkinHead("86971dd881dbaf4fd6bcaa93614493c612f869641ed59d1c9363a3666a5fa6");
+        ItemStack prevPage = ItemUtil.getSkinHead(SKIN_ARROW_LEFT);
         ItemUtil.editMeta(prevPage, meta -> {
-            meta.setDisplayName(LIGHT_GRAY.enclose("← Previous Page"));
+            meta.setDisplayName(Lang.EDITOR_ITEM_PREVIOUS_PAGE.getLocalizedName());
         });
         list.add(new MenuItem(prevPage).setSlots(18).setPriority(10).setHandler(ItemHandler.forPreviousPage(this)));
 
-        ItemStack nextPage = ItemUtil.getSkinHead("f32ca66056b72863e98f7f32bd7d94c7a0d796af691c9ac3a9136331352288f9");
+        ItemStack nextPage = ItemUtil.getSkinHead(SKIN_ARROW_RIGHT);
         ItemUtil.editMeta(nextPage, meta -> {
-            meta.setDisplayName(LIGHT_GRAY.enclose("Next Page →"));
+            meta.setDisplayName(Lang.EDITOR_ITEM_NEXT_PAGE.getLocalizedName());
         });
         list.add(new MenuItem(nextPage).setSlots(26).setPriority(10).setHandler(ItemHandler.forNextPage(this)));
 
-        ItemStack back = ItemUtil.getSkinHead("be9ae7a4be65fcbaee65181389a2f7d47e2e326db59ea3eb789a92c85ea46");
+        ItemStack back = ItemUtil.getSkinHead(SKIN_WRONG_MARK);
         ItemUtil.editMeta(back, meta -> {
-            meta.setDisplayName(LIGHT_RED.enclose("✕ Exit"));
+            meta.setDisplayName(Lang.EDITOR_ITEM_CLOSE.getLocalizedName());
         });
         list.add(new MenuItem(back).setSlots(40).setPriority(10).setHandler(ItemHandler.forClose(this)));
 
@@ -314,21 +317,21 @@ public class JobListMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<Jo
             LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("XP: ") + GENERIC_CURRENT + LIGHT_GRAY.enclose("/") + GENERIC_TOTAL)
         )).read(cfg);
 
-        this.jobAvailJoinPrimLore = ConfigValue.create("Job.Available.Status.Join_Primary", Lists.newList(
-            LIGHT_GREEN.enclose("[▶] " + LIGHT_GRAY.enclose("Click to") + " get as primary" + LIGHT_GRAY.enclose("."))
+        this.jobAvailJoinPrimLore = ConfigValue.create("Job.Available.Status.Preview", Lists.newList(
+            LIGHT_GREEN.enclose("[▶] " + LIGHT_GRAY.enclose("Click to") + " preview" + LIGHT_GRAY.enclose("."))
         )).read(cfg);
 
-        this.jobAvailJoinSeconLore = ConfigValue.create("Job.Available.Status.Join_Secondary", Lists.newList(
-            LIGHT_GREEN.enclose("[▶] " + LIGHT_GRAY.enclose("Click to") + " get as secondary" + LIGHT_GRAY.enclose("."))
-        )).read(cfg);
+//        this.jobAvailJoinSeconLore = ConfigValue.create("Job.Available.Status.Join_Secondary", Lists.newList(
+//            LIGHT_GREEN.enclose("[▶] " + LIGHT_GRAY.enclose("Click to") + " get as secondary" + LIGHT_GRAY.enclose("."))
+//        )).read(cfg);
 
         this.jobAvailSettingsLore = ConfigValue.create("Job.Available.Status.Settings", Lists.newList(
             LIGHT_YELLOW.enclose("[▶] " + LIGHT_GRAY.enclose("Click to") + " open settings" + LIGHT_GRAY.enclose("."))
         )).read(cfg);
 
-        this.jobAvailLimitLore = ConfigValue.create("Job.Available.Status.Limit", Lists.newList(
-            LIGHT_RED.enclose("[❗] " + LIGHT_GRAY.enclose("You can't get") + " more " + LIGHT_GRAY.enclose("jobs."))
-        )).read(cfg);
+//        this.jobAvailLimitLore = ConfigValue.create("Job.Available.Status.Limit", Lists.newList(
+//            LIGHT_RED.enclose("[❗] " + LIGHT_GRAY.enclose("You can't get") + " more " + LIGHT_GRAY.enclose("jobs."))
+//        )).read(cfg);
 
         this.jobPrimStateLore = ConfigValue.create("Job.State.Primary", Lists.newList(
             DARK_GRAY.enclose(LIGHT_GREEN.enclose("✔") + " This is your " + GRAY.enclose("Primary") + " job.")

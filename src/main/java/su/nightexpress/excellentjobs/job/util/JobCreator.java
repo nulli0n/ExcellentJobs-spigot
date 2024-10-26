@@ -208,6 +208,7 @@ public class JobCreator {
         rareOreItems.addAll(Tag.GOLD_ORES.getValues());
         rareOreItems.addAll(Tag.REDSTONE_ORES.getValues());
         rareOreItems.addAll(Tag.LAPIS_ORES.getValues());
+        rareOreItems.remove(Material.NETHER_GOLD_ORE);
 
         Set<Material> deepOreItems = new HashSet<>();
         deepOreItems.addAll(Tag.DIAMOND_ORES.getValues());

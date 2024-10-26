@@ -1,7 +1,6 @@
 package su.nightexpress.excellentjobs.job.menu;
 
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -11,6 +10,7 @@ import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.data.impl.JobData;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.menu.MenuOptions;
+import su.nightexpress.nightcore.menu.MenuSize;
 import su.nightexpress.nightcore.menu.MenuViewer;
 import su.nightexpress.nightcore.menu.impl.ConfigMenu;
 import su.nightexpress.nightcore.menu.item.ItemHandler;
@@ -84,7 +84,7 @@ public class JobResetMenu extends ConfigMenu<JobsPlugin> implements Linked<JobDa
     @Override
     @NotNull
     protected MenuOptions createDefaultOptions() {
-        return new MenuOptions(BLACK.enclose("Reset " + JOB_NAME + " Job Progress?"), 9, InventoryType.CHEST);
+        return new MenuOptions(BLACK.enclose("Reset " + JOB_NAME + " Job Progress?"), MenuSize.CHEST_9);
     }
 
     @Override

@@ -218,7 +218,7 @@ public class GenericListener extends AbstractListener<JobsPlugin> {
         Zone zone = this.manager.getZone(player);
         if (zone == null) return;
 
-        if (block.getState() instanceof Sign sign || zone.isDisabledInteraction(block)) {
+        if (block.getState() instanceof Sign || zone.isDisabledInteraction(block)) {
             event.setUseInteractedBlock(Event.Result.DENY);
         }
     }

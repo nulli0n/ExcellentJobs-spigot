@@ -26,6 +26,7 @@ import java.util.List;
 import static su.nightexpress.excellentjobs.Placeholders.*;
 import static su.nightexpress.nightcore.util.text.tag.Tags.*;
 
+@Deprecated
 public class JobJoinConfirmMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
 
     private static final String FILE_NAME = "job_join_confirm.yml";
