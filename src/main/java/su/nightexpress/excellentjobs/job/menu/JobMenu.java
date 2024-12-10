@@ -4,6 +4,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import su.nightexpress.economybridge.EconomyBridge;
+import su.nightexpress.economybridge.api.Currency;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Lang;
@@ -27,6 +29,7 @@ import su.nightexpress.nightcore.util.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static su.nightexpress.excellentjobs.Placeholders.*;
@@ -158,7 +161,15 @@ public class JobMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
                                 }
                                 else {
                                     lore.add(line
-                                        .replace(GENERIC_CURRENCY, job.getSpecialOrdersCost().entrySet().stream().map(entry -> entry.getKey().format(entry.getValue())).collect(Collectors.joining(", ")))
+                                        .replace(GENERIC_CURRENCY, job.getSpecialOrdersCost().entrySet().stream()
+                                            .map(entry -> {
+                                                Currency currency = EconomyBridge.getCurrency(entry.getKey());
+                                                if (currency == null) return null;
+
+                                                return currency.format(entry.getValue());
+                                            })
+                                            .filter(Objects::nonNull)
+                                            .collect(Collectors.joining(", ")))
                                         .replace(GENERIC_TIME, TimeUtil.formatDuration(hasActiveOrder ?  orderData.getExpireDate() : jobData.getNextOrderDate()))
                                     );
                                 }

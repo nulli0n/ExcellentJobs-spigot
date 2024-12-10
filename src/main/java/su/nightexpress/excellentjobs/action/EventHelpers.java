@@ -26,7 +26,7 @@ import org.bukkit.util.RayTraceResult;
 import su.nightexpress.excellentjobs.api.event.bukkit.PlayerCollectedHoneyEvent;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Keys;
-import su.nightexpress.excellentjobs.hook.HookId;
+import su.nightexpress.excellentjobs.hook.HookPlugin;
 import su.nightexpress.excellentjobs.hook.impl.EvenMoreFishHook;
 import su.nightexpress.excellentjobs.hook.impl.LevelledMobsHook;
 import su.nightexpress.excellentjobs.hook.impl.MythicMobsHook;
@@ -200,10 +200,10 @@ public class EventHelpers {
         double multiplier = 0D;
 
         // Do not count MythicMobs here.
-        if (Plugins.isInstalled(HookId.MYTHIC_MOBS) && MythicMobsHook.isMythicMob(entity)) return false;
+        if (Plugins.isInstalled(HookPlugin.MYTHIC_MOBS) && MythicMobsHook.isMythicMob(entity)) return false;
 
         // LevelledMobs integration.
-        if (Plugins.isInstalled(HookId.LEVELLED_MOBS) && Config.LEVELLED_MOBS_KILL_ENTITY_ENABLED.get()) {
+        if (Plugins.isInstalled(HookPlugin.LEVELLED_MOBS) && Config.LEVELLED_MOBS_KILL_ENTITY_ENABLED.get()) {
             int level = LevelledMobsHook.getLevel(entity);
             double amount = Config.LEVELLED_MOBS_KILL_ENTITY_MULTIPLIER.get();
             multiplier = level * amount;
@@ -228,10 +228,10 @@ public class EventHelpers {
         double multiplier = 0D;
 
         // Do not count MythicMobs here.
-        if (Plugins.isInstalled(HookId.MYTHIC_MOBS) && MythicMobsHook.isMythicMob(entity)) return false;
+        if (Plugins.isInstalled(HookPlugin.MYTHIC_MOBS) && MythicMobsHook.isMythicMob(entity)) return false;
 
         // LevelledMobs integration.
-        if (Plugins.isInstalled(HookId.LEVELLED_MOBS) && Config.LEVELLED_MOBS_KILL_ENTITY_ENABLED.get()) {
+        if (Plugins.isInstalled(HookPlugin.LEVELLED_MOBS) && Config.LEVELLED_MOBS_KILL_ENTITY_ENABLED.get()) {
             int level = LevelledMobsHook.getLevel(entity);
             double amount = Config.LEVELLED_MOBS_KILL_ENTITY_MULTIPLIER.get();
             multiplier = level * amount;
@@ -352,7 +352,7 @@ public class EventHelpers {
         ItemStack itemStack = item.getItemStack();
 
         // Do not count EMF fishes.
-        if (Plugins.isInstalled(HookId.EVEN_MORE_FISH) && EvenMoreFishHook.isCustomFish(itemStack)) return false;
+        if (Plugins.isInstalled(HookPlugin.EVEN_MORE_FISH) && EvenMoreFishHook.isCustomFish(itemStack)) return false;
 
         processor.progressObjective(player, itemStack.getType(), itemStack.getAmount());
         return true;

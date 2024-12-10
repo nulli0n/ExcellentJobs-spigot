@@ -4,10 +4,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import su.nightexpress.economybridge.api.Currency;
+import su.nightexpress.economybridge.currency.CurrencyId;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.Placeholders;
 import su.nightexpress.excellentjobs.action.ActionType;
-import su.nightexpress.excellentjobs.api.currency.Currency;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Perms;
 import su.nightexpress.excellentjobs.data.impl.JobData;
@@ -28,7 +29,7 @@ public class JobObjective {
     private final String                         displayName;
     private final ItemStack                      icon;
     private final Set<String>                    objects;
-    private final Map<Currency, ObjectiveReward> paymentMap;
+    private final Map<String, ObjectiveReward> paymentMap;
     private final ObjectiveReward                xpReward;
     private final int                            unlockLevel;
 
@@ -41,7 +42,7 @@ public class JobObjective {
                         @NotNull String displayName,
                         @NotNull ItemStack icon,
                         @NotNull Set<String> objects,
-                        @NotNull Map<Currency, ObjectiveReward> paymentMap,
+                        @NotNull Map<String, ObjectiveReward> paymentMap,
                         @NotNull ObjectiveReward xpReward,
                         int unlockLevel,
                         boolean specialOrderAllowed,
@@ -84,16 +85,10 @@ public class JobObjective {
         Set<String> objects = cfg.getStringSet(path + ".Objects")
             .stream().map(String::toLowerCase).collect(Collectors.toSet());
 
-        Map<Currency, ObjectiveReward> currencyDrop = new HashMap<>();
+        Map<String, ObjectiveReward> currencyDrop = new HashMap<>();
         for (String curId : cfg.getSection(path + ".Payment")) {
-            Currency currency = plugin.getCurrencyManager().getCurrency(curId);
-            if (currency == null) {
-                plugin.error("Invalid currency '" + curId + "' for '" + id + "' objective. File: '" + cfg.getFile().getName() + "'.");
-                continue;
-            }
-
             ObjectiveReward objectiveReward = ObjectiveReward.read(cfg, path + ".Payment." + curId);
-            currencyDrop.put(currency, objectiveReward);
+            currencyDrop.put(CurrencyId.reroute(curId), objectiveReward);
         }
         ObjectiveReward xpDrop = ObjectiveReward.read(cfg, path + ".Job_XP");
 
@@ -129,8 +124,8 @@ public class JobObjective {
 
         cfg.set(path + ".Objects", this.getObjects());
 
-        this.getPaymentMap().forEach((currency, objectiveReward) -> {
-            objectiveReward.write(cfg, path + ".Payment." + currency.getId());
+        this.getPaymentMap().forEach((currencyId, objectiveReward) -> {
+            objectiveReward.write(cfg, path + ".Payment." + currencyId);
         });
         this.getXPReward().write(cfg, path + ".Job_XP");
 
@@ -168,7 +163,7 @@ public class JobObjective {
 
     @NotNull
     public ObjectiveReward getPaymentInfo(@NotNull Currency currency) {
-        return this.getPaymentMap().getOrDefault(currency, ObjectiveReward.EMPTY);
+        return this.getPaymentMap().getOrDefault(currency.getInternalId(), ObjectiveReward.EMPTY);
     }
 
     @NotNull
@@ -197,7 +192,7 @@ public class JobObjective {
     }
 
     @NotNull
-    public Map<Currency, ObjectiveReward> getPaymentMap() {
+    public Map<String, ObjectiveReward> getPaymentMap() {
         return paymentMap;
     }
 

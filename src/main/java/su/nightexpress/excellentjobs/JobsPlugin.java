@@ -2,6 +2,7 @@ package su.nightexpress.excellentjobs;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import su.nightexpress.economybridge.EconomyBridge;
 import su.nightexpress.excellentjobs.action.ActionRegistry;
 import su.nightexpress.excellentjobs.booster.BoosterManager;
 import su.nightexpress.excellentjobs.command.base.*;
@@ -10,7 +11,6 @@ import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Keys;
 import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.config.Perms;
-import su.nightexpress.excellentjobs.currency.CurrencyManager;
 import su.nightexpress.excellentjobs.data.DataHandler;
 import su.nightexpress.excellentjobs.data.UserManager;
 import su.nightexpress.excellentjobs.data.impl.JobUser;
@@ -31,7 +31,6 @@ public class JobsPlugin extends NightDataPlugin<JobUser> {
     private UserManager userManager;
 
     private ActionRegistry  actionRegistry;
-    private CurrencyManager currencyManager;
     private BoosterManager  boosterManager;
     private JobManager      jobManager;
     private ZoneManager     zoneManager;
@@ -52,10 +51,8 @@ public class JobsPlugin extends NightDataPlugin<JobUser> {
 
         this.registerCommands();
 
-        this.currencyManager = new CurrencyManager(this);
-        this.currencyManager.setup();
-        if (!this.currencyManager.hasCurrency()) {
-            this.error("No currencies are available! Plugin will be disabled.");
+        if (!EconomyBridge.hasCurrency()) {
+            this.error("No currencies are available! Please setup EconomyBridge correctly. Plugin will be disabled.");
             this.getPluginManager().disablePlugin(this);
             return;
         }
@@ -104,7 +101,6 @@ public class JobsPlugin extends NightDataPlugin<JobUser> {
         if (this.zoneManager != null) this.zoneManager.shutdown();
         if (this.statsManager != null) this.statsManager.shutdown();
         if (this.jobManager != null) this.jobManager.shutdown();
-        if (this.currencyManager != null) this.currencyManager.shutdown();
 
         this.actionRegistry.shutdown();
         this.userManager.shutdown();
@@ -148,11 +144,6 @@ public class JobsPlugin extends NightDataPlugin<JobUser> {
     @NotNull
     public ActionRegistry getActionRegistry() {
         return actionRegistry;
-    }
-
-    @NotNull
-    public CurrencyManager getCurrencyManager() {
-        return currencyManager;
     }
 
     @NotNull

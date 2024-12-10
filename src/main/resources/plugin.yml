@@ -3,7 +3,9 @@ main: su.nightexpress.excellentjobs.JobsPlugin
 version: '${project.version}'
 description: A better & elegant jobs solution for your server!
 author: NightExpress
-depend: [nightcore]
+depend:
+  - nightcore
+  - EconomyBridge
 softdepend:
   - PlaceholderAPI
   - CoinsEngine
@@ -11,4 +13,4 @@ softdepend:
   - ProtocolLib
   - MythicMobs
   - EvenMoreFish
-api-version: 1.18
+api-version: 1.19

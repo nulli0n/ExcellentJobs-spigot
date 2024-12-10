@@ -2,8 +2,8 @@ package su.nightexpress.excellentjobs.data.impl;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import su.nightexpress.economybridge.api.Currency;
 import su.nightexpress.excellentjobs.Placeholders;
-import su.nightexpress.excellentjobs.api.currency.Currency;
 import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.job.impl.JobState;
@@ -127,7 +127,7 @@ public class JobData implements Placeholder {
     }
 
     public boolean isPaymentLimitReached(@NotNull Currency currency) {
-        return this.isPaymentLimitReached(currency.getId());
+        return this.isPaymentLimitReached(currency.getInternalId());
     }
 
     public boolean isPaymentLimitReached(@NotNull String id) {

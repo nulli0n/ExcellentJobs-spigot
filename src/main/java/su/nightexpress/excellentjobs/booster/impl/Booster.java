@@ -1,7 +1,7 @@
 package su.nightexpress.excellentjobs.booster.impl;
 
 import org.jetbrains.annotations.NotNull;
-import su.nightexpress.excellentjobs.api.currency.Currency;
+import su.nightexpress.economybridge.api.Currency;
 import su.nightexpress.excellentjobs.booster.BoosterMultiplier;
 import su.nightexpress.excellentjobs.booster.config.BoosterInfo;
 
@@ -25,7 +25,7 @@ public class Booster {
     }
 
     public static double getCurrencyBoost(@NotNull Currency currency, @NotNull Collection<Booster> boosters) {
-        return getCurrencyBoost(currency.getId(), boosters);
+        return getCurrencyBoost(currency.getInternalId(), boosters);
     }
 
     public static double getCurrencyBoost(@NotNull String id, @NotNull Collection<Booster> boosters) {
@@ -33,7 +33,7 @@ public class Booster {
     }
 
     public static double getCurrencyPlainBoost(@NotNull Currency currency, @NotNull Collection<Booster> boosters) {
-        return getCurrencyPlainBoost(currency.getId(), boosters);
+        return getCurrencyPlainBoost(currency.getInternalId(), boosters);
     }
 
     public static double getCurrencyPlainBoost(@NotNull String id, @NotNull Collection<Booster> boosters) {
@@ -49,7 +49,7 @@ public class Booster {
     }
 
     public static double getCurrencyPercent(@NotNull Currency currency, @NotNull Collection<Booster> boosters) {
-        return getCurrencyPercent(currency.getId(), boosters);
+        return getCurrencyPercent(currency.getInternalId(), boosters);
     }
 
     public static double getCurrencyPercent(@NotNull String id, @NotNull Collection<Booster> boosters) {

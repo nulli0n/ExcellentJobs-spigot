@@ -6,13 +6,12 @@ import org.bukkit.boss.BarColor;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import su.nightexpress.economybridge.currency.CurrencyId;
 import su.nightexpress.excellentjobs.JobsAPI;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.action.ActionType;
 import su.nightexpress.excellentjobs.action.ActionTypes;
-import su.nightexpress.excellentjobs.api.currency.Currency;
 import su.nightexpress.excellentjobs.config.Config;
-import su.nightexpress.excellentjobs.currency.handler.VaultEconomyHandler;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.job.impl.JobObjective;
 import su.nightexpress.excellentjobs.job.impl.JobState;
@@ -72,9 +71,9 @@ public class JobCreator {
         job.setMaxLevel(100);
         job.setMaxSecondaryLevel(30);
         job.setProgressBarColor(BarColor.GREEN);
-        job.getPaymentMultiplier().put(VaultEconomyHandler.ID, Modifier.add(0D, 0.01, 1D));
+        job.getPaymentMultiplier().put(CurrencyId.VAULT, Modifier.add(0D, 0.01, 1D));
         job.setXPMultiplier(Modifier.add(0D, 0.01, 3D));
-        job.getDailyPaymentLimits().put(VaultEconomyHandler.ID, Modifier.add(-1D, 0D, 0D));
+        job.getDailyPaymentLimits().put(CurrencyId.VAULT, Modifier.add(-1D, 0D, 0D));
         job.setXPDailyLimits(Modifier.add(-1D, 0D, 0D));
         job.save();
     }
@@ -296,12 +295,10 @@ public class JobCreator {
             MONEY_MEDIUM.multiply(2), XP_MEDIUM, 1)
         );
 
-        if (Version.isAbove(Version.V1_19_R3)) {
-            objectives.add(createObjective("cherry", type, Tag.CHERRY_LOGS.getValues(),
-                new ItemStack(Material.CHERRY_LOG),
-                MONEY_MEDIUM.multiply(2), XP_MEDIUM, 1)
-            );
-        }
+        objectives.add(createObjective("cherry", type, Tag.CHERRY_LOGS.getValues(),
+            new ItemStack(Material.CHERRY_LOG),
+            MONEY_MEDIUM.multiply(2), XP_MEDIUM, 1)
+        );
 
         objectives.add(createObjective("crimson", type, Tag.CRIMSON_STEMS.getValues(),
             new ItemStack(Material.CRIMSON_STEM),
@@ -318,12 +315,10 @@ public class JobCreator {
             MONEY_MEDIUM.multiply(3), XP_MEDIUM, 1)
         );
 
-        if (Version.isAtLeast(Version.V1_20_R1)) {
-            objectives.add(createObjective("mangrove", type, Tag.MANGROVE_LOGS.getValues(),
-                new ItemStack(Material.MANGROVE_LOG),
-                MONEY_MEDIUM.multiply(2), XP_MEDIUM, 1)
-            );
-        }
+        objectives.add(createObjective("mangrove", type, Tag.MANGROVE_LOGS.getValues(),
+            new ItemStack(Material.MANGROVE_LOG),
+            MONEY_MEDIUM.multiply(2), XP_MEDIUM, 1)
+        );
 
         objectives.add(createObjective("oak", type, Tag.OAK_LOGS.getValues(),
             new ItemStack(Material.OAK_LOG),
@@ -368,7 +363,7 @@ public class JobCreator {
             new ItemStack(Material.HONEY_BOTTLE),
             MONEY_HIGH.multiply(1.25), XP_HIGH.multiply(0.45), 1));
 
-        objectives.add(createObjective("milks", milk, Lists.newSet(EntityType.COW, EntityType.MUSHROOM_COW, EntityType.GOAT),
+        objectives.add(createObjective("milks", milk, Lists.newSet(EntityType.COW, EntityType.MOOSHROOM, EntityType.GOAT),
             new ItemStack(Material.MILK_BUCKET),
             MONEY_MEDIUM.multiply(2), XP_HIGH.multiply(0.35), 1));
 
@@ -399,7 +394,7 @@ public class JobCreator {
 
         Set<EntityType> breedItems = Lists.newSet(
             EntityType.PIG, EntityType.COW, EntityType.RABBIT, EntityType.HORSE, EntityType.DONKEY, EntityType.MULE,
-            EntityType.BEE, EntityType.CAT, EntityType.CHICKEN, EntityType.GOAT, EntityType.LLAMA, EntityType.MUSHROOM_COW,
+            EntityType.BEE, EntityType.CAT, EntityType.CHICKEN, EntityType.GOAT, EntityType.LLAMA, EntityType.MOOSHROOM,
             EntityType.PANDA, EntityType.SHEEP, EntityType.WOLF, EntityType.TURTLE
         );
 
@@ -485,11 +480,8 @@ public class JobCreator {
             EntityType.ENDERMITE, EntityType.ENDERMAN, EntityType.PIGLIN_BRUTE, EntityType.PIG,
             EntityType.HOGLIN, EntityType.ZOGLIN, EntityType.CAVE_SPIDER, EntityType.SPIDER,
             EntityType.CREEPER, EntityType.DROWNED, EntityType.PHANTOM, EntityType.VEX,
-            EntityType.SILVERFISH
+            EntityType.SILVERFISH, EntityType.BREEZE
         );
-        if (Version.isAtLeast(Version.MC_1_21)) {
-            hostileItems.add(EntityType.valueOf("BREEZE"));
-        }
 
         objectives.add(createObjective("hostile", entityKill, hostileItems,
             new ItemStack(Material.SKELETON_SKULL),
@@ -499,19 +491,11 @@ public class JobCreator {
         Set<EntityType> animalItems = Lists.newSet(
             EntityType.PIG, EntityType.COW, EntityType.SHEEP, EntityType.GOAT,
             EntityType.CHICKEN, EntityType.HORSE, EntityType.MULE, EntityType.DONKEY,
-            EntityType.MUSHROOM_COW, EntityType.TURTLE, EntityType.CAT,
+            EntityType.MOOSHROOM, EntityType.TURTLE, EntityType.CAT,
             EntityType.FOX, EntityType.LLAMA, EntityType.OCELOT, EntityType.PANDA,
             EntityType.PARROT, EntityType.POLAR_BEAR, EntityType.RABBIT, EntityType.TRADER_LLAMA,
-            EntityType.WOLF, EntityType.BEE, EntityType.BAT
+            EntityType.WOLF, EntityType.BEE, EntityType.BAT, EntityType.CAMEL, EntityType.FROG, EntityType.ARMADILLO, EntityType.SNIFFER
         );
-        if (Version.isAtLeast(Version.V1_20_R3)) {
-            animalItems.add(EntityType.CAMEL);
-            animalItems.add(EntityType.FROG);
-        }
-        if (Version.isAtLeast(Version.MC_1_21)) {
-            animalItems.add(EntityType.valueOf("ARMADILLO"));
-            animalItems.add(EntityType.valueOf("SNIFFER"));
-        }
 
         objectives.add(createObjective("animals", entityKill, animalItems,
             new ItemStack(Material.CARROT),
@@ -519,13 +503,9 @@ public class JobCreator {
         );
 
         Set<EntityType> fishItems = Lists.newSet(
-            EntityType.COD, EntityType.SALMON, EntityType.PUFFERFISH, EntityType.SQUID
+            EntityType.COD, EntityType.SALMON, EntityType.PUFFERFISH, EntityType.SQUID,
+            EntityType.GLOW_SQUID, EntityType.AXOLOTL, EntityType.TADPOLE
         );
-        if (Version.isAtLeast(Version.V1_20_R3)) {
-            fishItems.add(EntityType.GLOW_SQUID);
-            fishItems.add(EntityType.TADPOLE);
-            fishItems.add(EntityType.AXOLOTL);
-        }
 
         objectives.add(createObjective("fishes", entityKill, fishItems,
             new ItemStack(Material.COD),
@@ -677,11 +657,8 @@ public class JobCreator {
                                                     @NotNull ObjectiveReward money,
                                                     @NotNull ObjectiveReward xp,
                                                     int unlockLevel) {
-
-        Currency currency = JobsAPI.PLUGIN.getCurrencyManager().getCurrencyOrAny(VaultEconomyHandler.ID);
-
-        Map<Currency, ObjectiveReward> paymentMap = new HashMap<>();
-        paymentMap.put(currency, money);
+        Map<String, ObjectiveReward> paymentMap = new HashMap<>();
+        paymentMap.put(CurrencyId.VAULT, money);
 
         return new JobObjective(
             id, type, StringUtil.capitalizeUnderscored(id), icon,

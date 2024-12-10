@@ -4,10 +4,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import su.nightexpress.economybridge.EconomyBridge;
+import su.nightexpress.economybridge.api.Currency;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.Placeholders;
 import su.nightexpress.excellentjobs.action.ActionType;
-import su.nightexpress.excellentjobs.api.currency.Currency;
 import su.nightexpress.excellentjobs.booster.impl.Booster;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Lang;
@@ -73,7 +74,7 @@ public class ObjectivesMenu extends ConfigMenu<JobsPlugin> implements AutoFilled
             Job job = this.getLink().get(player);
             JobUser user = plugin.getUserManager().getUserData(player);
             if (user.getData(job).getState() == JobState.INACTIVE) {
-                this.runNextTick(player::closeInventory);
+                this.runNextTick(() -> plugin.getJobManager().openPreviewMenu(viewer.getPlayer(), job));
                 return;
             }
 
@@ -220,7 +221,10 @@ public class ObjectivesMenu extends ConfigMenu<JobsPlugin> implements AutoFilled
             );
 
             List<String> rewardCurrency = new ArrayList<>();
-            jobObjective.getPaymentMap().forEach((currency, rewardInfo) -> {
+            jobObjective.getPaymentMap().forEach((currencyId, rewardInfo) -> {
+                Currency currency = EconomyBridge.getCurrency(currencyId);
+                if (currency == null) return;
+
                 for (String line : (jobData.isPaymentLimitReached(currency) ? this.rewardCurrencyLimitLore : this.rewardCurrencyAvailLore)) {
                     rewardCurrency.add(currency.replacePlaceholders().apply(line)
                         .replace(Placeholders.OBJECTIVE_CURRENCY_MIN, NumberUtil.format(rewardInfo.getMin() * payMultiplier.apply(currency)))

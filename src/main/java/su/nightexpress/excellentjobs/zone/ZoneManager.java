@@ -14,7 +14,7 @@ import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Keys;
 import su.nightexpress.excellentjobs.config.Lang;
-import su.nightexpress.excellentjobs.hook.HookId;
+import su.nightexpress.excellentjobs.hook.HookPlugin;
 import su.nightexpress.excellentjobs.util.Cuboid;
 import su.nightexpress.excellentjobs.util.Modifier;
 import su.nightexpress.excellentjobs.util.pos.BlockPos;
@@ -95,10 +95,10 @@ public class ZoneManager extends AbstractManager<JobsPlugin> {
     private void loadHighlighter() {
         if (Version.isBehind(Version.V1_20_R3)) return;
 
-        if (Plugins.isInstalled(HookId.PACKET_EVENTS)) {
+        if (Plugins.isInstalled(HookPlugin.PACKET_EVENTS)) {
             this.highlighter = new BlockPacketsHighlighter(this.plugin);
         }
-        else if (Plugins.isInstalled(HookId.PROTOCOL_LIB)) {
+        else if (Plugins.isInstalled(HookPlugin.PROTOCOL_LIB)) {
             this.highlighter = new BlockProtocolHighlighter(this.plugin);
         }
     }

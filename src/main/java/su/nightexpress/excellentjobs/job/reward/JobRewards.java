@@ -9,6 +9,7 @@ import su.nightexpress.nightcore.util.Lists;
 import su.nightexpress.nightcore.util.NumberUtil;
 import su.nightexpress.nightcore.util.Players;
 import su.nightexpress.nightcore.util.placeholder.PlaceholderMap;
+import su.nightexpress.nightcore.util.text.tag.Tags;
 
 import java.util.*;
 import java.util.function.UnaryOperator;
@@ -21,7 +22,7 @@ public class JobRewards {
     private final Map<String, Modifier>    modifierMap;
 
     public JobRewards() {
-        this.rewardMap = new HashMap<>();
+        this.rewardMap = new LinkedHashMap<>();
         this.modifierMap = new HashMap<>();
     }
 
@@ -34,9 +35,15 @@ public class JobRewards {
             "Settings:",
             "  [Level] = Required player's job level.",
             "  [Repeatable] true = Reward given every N job levels; false = Reward given once at exact level.",
+            "  [Required Permission] = Reward available for players with specific permission. Set to '' or 'null' to disable.",
+            "  [Required Ranks] = Reward available for players that has one of listed ranks.",
+            "      Required_Ranks:",
+            "      - donator",
+            "      - vip",
             "Placeholders:",
             "  Use '" + Placeholders.PLAYER_NAME + "' placeholder for a player name.",
-            "  Use '" + Placeholders.REWARD_MODIFIER.apply("name") + "' placeholder to display modifier value, where 'name' is name of the modifier.",
+            "  Use '" + Placeholders.REWARD_MODIFIER.apply("name") + "' placeholder to display FORMATTED modifier value, where 'name' is name of the modifier.",
+            "  Use '" + Placeholders.REWARD_MODIFIER_RAW.apply("name") + "' placeholder to display RAW modifier value, where 'name' is name of the modifier.",
             "  Use '" + Players.PLAYER_COMMAND_PREFIX + "' prefix to run command by a player."
         ).read(config));
 
@@ -59,13 +66,26 @@ public class JobRewards {
     public static Map<String, LevelReward> getDefaultRewards() {
         Map<String, LevelReward> map = new HashMap<>();
 
-        LevelReward reward1 = new LevelReward(
+        LevelReward moneyReward = new LevelReward(
             "every_5_levels", 5, true, "Money",
             Lists.newList("Small $" + Placeholders.REWARD_MODIFIER.apply(DEF_MOD_MONEY) + " reward."),
-            Lists.newList("money give " + Placeholders.PLAYER_NAME + " " + Placeholders.REWARD_MODIFIER.apply(DEF_MOD_MONEY))
+            Lists.newList("money give " + Placeholders.PLAYER_NAME + " " + Placeholders.REWARD_MODIFIER.apply(DEF_MOD_MONEY)),
+            "null",
+            Lists.newList(),
+            Lists.newList("")
         );
 
-        map.put(reward1.getId(), reward1);
+        LevelReward donatorReward = new LevelReward(
+            "donator_10_levels", 10, true, "Jobs Crate Key",
+            Lists.newList("x1 Jobs Crate Key."),
+            Lists.newList("crates key give " + Placeholders.PLAYER_NAME + " jobs 1"),
+            "null",
+            Lists.newList("vip", "gold", "premium"),
+            Lists.newList(Tags.LIGHT_RED.enclose("You must have VIP, Gold or Premium."))
+        );
+
+        map.put(moneyReward.getId(), moneyReward);
+        map.put(donatorReward.getId(), donatorReward);
 
         return map;
     }
@@ -92,6 +112,7 @@ public class JobRewards {
 
         this.modifierMap.forEach((id, modifier) -> {
             map.add(Placeholders.REWARD_MODIFIER.apply(id), NumberUtil.format(modifier.getValue(jobLevel)));
+            map.add(Placeholders.REWARD_MODIFIER_RAW.apply(id), String.valueOf(modifier.getValue(jobLevel)));
         });
 
         return map.replacer();

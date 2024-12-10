@@ -29,6 +29,8 @@ import su.nightexpress.nightcore.util.ItemReplacer;
 import su.nightexpress.nightcore.util.ItemUtil;
 import su.nightexpress.nightcore.util.Lists;
 import su.nightexpress.nightcore.util.NumberUtil;
+import su.nightexpress.nightcore.util.bukkit.NightItem;
+import su.nightexpress.nightcore.util.placeholder.Replacer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,9 +47,9 @@ public class RewardsMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<In
     private final ViewLink<Job> link;
     private final ItemHandler   returnHandler;
 
-    private ItemStack lockedReward;
-    private ItemStack emptyReward;
-    private ItemStack claimedReward;
+    private NightItem lockedReward;
+    private NightItem emptyReward;
+    private NightItem claimedReward;
 
     private List<String> rewardFormat;
 
@@ -107,31 +109,30 @@ public class RewardsMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<In
         autoFill.setItemCreator(level -> {
             List<LevelReward> rewards = job.getRewards().getRewards(level);
 
-            ItemStack item;
+            NightItem item;
             if (rewards.isEmpty()) {
-                item = new ItemStack(this.emptyReward);
+                item = this.emptyReward.copy();
             }
             else {
                 if (jobLevel >= level) {
-                    item = new ItemStack(this.claimedReward);
+                    item = this.claimedReward.copy();
                 }
-                else item = new ItemStack(this.lockedReward);
+                else item = this.lockedReward.copy();
             }
 
             List<String> rewardFormats = new ArrayList<>();
             rewards.forEach(reward -> {
-                List<String> format = new ArrayList<>(this.rewardFormat);
-                format.replaceAll(reward.replacePlaceholders());
-                rewardFormats.addAll(format);
+                rewardFormats.addAll(Replacer.create().replace(reward.replacePlaceholders()).apply(this.rewardFormat));
             });
 
-            ItemReplacer.create(item).readMeta().trimmed().hideFlags()
-                .replace(job.getPlaceholders())
-                .replace(GENERIC_LEVEL, NumberUtil.format(level))
-                .replace(REWARDS, rewardFormats)
-                .writeMeta();
-
-            return item;
+           return item
+                .setHideComponents(true)
+                .replacement(replacer -> replacer
+                    .replace(job.replacePlaceholders())
+                    .replace(GENERIC_LEVEL, NumberUtil.format(level))
+                    .replace(REWARDS, rewardFormats)
+                )
+               .getItemStack();
         });
     }
 
@@ -169,23 +170,17 @@ public class RewardsMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<In
 
     @Override
     protected void loadAdditional() {
-        ItemStack lockedItem = new ItemStack(Material.RED_STAINED_GLASS_PANE);
-        ItemUtil.editMeta(lockedItem, meta -> {
-            meta.setDisplayName(GRAY.enclose("Level " + GENERIC_LEVEL) + " " + RED.enclose("[Locked]"));
-            meta.setLore(Lists.newList(REWARDS));
-        });
+        NightItem lockedItem = new NightItem(Material.RED_STAINED_GLASS_PANE)
+            .setDisplayName(GRAY.enclose("Level " + GENERIC_LEVEL) + " " + RED.enclose("[Locked]"))
+            .setLore(Lists.newList(REWARDS));
 
-        ItemStack claimedItem = new ItemStack(Material.LIME_STAINED_GLASS_PANE);
-        ItemUtil.editMeta(claimedItem, meta -> {
-            meta.setDisplayName(GRAY.enclose("Level " + GENERIC_LEVEL) + " " + GREEN.enclose("[Completed]"));
-            meta.setLore(Lists.newList(REWARDS));
-        });
+        NightItem claimedItem = new NightItem(Material.LIME_STAINED_GLASS_PANE)
+            .setDisplayName(GRAY.enclose("Level " + GENERIC_LEVEL) + " " + GREEN.enclose("[Completed]"))
+            .setLore(Lists.newList(REWARDS));
 
-        ItemStack emptyItem = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
-        ItemUtil.editMeta(emptyItem, meta -> {
-            meta.setDisplayName(GRAY.enclose("Level " + GENERIC_LEVEL) + " " + LIGHT_YELLOW.enclose("[No Rewards]"));
-            meta.setLore(Lists.newList(REWARDS));
-        });
+        NightItem emptyItem = new NightItem(Material.BLACK_STAINED_GLASS_PANE)
+            .setDisplayName(GRAY.enclose("Level " + GENERIC_LEVEL) + " " + LIGHT_YELLOW.enclose("[No Rewards]"))
+            .setLore(Lists.newList(REWARDS));
 
         this.lockedReward = ConfigValue.create("Reward.Locked", lockedItem).read(cfg);
         this.claimedReward = ConfigValue.create("Reward.Claimed", claimedItem).read(cfg);
@@ -193,12 +188,13 @@ public class RewardsMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<In
 
         this.rewardFormat = ConfigValue.create("Reward.Format", Lists.newList(
             LIGHT_YELLOW.enclose(REWARD_NAME + ":"),
+            REWARD_REQUIREMENT,
             LIGHT_GRAY.enclose(REWARD_DESCRIPTION),
             EMPTY_IF_BELOW
         )).read(cfg);
 
         this.rewardSlots = ConfigValue.create("Reward.Slots", new int[]{
-            0,1,10,19,28,29,30,21,12,3,4,5,14,23,32,33,34,25,16,7,8
+            0,1,10,19,28,37,38,39,30,21,12,3,4,5,14,23,32,41,42,43,34,25,16,7,8
         }).read(cfg);
     }
 }

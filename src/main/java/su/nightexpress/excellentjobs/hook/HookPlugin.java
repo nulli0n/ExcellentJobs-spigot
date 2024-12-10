@@ -1,8 +1,8 @@
 package su.nightexpress.excellentjobs.hook;
 
-public class HookId {
+public class HookPlugin {
 
-    public static final String COINS_ENGINE  = "CoinsEngine";
+    //public static final String ECONOMY_BRIDGE  = "EconomyBridge";
 
     public static final String MYTHIC_MOBS   = "MythicMobs";
     public static final String LEVELLED_MOBS = "LevelledMobs";

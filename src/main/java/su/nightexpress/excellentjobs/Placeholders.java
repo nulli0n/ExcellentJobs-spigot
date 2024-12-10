@@ -1,6 +1,7 @@
 package su.nightexpress.excellentjobs;
 
 import org.jetbrains.annotations.NotNull;
+import su.nightexpress.economybridge.api.Currency;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.job.impl.Job;
@@ -13,10 +14,12 @@ import su.nightexpress.excellentjobs.zone.impl.BlockList;
 import su.nightexpress.nightcore.core.CoreLang;
 import su.nightexpress.nightcore.language.LangAssets;
 import su.nightexpress.nightcore.util.*;
+import su.nightexpress.nightcore.util.placeholder.PlaceholderList;
 import su.nightexpress.nightcore.util.placeholder.PlaceholderMap;
 
 import java.time.LocalTime;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import static su.nightexpress.nightcore.util.text.tag.Tags.*;
 
@@ -121,11 +124,22 @@ public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
     public static final String OBJECTIVE_XP_CHANCE       = "%objective_xp_chance%";
     public static final String OBJECTIVE_UNLOCK_LEVEL    = "%objective_unlock_level%";
 
-    public static final String                   REWARD_NAME        = "%reward_name%";
-    public static final String                   REWARD_DESCRIPTION = "%reward_description%";
-    public static final String                   REWARD_LEVEL       = "%reward_level%";
-    public static final String                   REWARD_REPEATABLE  = "%reward_repeatable%";
-    public static final Function<String, String> REWARD_MODIFIER    = id -> "%mod_" + id + "%";
+    public static final String                   REWARD_NAME         = "%reward_name%";
+    public static final String                   REWARD_DESCRIPTION  = "%reward_description%";
+    public static final String                   REWARD_LEVEL        = "%reward_level%";
+    public static final String                   REWARD_REPEATABLE   = "%reward_repeatable%";
+    public static final String                   REWARD_REQUIREMENT  = "%reward_requirement%";
+    public static final Function<String, String> REWARD_MODIFIER     = id -> "%mod_" + id + "%";
+    public static final Function<String, String> REWARD_MODIFIER_RAW = id -> "%rawmod_" + id + "%";
+
+    public static final PlaceholderList<Currency> CURRENCY = new PlaceholderList<Currency>()
+        .add(CURRENCY_ID, Currency::getInternalId)
+        .add(CURRENCY_NAME, Currency::getName);
+
+//    @NotNull
+//    public static UnaryOperator<String> forCurrency(@NotNull Currency currency) {
+//        return CURRENCY.replacer(currency);
+//    }
 
     @NotNull
     public static PlaceholderMap forJob(@NotNull Job job) {
@@ -142,14 +156,23 @@ public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
             .add(JOB_EMPLOYEES_SECONDARY, () -> NumberUtil.format(job.getEmployeesAmount(JobState.SECONDARY)));
     }
 
-    @NotNull
-    public static PlaceholderMap forReward(@NotNull LevelReward reward) {
-        return new PlaceholderMap()
-            .add(REWARD_NAME, reward::getName)
-            .add(REWARD_DESCRIPTION, () -> String.join("\n", reward.getDescription()))
-            .add(REWARD_LEVEL, () -> NumberUtil.format(reward.getLevel()))
-            .add(REWARD_REPEATABLE, () -> Lang.getYesOrNo(reward.isRepeatable()));
-    }
+    public static final PlaceholderList<LevelReward> LEVEL_REWARD = PlaceholderList.create(list -> list
+        .add(REWARD_NAME, LevelReward::getName)
+        .add(REWARD_DESCRIPTION, reward -> String.join("\n", reward.getDescription()))
+        .add(REWARD_REQUIREMENT, reward -> String.join("\n", reward.getRequirementText()))
+        .add(REWARD_LEVEL, reward -> NumberUtil.format(reward.getLevel()))
+        .add(REWARD_REPEATABLE, reward -> Lang.getYesOrNo(reward.isRepeatable()))
+    );
+
+//    @NotNull
+//    public static PlaceholderMap forReward(@NotNull LevelReward reward) {
+//        return new PlaceholderMap()
+//            .add(REWARD_NAME, reward::getName)
+//            .add(REWARD_DESCRIPTION, () -> String.join("\n", reward.getDescription()))
+//            .add(REWARD_REQUIREMENT, () -> String.join("\n", reward.getRequirementText()))
+//            .add(REWARD_LEVEL, () -> NumberUtil.format(reward.getLevel()))
+//            .add(REWARD_REPEATABLE, () -> Lang.getYesOrNo(reward.isRepeatable()));
+//    }
 
     @NotNull
     public static PlaceholderMap forZoneAll(@NotNull Zone zone) {

@@ -6,13 +6,13 @@ import org.bukkit.boss.BarStyle;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import su.nightexpress.economybridge.currency.CurrencyId;
 import su.nightexpress.excellentjobs.Placeholders;
 import su.nightexpress.excellentjobs.action.ActionTypes;
 import su.nightexpress.excellentjobs.booster.BoosterMultiplier;
 import su.nightexpress.excellentjobs.booster.config.BoosterInfo;
 import su.nightexpress.excellentjobs.booster.config.RankBoosterInfo;
 import su.nightexpress.excellentjobs.booster.config.TimedBoosterInfo;
-import su.nightexpress.excellentjobs.currency.handler.VaultEconomyHandler;
 import su.nightexpress.excellentjobs.job.impl.OrderReward;
 import su.nightexpress.excellentjobs.util.JobUtils;
 import su.nightexpress.nightcore.config.ConfigValue;
@@ -276,7 +276,7 @@ public class Config {
         (cfg, path, map) -> map.forEach((id, info) -> info.write(cfg, path + "." + id)),
         Map.of(
             "example", new TimedBoosterInfo(Set.of(Placeholders.WILDCARD),
-                new BoosterMultiplier(Map.of(VaultEconomyHandler.ID, 25D), 25D),
+                new BoosterMultiplier(Map.of(CurrencyId.VAULT, 25D), 25D),
                 Map.of(DayOfWeek.SATURDAY, Set.of(LocalTime.of(16, 0))), 7200)
         ),
         "List of global, automated XP / currency boosters.",
@@ -290,10 +290,10 @@ public class Config {
         (cfg, path, map) -> map.forEach((id, info) -> info.write(cfg, path + "." + id)),
         Map.of(
             "vip", new RankBoosterInfo("vip", 10, Set.of(Placeholders.WILDCARD),
-                new BoosterMultiplier(Map.of(VaultEconomyHandler.ID, 25D), 25D)
+                new BoosterMultiplier(Map.of(CurrencyId.VAULT, 25D), 25D)
             ),
             "premium", new RankBoosterInfo("premium", 10, Set.of(Placeholders.WILDCARD),
-                new BoosterMultiplier(Map.of(VaultEconomyHandler.ID, 50D), 50D)
+                new BoosterMultiplier(Map.of(CurrencyId.VAULT, 50D), 50D)
             )
         ),
         "List of passive XP / currency boosters based on player permission group(s).",
@@ -305,13 +305,13 @@ public class Config {
         (cfg, path, map) -> map.forEach((id, info) -> info.write(cfg, path + "." + id)),
         Map.of(
             "xp_money_25", new BoosterInfo(Set.of(Placeholders.WILDCARD),
-                new BoosterMultiplier(Map.of(VaultEconomyHandler.ID, 25D), 25D)),
+                new BoosterMultiplier(Map.of(CurrencyId.VAULT, 25D), 25D)),
             "xp_money_50", new BoosterInfo(Set.of(Placeholders.WILDCARD),
-                new BoosterMultiplier(Map.of(VaultEconomyHandler.ID, 50D), 50D)),
+                new BoosterMultiplier(Map.of(CurrencyId.VAULT, 50D), 50D)),
             "money_100", new BoosterInfo(Set.of(Placeholders.WILDCARD),
-                new BoosterMultiplier(Map.of(VaultEconomyHandler.ID, 100D), 0D)),
+                new BoosterMultiplier(Map.of(CurrencyId.VAULT, 100D), 0D)),
             "xp_100", new BoosterInfo(Set.of(Placeholders.WILDCARD),
-                new BoosterMultiplier(Map.of(VaultEconomyHandler.ID, 0D), 100D))
+                new BoosterMultiplier(Map.of(CurrencyId.VAULT, 0D), 100D))
         ),
         "List of custom XP / currency boosters to be given via booster commands.",
         "You can create as many boosters as you want.",

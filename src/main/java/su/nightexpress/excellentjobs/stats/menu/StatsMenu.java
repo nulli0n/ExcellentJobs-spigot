@@ -5,8 +5,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import su.nightexpress.economybridge.EconomyBridge;
+import su.nightexpress.economybridge.api.Currency;
 import su.nightexpress.excellentjobs.JobsPlugin;
-import su.nightexpress.excellentjobs.api.currency.Currency;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.data.impl.JobUser;
@@ -98,7 +99,7 @@ public class StatsMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
             List<String> currencyAmounts = new ArrayList<>();
             List<String> objectiveAmounts = new ArrayList<>();
 
-            for (Currency currency : plugin.getCurrencyManager().getCurrencies()) {
+            for (Currency currency : EconomyBridge.getCurrencies()) {
                 double amount = dayStats.getCurrency(currency);
                 if (amount == 0D) continue;
 

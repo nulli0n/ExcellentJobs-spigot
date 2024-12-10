@@ -6,8 +6,9 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import su.nightexpress.economybridge.EconomyBridge;
+import su.nightexpress.economybridge.api.Currency;
 import su.nightexpress.excellentjobs.JobsPlugin;
-import su.nightexpress.excellentjobs.api.currency.Currency;
 import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.util.Modifier;
 import su.nightexpress.excellentjobs.zone.ZoneManager;
@@ -21,6 +22,7 @@ import su.nightexpress.nightcore.menu.impl.EditorMenu;
 import su.nightexpress.nightcore.util.ItemReplacer;
 
 import java.util.Comparator;
+import java.util.Objects;
 import java.util.stream.IntStream;
 
 public class ModifiersEditor extends EditorMenu<JobsPlugin, Zone> implements AutoFilled<Currency> {
@@ -39,13 +41,13 @@ public class ModifiersEditor extends EditorMenu<JobsPlugin, Zone> implements Aut
 
         this.addCreation(Lang.EDITOR_ZONE_MODIFIER_CURRENCY_CREATE, 41, (viewer, event, zone) -> {
             this.handleInput(viewer, Lang.EDITOR_GENERIC_ENTER_CURRENCY, (dialog, input) -> {
-                Currency currency = this.plugin.getCurrencyManager().getCurrency(input.getTextRaw());
+                Currency currency = EconomyBridge.getCurrency(input.getTextRaw());
                 if (currency != null && zone.getPaymentModifier(currency) == null) {
-                    zone.getPaymentModifierMap().put(currency, Modifier.add(0.5, 0, 0));
+                    zone.getPaymentModifierMap().put(currency.getInternalId(), Modifier.add(0.5, 0, 0));
                     zone.save();
                 }
                 return true;
-            }).setSuggestions(plugin.getCurrencyManager().getCurrencyIds(), true);
+            }).setSuggestions(EconomyBridge.getCurrencyIds(), true);
         });
 
         this.addItem(Material.EXPERIENCE_BOTTLE, Lang.EDITOR_ZONE_MODIFIER_XP_OBJECT, 4, (viewer, event, zone) -> {
@@ -72,7 +74,10 @@ public class ModifiersEditor extends EditorMenu<JobsPlugin, Zone> implements Aut
         Zone zone = this.getLink(player);
 
         autoFill.setSlots(IntStream.range(9, 36).toArray());
-        autoFill.setItems(zone.getPaymentModifierMap().keySet().stream().sorted(Comparator.comparing(Currency::getId)).toList());
+        autoFill.setItems(zone.getPaymentModifierMap().keySet().stream()
+            .map(EconomyBridge::getCurrency)
+            .filter(Objects::nonNull)
+            .sorted(Comparator.comparing(Currency::getInternalId)).toList());
         autoFill.setItemCreator(currency -> {
             ItemStack item = new ItemStack(Material.GOLD_NUGGET);
             Modifier modifier = zone.getPaymentModifier(currency);

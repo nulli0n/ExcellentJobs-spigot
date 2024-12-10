@@ -103,7 +103,7 @@ public class BlockList implements Placeholder {
             BlockData blockData = pair.getFirst();
             Location location = pos.toLocation(world);
             world.setBlockData(location, blockData);
-            UniParticle.of(Particle.BLOCK_CRACK, blockData).play(LocationUtil.getCenter(location), 0.35, 0.05, 60);
+            UniParticle.of(Particle.BLOCK, blockData).play(LocationUtil.getCenter(location), 0.35, 0.05, 60);
 
             return true;
         });

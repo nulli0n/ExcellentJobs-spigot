@@ -9,9 +9,9 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import su.nightexpress.economybridge.currency.CurrencyId;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.Placeholders;
-import su.nightexpress.excellentjobs.api.currency.Currency;
 import su.nightexpress.excellentjobs.config.Perms;
 import su.nightexpress.excellentjobs.data.impl.JobData;
 import su.nightexpress.excellentjobs.data.impl.JobUser;
@@ -29,6 +29,7 @@ import su.nightexpress.nightcore.manager.AbstractFileData;
 import su.nightexpress.nightcore.util.*;
 import su.nightexpress.nightcore.util.placeholder.Placeholder;
 import su.nightexpress.nightcore.util.placeholder.PlaceholderMap;
+import su.nightexpress.economybridge.api.Currency;
 
 import java.io.File;
 import java.time.DayOfWeek;
@@ -41,7 +42,7 @@ public class Zone extends AbstractFileData<JobsPlugin> implements Placeholder {
 
     private final Map<DayOfWeek, List<Pair<LocalTime, LocalTime>>> openTimes;
     private final Map<String, BlockList>                           blockListMap;
-    private final Map<Currency, Modifier>                          paymentModifierMap;
+    private final Map<String, Modifier>                          paymentModifierMap;
     private final Report report;
     private final PlaceholderMap                                   placeholderMap;
 
@@ -117,14 +118,8 @@ public class Zone extends AbstractFileData<JobsPlugin> implements Placeholder {
         });
 
         config.getSection("Payment_Modifier").forEach(curId -> {
-            Currency currency = this.plugin.getCurrencyManager().getCurrency(curId);
-            if (currency == null) {
-                this.plugin.warn("Invalid currency '" + curId + "' in zone '" + this.getFile().getName() + "'!");
-                return;
-            }
-
             Modifier modifier = Modifier.read(config, "Payment_Modifier." + curId);
-            this.getPaymentModifierMap().put(currency, modifier);
+            this.getPaymentModifierMap().put(CurrencyId.reroute(curId), modifier);
         });
 
         this.setXPModifier(Modifier.read(config, "XP_Modifier"));
@@ -157,8 +152,8 @@ public class Zone extends AbstractFileData<JobsPlugin> implements Placeholder {
         config.set("Job.Min_Level", this.getMinJobLevel());
         config.set("Job.Max_Level", this.getMaxJobLevel());
         config.remove("Payment_Modifier");
-        this.getPaymentModifierMap().forEach((currency, mod) -> {
-            mod.write(config, "Payment_Modifier." + currency.getId());
+        this.getPaymentModifierMap().forEach((currencyId, mod) -> {
+            mod.write(config, "Payment_Modifier." + currencyId);
         });
         this.getXPModifier().write(config, "XP_Modifier");
     }
@@ -436,7 +431,7 @@ public class Zone extends AbstractFileData<JobsPlugin> implements Placeholder {
     }
 
     @NotNull
-    public Map<Currency, Modifier> getPaymentModifierMap() {
+    public Map<String, Modifier> getPaymentModifierMap() {
         return paymentModifierMap;
     }
 

@@ -3,6 +3,7 @@ package su.nightexpress.excellentjobs.booster;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import su.nightexpress.economybridge.EconomyBridge;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.Placeholders;
 import su.nightexpress.excellentjobs.booster.config.BoosterInfo;
@@ -110,7 +111,7 @@ public class BoosterManager extends AbstractManager<JobsPlugin> {
                 .replace(Placeholders.XP_BOOST_MODIFIER, 1D + NumberUtil.format(booster.getMultiplier().getXPMultiplier()))
                 .replace(Placeholders.XP_BOOST_PERCENT, NumberUtil.format(booster.getMultiplier().getXPPercent()))
                 .replace(Placeholders.GENERIC_CURRENCY, list -> {
-                    plugin.getCurrencyManager().getCurrencies().forEach(currency -> {
+                    EconomyBridge.getCurrencies().forEach(currency -> {
                         double percent = booster.getMultiplier().getCurrencyPercent(currency);
                         double modifier = booster.getMultiplier().getCurrencyMultiplier(currency);
                         if (percent == 0D || modifier == 0D) return;

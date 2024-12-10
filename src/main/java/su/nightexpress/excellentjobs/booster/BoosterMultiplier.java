@@ -1,7 +1,7 @@
 package su.nightexpress.excellentjobs.booster;
 
 import org.jetbrains.annotations.NotNull;
-import su.nightexpress.excellentjobs.api.currency.Currency;
+import su.nightexpress.economybridge.api.Currency;
 import su.nightexpress.nightcore.config.FileConfig;
 
 import java.util.HashMap;
@@ -39,7 +39,7 @@ public class BoosterMultiplier {
     }
 
     public double getCurrencyMultiplier(@NotNull Currency currency) {
-        return this.getCurrencyMultiplier(currency.getId());
+        return this.getCurrencyMultiplier(currency.getInternalId());
     }
 
     public double getCurrencyMultiplier(@NotNull String id) {
@@ -48,7 +48,7 @@ public class BoosterMultiplier {
     }
 
     public double getCurrencyPercent(@NotNull Currency currency) {
-        return this.getCurrencyPercent(currency.getId());
+        return this.getCurrencyPercent(currency.getInternalId());
     }
 
     public double getCurrencyPercent(@NotNull String id) {

@@ -1,7 +1,7 @@
 package su.nightexpress.excellentjobs.data.impl;
 
 import org.jetbrains.annotations.NotNull;
-import su.nightexpress.excellentjobs.api.currency.Currency;
+import su.nightexpress.economybridge.api.Currency;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.nightcore.util.TimeUtil;
@@ -49,7 +49,7 @@ public class JobLimitData {
     }
 
     public void addCurrency(@NotNull Currency currency, double amount) {
-        this.addCurrency(currency.getId(), amount);
+        this.addCurrency(currency.getInternalId(), amount);
     }
 
     public void addCurrency(@NotNull String id, double amount) {
@@ -65,7 +65,7 @@ public class JobLimitData {
     }
 
     public double getCurrencyEarned(@NotNull Currency currency) {
-        return this.getCurrencyEarned(currency.getId());
+        return this.getCurrencyEarned(currency.getInternalId());
     }
 
     public double getCurrencyEarned(@NotNull String id) {

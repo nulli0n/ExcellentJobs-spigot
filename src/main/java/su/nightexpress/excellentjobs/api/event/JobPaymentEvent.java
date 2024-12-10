@@ -5,16 +5,16 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
-import su.nightexpress.excellentjobs.api.currency.Currency;
+import su.nightexpress.economybridge.api.Currency;
 import su.nightexpress.excellentjobs.job.impl.Job;
 
 public class JobPaymentEvent extends JobEvent implements Cancellable {
 
     private static final HandlerList HANDLER_LIST = new HandlerList();
 
-    private boolean cancelled;
+    private boolean  cancelled;
     private Currency currency;
-    private double amount;
+    private double   amount;
 
     public JobPaymentEvent(@NotNull Player player, @NotNull Job job, @NotNull Currency currency, double amount) {
         super(!Bukkit.isPrimaryThread(), player, job);

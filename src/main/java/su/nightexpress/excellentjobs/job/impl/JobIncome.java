@@ -1,7 +1,7 @@
 package su.nightexpress.excellentjobs.job.impl;
 
 import org.jetbrains.annotations.NotNull;
-import su.nightexpress.excellentjobs.api.currency.Currency;
+import su.nightexpress.economybridge.api.Currency;
 
 import java.util.HashMap;
 import java.util.Map;

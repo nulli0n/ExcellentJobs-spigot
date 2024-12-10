@@ -4,8 +4,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import su.nightexpress.economybridge.EconomyBridge;
+import su.nightexpress.economybridge.api.Currency;
 import su.nightexpress.excellentjobs.JobsPlugin;
-import su.nightexpress.excellentjobs.api.currency.Currency;
 import su.nightexpress.excellentjobs.booster.impl.Booster;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Lang;
@@ -137,7 +138,7 @@ public class JobsMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<Job> 
                 currencyLimits = new ArrayList<>();
                 for (String line : this.jobDailyCurrencyLimit) {
                     if (line.contains(CURRENCY_NAME)) {
-                        for (Currency currency : plugin.getCurrencyManager().getCurrencies()) {
+                        for (Currency currency : EconomyBridge.getCurrencies()) {
                             if (!job.hasDailyPaymentLimit(currency, level)) continue;
 
                             currencyLimits.add(currency.replacePlaceholders().apply(line)
@@ -160,7 +161,7 @@ public class JobsMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<Job> 
             if (!boosters.isEmpty()) {
                 for (String line : this.jobBoosterLore) {
                     if (line.contains(CURRENCY_BOOST_PERCENT) || line.contains(CURRENCY_BOOST_MODIFIER)) {
-                        for (Currency currency : plugin.getCurrencyManager().getCurrencies()) {
+                        for (Currency currency : EconomyBridge.getCurrencies()) {
                             boosterInfo.add(currency.replacePlaceholders().apply(line)
                                 .replace(CURRENCY_BOOST_MODIFIER, NumberUtil.format(Booster.getCurrencyBoost(currency, boosters)))
                                 .replace(CURRENCY_BOOST_PERCENT, NumberUtil.format(Booster.getCurrencyPercent(currency, boosters)))
@@ -193,7 +194,7 @@ public class JobsMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<Job> 
             List<String> loreFinal = new ArrayList<>();
             for (String line : lore) {
                 if (line.contains(CURRENCY_MULTIPLIER)) {
-                    for (Currency currency : plugin.getCurrencyManager().getCurrencies()) {
+                    for (Currency currency : EconomyBridge.getCurrencies()) {
                         double multiplier = job.getPaymentMultiplier(currency, level);
                         if (multiplier == 0D) continue;
 

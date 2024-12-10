@@ -1,7 +1,7 @@
 package su.nightexpress.excellentjobs.stats.impl;
 
 import org.jetbrains.annotations.NotNull;
-import su.nightexpress.excellentjobs.api.currency.Currency;
+import su.nightexpress.economybridge.api.Currency;
 import su.nightexpress.excellentjobs.job.impl.JobObjective;
 
 import java.time.LocalDate;
@@ -33,7 +33,7 @@ public class DayStats {
     }
 
     public double getCurrency(@NotNull Currency currency) {
-        return this.getCurrency(currency.getId());
+        return this.getCurrency(currency.getInternalId());
     }
 
     public double getCurrency(@NotNull String currencyId) {
@@ -69,7 +69,7 @@ public class DayStats {
     }
 
     public void addCurrency(@NotNull Currency currency, double amount) {
-        this.addCurrency(currency.getId(), amount);
+        this.addCurrency(currency.getInternalId(), amount);
     }
 
     public void addCurrency(@NotNull String currencyId, double amount) {

@@ -11,10 +11,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import su.nightexpress.economybridge.EconomyBridge;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.Placeholders;
 import su.nightexpress.excellentjobs.action.ActionType;
-import su.nightexpress.excellentjobs.api.currency.Currency;
 import su.nightexpress.excellentjobs.api.event.*;
 import su.nightexpress.excellentjobs.booster.impl.Booster;
 import su.nightexpress.excellentjobs.config.Config;
@@ -34,6 +34,7 @@ import su.nightexpress.nightcore.util.NumberUtil;
 import su.nightexpress.nightcore.util.PDCUtil;
 import su.nightexpress.nightcore.util.TimeUtil;
 import su.nightexpress.nightcore.util.random.Rnd;
+import su.nightexpress.economybridge.api.Currency;
 
 import java.io.File;
 import java.time.LocalDate;
@@ -448,7 +449,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
 
         // Pay the worker.
         total.forEach((currency, amount) -> {
-            currency.getHandler().give(player, amount);
+            currency.give(player, amount);
         });
 
         String totalPay = total.entrySet().stream().map(entry -> {
@@ -486,7 +487,6 @@ public class JobManager extends AbstractManager<JobsPlugin> {
 
         JobUser user = plugin.getUserManager().getUserData(player);
         JobData jobData = user.getData(job);
-        var costMap = job.getSpecialOrdersCost();
 
         if (!force) {
             if (!job.isSpecialOrdersAllowed()) {
@@ -516,10 +516,19 @@ public class JobManager extends AbstractManager<JobsPlugin> {
             }
 
 
-            if (costMap.entrySet().stream().anyMatch(entry -> entry.getKey().getHandler().getBalance(player) < entry.getValue())) {
-                Lang.SPECIAL_ORDER_ERROR_NOT_ENOUGH_FUNDS.getMessage()
-                    .replace(Placeholders.GENERIC_AMOUNT, costMap.entrySet().stream().map(entry -> entry.getKey().format(entry.getValue())).collect(Collectors.joining(", ")))
-                    .send(player);
+            if (!job.canAffordSpecialOrder(player)) {
+                Lang.SPECIAL_ORDER_ERROR_NOT_ENOUGH_FUNDS_INFO.getMessage().send(player, replacer -> replacer
+                    .replace(Placeholders.GENERIC_ENTRY, list -> {
+                        job.getSpecialOrdersCost().forEach((id, amount) -> {
+                            Currency currency = EconomyBridge.getCurrency(id);
+                            if (currency == null) return;
+
+                            list.add(currency.replacePlaceholders().apply(Lang.SPECIAL_ORDER_ERROR_NOT_ENOUGH_FUNDS_ENTRY.getString()
+                                .replace(Placeholders.GENERIC_AMOUNT, currency.format(amount))
+                            ));
+                        });
+                    })
+                );
                 return false;
             }
         }
@@ -531,9 +540,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         }
 
         if (!force) {
-            costMap.forEach((currency, amount) -> {
-                currency.getHandler().take(player, amount);
-            });
+            job.payForSpecialOrder(player);
         }
 
         long cooldown = Config.SPECIAL_ORDERS_COOLDOWN.get();
@@ -639,15 +646,18 @@ public class JobManager extends AbstractManager<JobsPlugin> {
             ProgressBar progressBar = this.getProgressBarOrCreate(player, job);
 
             JobIncome income = this.getIncome(player, job);
-            jobObjective.getPaymentMap().forEach((currency, rewardInfo) -> {
+            jobObjective.getPaymentMap().forEach((currencyId, rewardInfo) -> {
                 // Do no process payment for limited currencies.
-                if (jobData.isPaymentLimitReached(currency)) return;
+                if (jobData.isPaymentLimitReached(currencyId)) return;
+
+                Currency currency = EconomyBridge.getCurrency(currencyId);
+                if (currency == null) return;
 
                 double payment = rewardInfo.rollAmountNaturally() * amount;
                 double paymentMultiplier = 1D;
 
-                paymentMultiplier += Booster.getCurrencyPlainBoost(currency, boosters);
-                paymentMultiplier += job.getPaymentMultiplier(currency, jobLevel);
+                paymentMultiplier += Booster.getCurrencyPlainBoost(currencyId, boosters);
+                paymentMultiplier += job.getPaymentMultiplier(currencyId, jobLevel);
                 paymentMultiplier += multiplier;
 
                 JobObjectiveIncomeEvent event = new JobObjectiveIncomeEvent(
@@ -662,10 +672,10 @@ public class JobManager extends AbstractManager<JobsPlugin> {
                 income.add(jobObjective, currency, payment);
                 if (progressBar != null) progressBar.addPayment(currency, payment);
 
-                if (!player.hasPermission(Perms.PREFIX_BYPASS_LIMIT_CURRENCY + job.getId()) && job.hasDailyPaymentLimit(currency, jobLevel)) {
-                    jobData.getLimitData().addCurrency(currency, payment);
+                if (!player.hasPermission(Perms.PREFIX_BYPASS_LIMIT_CURRENCY + job.getId()) && job.hasDailyPaymentLimit(currencyId, jobLevel)) {
+                    jobData.getLimitData().addCurrency(currencyId, payment);
 
-                    if (jobData.isPaymentLimitReached(currency)) {
+                    if (jobData.isPaymentLimitReached(currencyId)) {
                         Lang.JOB_LIMIT_CURRENCY_NOTIFY.getMessage()
                             .replace(job.replacePlaceholders())
                             .replace(currency.replacePlaceholders())

@@ -280,8 +280,14 @@ public class Lang extends CoreLang {
     public static final LangText SPECIAL_ORDER_ERROR_COOLDOWN = LangText.of("SpecialOrder.Error.Cooldown",
         GRAY.enclose("You can take next Special Order in " + LIGHT_RED.enclose(GENERIC_TIME)));
 
-    public static final LangText SPECIAL_ORDER_ERROR_NOT_ENOUGH_FUNDS = LangText.of("SpecialOrder.Error.NotEnoughFunds",
-        GRAY.enclose("You need " + LIGHT_RED.enclose(GENERIC_AMOUNT) + " to take a Special Order!"));
+    public static final LangText SPECIAL_ORDER_ERROR_NOT_ENOUGH_FUNDS_INFO = LangText.of("SpecialOrder.Error.NotEnoughMoney.Info",
+        LIGHT_RED.enclose("You can't afford Special Order! You need:"),
+        GENERIC_ENTRY
+    );
+
+    public static final LangString SPECIAL_ORDER_ERROR_NOT_ENOUGH_FUNDS_ENTRY = LangString.of("SpecialOrder.Error.NotEnoughMoney.Entry",
+        LIGHT_YELLOW.enclose("- " + GENERIC_AMOUNT)
+    );
 
     public static final LangText SPECIAL_ORDER_ERROR_GENERATION = LangText.of("SpecialOrder.Error.Generation",
         GRAY.enclose(LIGHT_RED.enclose("Whoops!") + " Unable to create Special Order."));

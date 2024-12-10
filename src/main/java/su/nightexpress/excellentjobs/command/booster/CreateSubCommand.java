@@ -3,6 +3,7 @@ package su.nightexpress.excellentjobs.command.booster;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import su.nightexpress.economybridge.EconomyBridge;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.Placeholders;
 import su.nightexpress.excellentjobs.booster.config.BoosterInfo;
@@ -99,7 +100,7 @@ class CreateSubCommand extends AbstractCommand<JobsPlugin> {
                     .replace(Placeholders.XP_BOOST_MODIFIER, NumberUtil.format(booster.getMultiplier().getXPMultiplier()))
                     .replace(Placeholders.XP_BOOST_PERCENT, NumberUtil.format(booster.getMultiplier().getXPPercent()))
                     .replace(Placeholders.GENERIC_CURRENCY, list -> {
-                        plugin.getCurrencyManager().getCurrencies().forEach(currency -> {
+                        EconomyBridge.getCurrencies().forEach(currency -> {
                             double percent = booster.getMultiplier().getCurrencyPercent(currency);
                             double modifier = booster.getMultiplier().getCurrencyMultiplier(currency);
                             list.add(currency.replacePlaceholders().apply(Lang.COMMAND_BOOSTER_CREATE_NOTIFY_CURRENCY.getString())

@@ -46,7 +46,7 @@ public class PreviewMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
         this.link = new ViewLink<>();
 
         this.addHandler(this.returnHandler = ItemHandler.forReturn(this, (viewer, event) -> {
-            this.runNextTick(() -> plugin.getJobManager().openJobMenu(viewer.getPlayer(), this.getLink().get(viewer)));
+            this.runNextTick(() -> plugin.getJobManager().openJobsMenu(viewer.getPlayer()));
         }));
 
         this.addHandler(this.objectivesHandler = new ItemHandler("objectives", (viewer, event) -> {

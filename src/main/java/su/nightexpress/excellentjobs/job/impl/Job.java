@@ -7,13 +7,14 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import su.nightexpress.economybridge.EconomyBridge;
+import su.nightexpress.economybridge.api.Currency;
+import su.nightexpress.economybridge.currency.CurrencyId;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.Placeholders;
 import su.nightexpress.excellentjobs.action.ActionType;
-import su.nightexpress.excellentjobs.api.currency.Currency;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Perms;
-import su.nightexpress.excellentjobs.currency.handler.VaultEconomyHandler;
 import su.nightexpress.excellentjobs.data.impl.JobOrderCount;
 import su.nightexpress.excellentjobs.data.impl.JobOrderData;
 import su.nightexpress.excellentjobs.data.impl.JobOrderObjective;
@@ -60,7 +61,7 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
     private UniInt                         specialOrdersCompleteTime;
     private UniInt                         specialOrdersRewardsAmount;
     private TreeMap<Integer, List<String>> specialOrdersAllowedRewards;
-    private Map<Currency, Double>          specialOrdersCost;
+    private Map<String, Double>          specialOrdersCost;
 
     private final Set<JobState>              allowedStates;
     private final Set<String>                disabledWorlds;
@@ -187,22 +188,22 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
         ).read(config));
 
         this.paymentMultiplier.putAll(ConfigValue.forMap("Payment_Modifier.Currency",
-            String::toLowerCase,
+            CurrencyId::reroute,
             (cfg, path, key) -> Modifier.read(cfg, path + "." + key),
             (cfg, path, map) -> map.forEach((id, mod) -> mod.write(cfg, path + "." + id)),
             () -> Map.of(
-                VaultEconomyHandler.ID, Modifier.add(1.00, 0.01, 1)
+                CurrencyId.VAULT, Modifier.add(1.00, 0.01, 1)
             ),
             "Sets payment multipliers for each currency adjustable by player's job level.",
             "You can use '" + Placeholders.DEFAULT + "' keyword for all currencies not included here."
         ).read(config));
 
         this.paymentDailyLimits.putAll(ConfigValue.forMap("Daily_Limits.Currency",
-            String::toLowerCase,
+            CurrencyId::reroute,
             (cfg, path, key) -> Modifier.read(cfg, path + "." + key),
             (cfg, path, map) -> map.forEach((id, mod) -> mod.write(cfg, path + "." + id)),
             () -> Map.of(
-                VaultEconomyHandler.ID, Modifier.add(-1, 0, 0)
+                CurrencyId.VAULT, Modifier.add(-1, 0, 0)
             ),
             "Sets payment daily limits for each currency adjustable by player's job level.",
             "You can use '" + Placeholders.DEFAULT + "' keyword for all currencies not included here."
@@ -258,11 +259,11 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
             ).read(config));
 
             this.specialOrdersCost = new HashMap<>(ConfigValue.forMap("SpecialOrder.Cost",
-                id -> plugin.getCurrencyManager().getCurrency(id),
+                CurrencyId::reroute,
                 (cfg, path, key) -> cfg.getDouble(path + "." + key),
-                (cfg, path, map) -> map.forEach((currency, amount) -> cfg.set(path + "." + currency.getId(), amount)),
+                (cfg, path, map) -> map.forEach((currencyId, amount) -> cfg.set(path + "." + currencyId, amount)),
                 () -> Map.of(
-                    plugin.getCurrencyManager().getCurrencyOrAny(VaultEconomyHandler.ID), 5000D
+                    CurrencyId.VAULT, 5000D
                 ),
                 "Sets amount of currency player have to pay to take a Special Order.",
                 "Available currencies: " + Placeholders.URL_WIKI_CURRENCY
@@ -332,7 +333,7 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
             this.getSpecialOrdersCompleteTime().write(config, "SpecialOrder.Time_To_Complete");
             this.getSpecialOrdersRewardsAmount().write(config, "SpecialOrder.Rewards_Amount");
             this.getSpecialOrdersAllowedRewards().forEach((level, list) -> config.set("SpecialOrder.Rewards_List." + level, list));
-            this.getSpecialOrdersCost().forEach((currency, amount) -> config.set("SpecialOrder.Cost." + currency.getId(), amount));
+            this.getSpecialOrdersCost().forEach((currencyId, amount) -> config.set("SpecialOrder.Cost." + currencyId, amount));
         }
     }
 
@@ -391,6 +392,24 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
         commands.addAll(this.levelUpCommands.getOrDefault(0, Collections.emptyList()));
         commands.addAll(this.levelUpCommands.getOrDefault(level, Collections.emptyList()));
         return commands;
+    }
+
+    public boolean canAffordSpecialOrder(@NotNull Player player) {
+        return this.specialOrdersCost.entrySet().stream().allMatch(entry -> {
+            Currency currency = EconomyBridge.getCurrency(entry.getKey());
+            double amount = entry.getValue();
+
+            return currency == null || currency.getBalance(player) >= amount;
+        });
+    }
+
+    public void payForSpecialOrder(@NotNull Player player) {
+        this.specialOrdersCost.forEach((currencyId, amount) -> {
+            Currency currency = EconomyBridge.getCurrency(currencyId);
+            if (currency == null) return;
+
+            currency.take(player, amount);
+        });
     }
 
     @Nullable
@@ -469,7 +488,7 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
 
 
     public double getPaymentMultiplier(@NotNull Currency currency, int level) {
-        return this.getPaymentMultiplier(currency.getId(), level);
+        return this.getPaymentMultiplier(currency.getInternalId(), level);
     }
 
     public double getPaymentMultiplier(@NotNull String id, int level) {
@@ -478,7 +497,7 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
     }
 
     public boolean hasDailyPaymentLimit(@NotNull Currency currency, int level) {
-        return this.hasDailyPaymentLimit(currency.getId(), level);
+        return this.hasDailyPaymentLimit(currency.getInternalId(), level);
     }
 
     public boolean hasDailyPaymentLimit(@NotNull String id, int level) {
@@ -486,7 +505,7 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
     }
 
     public double getDailyPaymentLimit(@NotNull Currency currency, int level) {
-        return this.getDailyPaymentLimit(currency.getId(), level);
+        return this.getDailyPaymentLimit(currency.getInternalId(), level);
     }
 
     public double getDailyPaymentLimit(@NotNull String id, int level) {
@@ -767,11 +786,11 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
         return entry == null ? new ArrayList<>() : entry.getValue();
     }
 
-    public Map<Currency, Double> getSpecialOrdersCost() {
+    public Map<String, Double> getSpecialOrdersCost() {
         return specialOrdersCost;
     }
 
-    public void setSpecialOrdersCost(Map<Currency, Double> specialOrdersCost) {
+    public void setSpecialOrdersCost(Map<String, Double> specialOrdersCost) {
         this.specialOrdersCost = specialOrdersCost;
     }
 }
