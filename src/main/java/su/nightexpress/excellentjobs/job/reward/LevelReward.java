@@ -8,7 +8,6 @@ import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.util.Lists;
 import su.nightexpress.nightcore.util.Players;
 import su.nightexpress.nightcore.util.StringUtil;
-import su.nightexpress.nightcore.util.text.tag.Tags;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,7 +54,7 @@ public class LevelReward {
         List<String> commands = ConfigValue.create(path + ".Commands", Lists.newList()).read(config);
         String permission = ConfigValue.create(path + ".Required_Permission", "null").read(config);
         List<String> ranks = ConfigValue.create(path + ".Required_Ranks", Lists.newList()).onRead(set -> Lists.modify(set, String::toLowerCase)).read(config);
-        List<String> requirementInfo = ConfigValue.create(path + ".RequirementInfo", Lists.newList(Tags.LIGHT_RED.enclose("Donate /donate to unlock more rewards!"))).read(config);
+        List<String> requirementInfo = ConfigValue.create(path + ".RequirementInfo", Lists.newList()).read(config);
 
         return new LevelReward(id, level, repeatable, name, description, commands, permission, ranks, requirementInfo);
     }
@@ -92,6 +91,9 @@ public class LevelReward {
     }
 
     public boolean isGoodRank(@NotNull String rank) {
+        if (this.requiredRanks.isEmpty()) return true;
+        if (this.requiredRanks.contains(Placeholders.WILDCARD)) return true;
+
         return this.requiredRanks.contains(rank.toLowerCase());
     }
 
