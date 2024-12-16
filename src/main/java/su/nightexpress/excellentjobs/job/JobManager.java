@@ -812,7 +812,9 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         }
 
         List<LevelReward> rewards = job.getRewards().getRewards(level);
-        rewards.removeIf(reward -> !force && jobData.isLevelRewardObtained(reward.getLevel()) && !reward.isRepeatable());
+        rewards.removeIf(reward -> !force && (jobData.isLevelRewardObtained(level) || !reward.isAvailable(player, level)));
+
+        //rewards.removeIf(reward -> !force && jobData.isLevelRewardObtained(reward.getLevel()) && !reward.isRepeatable());
 
         if (!rewards.isEmpty()) {
             rewards.forEach(reward -> reward.run(player));

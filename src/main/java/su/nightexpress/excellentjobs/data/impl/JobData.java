@@ -317,10 +317,10 @@ public class JobData implements Placeholder {
     }
 
     public boolean isLevelRewardObtained(int level) {
-        return this.getObtainedLevelRewards().contains(level);
+        return this.obtainedLevelRewards.contains(level);
     }
 
     public void setLevelRewardObtained(int level) {
-        this.getObtainedLevelRewards().add(level);
+        this.obtainedLevelRewards.add(level);
     }
 }
