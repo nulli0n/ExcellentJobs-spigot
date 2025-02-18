@@ -61,7 +61,7 @@ public class JobLeaveConfirmMenu extends ConfigMenu<JobsPlugin> implements Linke
                 Job job = this.getLink().get(viewer);
                 JobData data = plugin.getUserManager().getUserData(viewer.getPlayer()).getData(job);
 
-                ItemReplacer.create(item).readMeta().replace(data.getPlaceholders()).writeMeta();
+                ItemReplacer.create(item).readMeta().replace(data.replaceAllPlaceholders()).writeMeta();
             });
         });
     }

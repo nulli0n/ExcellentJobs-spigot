@@ -66,14 +66,14 @@ public class ResetCommand extends AbstractCommand<JobsPlugin> {
 
             if (!sender.getName().equalsIgnoreCase(user.getName())) {
                 Lang.COMMAND_RESET_DONE.getMessage()
-                    .replace(jobData.replacePlaceholders())
+                    .replace(jobData.replaceAllPlaceholders())
                     .replace(Placeholders.PLAYER_NAME, user.getName())
                     .send(sender);
             }
 
             Player target = user.getPlayer();
             if (target != null && !result.hasFlag(CommandFlags.SILENT)) {
-                Lang.JOB_RESET_NOTIFY.getMessage().replace(jobData.replacePlaceholders()).send(target);
+                Lang.JOB_RESET_NOTIFY.getMessage().replace(jobData.replaceAllPlaceholders()).send(target);
             }
         });
     }

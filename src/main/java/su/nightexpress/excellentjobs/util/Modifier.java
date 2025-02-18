@@ -4,26 +4,23 @@ import org.jetbrains.annotations.NotNull;
 import su.nightexpress.excellentjobs.Placeholders;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
+import su.nightexpress.nightcore.config.Writeable;
 import su.nightexpress.nightcore.util.StringUtil;
-import su.nightexpress.nightcore.util.placeholder.Placeholder;
-import su.nightexpress.nightcore.util.placeholder.PlaceholderMap;
 
-public class Modifier implements Placeholder {
+import java.util.function.UnaryOperator;
+
+public class Modifier implements Writeable {
 
     private double base;
     private double perLevel;
     private double step;
     private ModifierAction action;
 
-    private final PlaceholderMap placeholderMap;
-
     public Modifier(double base, double perLevel, double step, @NotNull ModifierAction action) {
         this.setBase(base);
         this.setPerLevel(perLevel);
         this.setStep(step);
         this.setAction(action);
-
-        this.placeholderMap = Placeholders.forModifier(this);
     }
 
     @NotNull
@@ -47,44 +44,44 @@ public class Modifier implements Placeholder {
     }
 
     @NotNull
-    public static Modifier read(@NotNull FileConfig cfg, @NotNull String path) {
+    public static Modifier read(@NotNull FileConfig config, @NotNull String path) {
         double base = ConfigValue.create(path + ".Base", 0D,
             "Start modifier value."
-        ).read(cfg);
+        ).read(config);
 
         double perLevel = ConfigValue.create(path + ".Per_Level", 0D,
             "Additional value calculated by job level step (see below). Formula: <per_level> * <step>"
-        ).read(cfg);
+        ).read(config);
 
         double step = ConfigValue.create(path + ".Step" , 1D,
             "Defines level step for 'Per_Level' value calculation. Formula: <job_level> / <step>"
-        ).read(cfg);
+        ).read(config);
 
         ModifierAction action = ConfigValue.create(path + ".Action", ModifierAction.class, ModifierAction.ADD,
             "Sets action performed between 'Base' and final 'Per_Level' values.",
             "Available types: " + StringUtil.inlineEnum(ModifierAction.class, ", ")
-        ).read(cfg);
+        ).read(config);
 
         return new Modifier(base, perLevel, step, action);
     }
 
-    public void write(@NotNull FileConfig cfg, @NotNull String path) {
-        cfg.set(path + ".Base", this.getBase());
-        cfg.set(path + ".Per_Level", this.getPerLevel());
-        cfg.set(path + ".Step", this.getStep());
-        cfg.set(path + ".Action", this.getAction().name());
+    @Override
+    public void write(@NotNull FileConfig config, @NotNull String path) {
+        config.set(path + ".Base", this.base);
+        config.set(path + ".Per_Level", this.perLevel);
+        config.set(path + ".Step", this.step);
+        config.set(path + ".Action", this.action.name());
     }
 
-    @Override
     @NotNull
-    public PlaceholderMap getPlaceholders() {
-        return this.placeholderMap;
+    public UnaryOperator<String> replacePlaceholders() {
+        return Placeholders.MODIFIER.replacer(this);
     }
 
     public double getValue(int level) {
-        double step = this.getStep() == 0D ? 1D : Math.floor((double) level / this.getStep());
+        double step = this.step == 0D ? 1D : Math.floor((double) level / this.step);
 
-        return this.action.math(this.getBase(), this.getPerLevel() * step);
+        return this.action.math(this.base, this.perLevel * step);
     }
 
     public double getBase() {

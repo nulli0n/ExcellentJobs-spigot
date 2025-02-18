@@ -17,6 +17,7 @@ import org.jetbrains.annotations.Nullable;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.api.event.bukkit.PlayerCollectedHoneyEvent;
 import su.nightexpress.excellentjobs.hook.HookPlugin;
+import su.nightexpress.excellentjobs.hook.impl.CustomFishingHook;
 import su.nightexpress.excellentjobs.hook.impl.EvenMoreFishHook;
 import su.nightexpress.excellentjobs.hook.impl.MythicMobsHook;
 import su.nightexpress.nightcore.manager.AbstractManager;
@@ -84,6 +85,7 @@ public class ActionRegistry extends AbstractManager<JobsPlugin> {
     private void registerHooks() {
         this.registerExternal(HookPlugin.MYTHIC_MOBS, MythicMobsHook::register);
         this.registerExternal(HookPlugin.EVEN_MORE_FISH, EvenMoreFishHook::register);
+        this.registerExternal(HookPlugin.CUSTOM_FISHING, CustomFishingHook::register);
     }
 
     private void registerExternal(@NotNull String name, @NotNull Consumer<ActionRegistry> consumer) {

@@ -67,7 +67,7 @@ public class ProgressBar {
         if (percent < 0) percent = 0D;
         else if (percent > 1) percent = 1D;
 
-        String title = data.replacePlaceholders().apply(Config.GENERAL_PROGRESS_BAR_TITLE.get());
+        String title = data.replaceAllPlaceholders().apply(Config.GENERAL_PROGRESS_BAR_TITLE.get());
 
         this.bossBar.setTitle(NightMessage.asLegacy(title
             .replace(Placeholders.JOB_NAME, job.getName())

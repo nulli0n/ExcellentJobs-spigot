@@ -64,6 +64,14 @@ public class JobUser extends AbstractUser<JobsPlugin> {
         this.statsMap.putAll(statsMap);
     }
 
+    public int countTotalLevel() {
+        return this.getDatas().stream().mapToInt(data -> data.isActive() ? data.getLevel() : 0).sum();
+    }
+
+    public int countActiveJobs() {
+        return (int) this.getDatas().stream().filter(JobData::isActive).count();
+    }
+
     public int countJobs(@NotNull JobState state) {
         return (int) this.getDatas().stream().filter(jobData -> jobData.getState() == state).count();
     }

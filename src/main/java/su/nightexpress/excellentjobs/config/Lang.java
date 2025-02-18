@@ -2,7 +2,6 @@ package su.nightexpress.excellentjobs.config;
 
 import org.bukkit.Sound;
 import su.nightexpress.excellentjobs.job.impl.JobState;
-import su.nightexpress.excellentjobs.util.report.ReportType;
 import su.nightexpress.excellentjobs.zone.command.ZoneCommands;
 import su.nightexpress.nightcore.core.CoreLang;
 import su.nightexpress.nightcore.language.entry.LangEnum;
@@ -12,7 +11,8 @@ import su.nightexpress.nightcore.language.entry.LangText;
 import su.nightexpress.nightcore.language.message.OutputType;
 
 import static su.nightexpress.excellentjobs.Placeholders.*;
-import static su.nightexpress.nightcore.language.tag.MessageTags.*;
+import static su.nightexpress.nightcore.language.tag.MessageTags.OUTPUT;
+import static su.nightexpress.nightcore.language.tag.MessageTags.SOUND;
 import static su.nightexpress.nightcore.util.text.tag.Tags.*;
 
 public class Lang extends CoreLang {
@@ -456,6 +456,9 @@ public class Lang extends CoreLang {
     public static final LangString EDITOR_TITLE_ZONE_MODIFIER_SETTINGS = LangString.of("Editor.Title.Zone.ModifierSettings",
         BLACK.enclose("Modifier Settings"));
 
+    public static final LangString EDITOR_TITLE_ZONE_HOURS = LangString.of("Editor.Title.Zone.Hours",
+        BLACK.enclose("Zone Hours"));
+
     public static final LangString EDITOR_GENERIC_ENTER_ID = LangString.of("Editor.Generic.Enter.Id",
         LIGHT_GRAY.enclose("Enter " + LIGHT_GREEN.enclose("[Unique Identifier]")));
 
@@ -469,7 +472,7 @@ public class Lang extends CoreLang {
         LIGHT_GRAY.enclose("Enter " + LIGHT_GREEN.enclose("[Min] [Max]")));
 
     public static final LangString EDITOR_GENERIC_ENTER_TIMES = LangString.of("Editor.Generic.Enter.Times",
-        LIGHT_GRAY.enclose("Enter " + LIGHT_GREEN.enclose("[Time1 Time2] [12:00 17:00]")));
+        LIGHT_GRAY.enclose("Enter " + LIGHT_GREEN.enclose("[Hours] [12:00 17:00]")));
 
     public static final LangString EDITOR_GENERIC_ENTER_CURRENCY = LangString.of("Editor.Generic.Enter.Currency",
         LIGHT_GRAY.enclose("Enter " + LIGHT_GREEN.enclose("[Currency Identifier]")));
@@ -483,11 +486,9 @@ public class Lang extends CoreLang {
     public static final LangString EDITOR_ZONE_ENTER_JOB_ID = LangString.of("Editor.Zone.Enter.JobId",
         LIGHT_GRAY.enclose("Enter " + LIGHT_GREEN.enclose("[Job Identifier]")));
 
-    public static final LangItem EDITOR_ZONE_OBJECT = LangItem.builder("Editor.Zone.Object")
+    public static final LangItem EDITOR_ZONE_OBJECT = LangItem.builder("Editor.Zone.Objectv180")
         .name(ZONE_NAME + RESET.getBracketsName() + GRAY.enclose(" (ID: " + WHITE.enclose(ZONE_ID) + ")"))
-        .text(ZONE_REPORT)
-        .emptyLine()
-        .current("Linked Job", ZONE_JOB_NAME)
+        .textRaw(ZONE_JOB_NAMES)
         .emptyLine()
         .leftClick("edit")
         .dragAndDrop("set icon")
@@ -501,7 +502,7 @@ public class Lang extends CoreLang {
 
     public static final LangItem EDITOR_ZONE_SELECTION = LangItem.builder("Editor.Zone.Selection")
         .name("Selection")
-        .text(ZONE_INSPECT.apply(ReportType.ZONE_SELECTION))
+        .text(ZONE_INSPECT_SELECTION)
         .emptyLine()
         .text("Sets zone bounds (with a cuboid shape).")
         .emptyLine()
@@ -519,19 +520,17 @@ public class Lang extends CoreLang {
         .textRaw(ZONE_DESCRIPTION)
         .emptyLine()
         .leftClick("add line")
-        .rightClick("remove latest")
-        .dropKey("clear all")
+        .rightClick("clear all")
         .build();
 
-    public static final LangItem EDITOR_ZONE_LINKED_JOB = LangItem.builder("Editor.Zone.LinkedJob")
-        .name("Linked Job")
-        .textRaw(ZONE_INSPECT.apply(ReportType.ZONE_JOB))
-        .emptyLine()
-        .current("Current", ZONE_JOB_NAME)
+    public static final LangItem EDITOR_ZONE_LINKED_JOBS = LangItem.builder("Editor.Zone.LinkedJobs")
+        .name("Linked Jobs")
+        .textRaw(ZONE_JOB_NAMES)
         .emptyLine()
         .text("Links job with the zone.")
         .emptyLine()
-        .click("change")
+        .leftClick("add job")
+        .rightClick("remove all")
         .build();
 
     public static final LangItem EDITOR_ZONE_JOB_LEVEL = LangItem.builder("Editor.Zone.JobLevel")
@@ -574,12 +573,14 @@ public class Lang extends CoreLang {
         .dropKey("remove all")
         .build();
 
-    public static final LangItem EDITOR_ZONE_OPEN_TIMES = LangItem.builder("Editor.Zone.OpenTimes")
-        .name("Open Times")
-        .text("Sets day times when this zone", "is available for players.")
+    public static final LangItem EDITOR_ZONE_HOURS = LangItem.builder("Editor.Zone.Hours")
+        .name("Hours")
+        .current("Enabled", ZONE_HOURS_ENABLED)
         .emptyLine()
-        .click("navigate")
-        .dropKey("disable")
+        .text("Controls whether job zone is", "active during certain", "hours only.")
+        .emptyLine()
+        .leftClick("navigate")
+        .rightClick("toggle")
         .build();
 
     public static final LangItem EDITOR_ZONE_MODIFIERS = LangItem.builder("Editor.Zone.Modifiers")
@@ -593,9 +594,8 @@ public class Lang extends CoreLang {
         .name(GENERIC_NAME)
         .textRaw(GENERIC_VALUE)
         .emptyLine()
-        .leftClick("add time")
-        .rightClick("remove latest")
-        .dropKey("remove all")
+        .leftClick("add hours")
+        .rightClick("remove")
         .build();
 
     public static final LangItem EDITOR_ZONE_MODIFIER_CURRENCY_CREATE = LangItem.builder("Editor.Zone.Modifier.Currency_Create")
@@ -648,9 +648,7 @@ public class Lang extends CoreLang {
         .name("Per Level Value")
         .current("Current", MODIFIER_PER_LEVEL)
         .emptyLine()
-        .text("The number increases by itself", "for each " + LIGHT_YELLOW.enclose("<Step>") + " job levels.")
-        .emptyLine()
-        .text("Where " + LIGHT_YELLOW.enclose("<Step>") + " is the " + LIGHT_YELLOW.enclose("Level Step") + ".")
+        .text("The number increases by itself", "for each " + LIGHT_YELLOW.enclose("<Level Step>") + " job levels.")
         .emptyLine()
         .click("change")
         .build();
@@ -659,7 +657,7 @@ public class Lang extends CoreLang {
         .name("Level Step")
         .current("Current", MODIFIER_STEP)
         .emptyLine()
-        .text("Determines how often " + LIGHT_YELLOW.enclose("Per Level Value"), "should increase in job levels.")
+        .text("Sets how often " + LIGHT_YELLOW.enclose("Per Level Value"), "should increase in job levels.")
         .emptyLine()
         .click("change")
         .build();
@@ -668,7 +666,7 @@ public class Lang extends CoreLang {
         .name("Action")
         .current("Current", MODIFIER_ACTION)
         .emptyLine()
-        .text("Determines math action", "between " + LIGHT_YELLOW.enclose("Base") + " and " + LIGHT_YELLOW.enclose("Per Level") + " values.")
+        .text("Sets math action", "between " + LIGHT_YELLOW.enclose("Base") + " and " + LIGHT_YELLOW.enclose("Per Level") + " values.")
         .emptyLine()
         .click("toggle")
         .build();

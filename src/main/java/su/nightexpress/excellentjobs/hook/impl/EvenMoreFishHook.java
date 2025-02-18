@@ -49,7 +49,7 @@ public class EvenMoreFishHook {
         @NotNull
         @Override
         public String getName(@NotNull Fish object) {
-            return object.getRarity().getValue() + ":" + object.getName();
+            return object.getRarity().getId() + ":" + object.getName();
         }
 
         @NotNull
@@ -64,7 +64,7 @@ public class EvenMoreFishHook {
             String[] split = name.split(":");
             if (split.length < 2) return null;
 
-            return API.getFish(split[0], split[1]).orElse(null);
+            return API.getFish(split[0], split[1]);//.orElse(null);
         }
     };
 

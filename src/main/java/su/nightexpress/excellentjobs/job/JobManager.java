@@ -251,10 +251,6 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         return Config.JOBS_SECONDARY_AMOUNT.get().getGreatestOrNegative(player);
     }
 
-    public boolean canGetMoreJobs(@NotNull Player player) {
-        return this.canGetMoreJobs(player, JobState.PRIMARY) || this.canGetMoreJobs(player, JobState.SECONDARY);
-    }
-
     public void openJobsMenu(@NotNull Player player) {
         this.jobsMenu.open(player);
     }
@@ -288,10 +284,30 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         this.jobResetMenu.open(player, user.getData(job));
     }
 
+    public boolean canGetMoreJobs(@NotNull Player player) {
+        //return this.canGetMoreJobs(player, JobState.PRIMARY) || this.canGetMoreJobs(player, JobState.SECONDARY);
+
+        return this.countJoinableJobs(player) != 0;
+    }
+
     public boolean canGetMoreJobs(@NotNull Player player, @NotNull JobState state) {
+//        JobUser user = this.plugin.getUserManager().getUserData(player);
+//        int limit = getJobsLimit(player, state);
+//        return limit < 0 || user.countJobs(state) < limit;
+
+        return this.countJoinableJobs(player, state) != 0;
+    }
+
+    public int countJoinableJobs(@NotNull Player player) {
+        return this.countJoinableJobs(player, JobState.PRIMARY) + this.countJoinableJobs(player, JobState.SECONDARY);
+    }
+
+    public int countJoinableJobs(@NotNull Player player, @NotNull JobState state) {
         JobUser user = this.plugin.getUserManager().getUserData(player);
         int limit = getJobsLimit(player, state);
-        return limit < 0 || user.countJobs(state) < limit;
+        if (limit < 0) return -1;
+
+        return user.countJobs(state) - limit;
     }
 
     public void handleQuit(@NotNull Player player) {
@@ -762,7 +778,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         // Send exp gain/lose message.
         if (notify) {
             (isLose ? Lang.JOB_XP_LOSE : Lang.JOB_XP_GAIN).getMessage()
-                .replace(jobData.replacePlaceholders())
+                .replace(jobData.replaceAllPlaceholders())
                 .replace(Placeholders.GENERIC_AMOUNT, NumberUtil.format(amount))
                 .send(player);
         }
@@ -774,7 +790,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
             JobLevelDownEvent event = new JobLevelDownEvent(player, user, jobData);
             plugin.getPluginManager().callEvent(event);
 
-            Lang.JOB_LEVEL_DOWN.getMessage().replace(jobData.replacePlaceholders()).send(player);
+            Lang.JOB_LEVEL_DOWN.getMessage().replace(jobData.replaceAllPlaceholders()).send(player);
         }
         else if (levelHas < jobData.getLevel()) {
             JobLevelUpEvent event = new JobLevelUpEvent(player, user, jobData);
@@ -783,7 +799,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
             // TODO force permission
             this.triggerLevelRewards(player, job, jobData.getLevel(), false);
 
-            Lang.JOB_LEVEL_UP.getMessage().replace(jobData.replacePlaceholders()).send(player);
+            Lang.JOB_LEVEL_UP.getMessage().replace(jobData.replaceAllPlaceholders()).send(player);
 
             if (Config.LEVELING_FIREWORKS.get()) {
                 this.createFirework(player.getWorld(), player.getLocation());

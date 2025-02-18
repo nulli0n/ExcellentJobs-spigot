@@ -8,9 +8,9 @@ depend:
   - EconomyBridge
 softdepend:
   - PlaceholderAPI
-  - CoinsEngine
   - Vault
   - ProtocolLib
   - MythicMobs
   - EvenMoreFish
-api-version: 1.19
+  - CustomFishing
+api-version: 1.21

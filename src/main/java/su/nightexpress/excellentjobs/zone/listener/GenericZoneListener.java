@@ -4,9 +4,9 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
+import org.bukkit.damage.DamageSource;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -32,11 +32,11 @@ import su.nightexpress.excellentjobs.zone.impl.BlockList;
 import su.nightexpress.excellentjobs.zone.impl.Zone;
 import su.nightexpress.nightcore.manager.AbstractListener;
 
-public class GenericListener extends AbstractListener<JobsPlugin> {
+public class GenericZoneListener extends AbstractListener<JobsPlugin> {
 
     private final ZoneManager manager;
 
-    public GenericListener(@NotNull JobsPlugin plugin, @NotNull ZoneManager manager) {
+    public GenericZoneListener(@NotNull JobsPlugin plugin, @NotNull ZoneManager manager) {
         super(plugin);
         this.manager = manager;
     }
@@ -116,30 +116,25 @@ public class GenericListener extends AbstractListener<JobsPlugin> {
         }
     }
 
+    @SuppressWarnings("UnstableApiUsage")
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onZoneEntityDamage(EntityDamageByEntityEvent event) {
-        Entity attacker = event.getDamager();
         Entity victim = event.getEntity();
+
         Zone zone = this.manager.getZone(victim);
         if (zone == null) return;
 
-        Player damager;
-        if (attacker instanceof Player player) {
-            damager = player;
-        }
-        else if (attacker instanceof Projectile projectile && projectile.getShooter() instanceof Player player) {
-            damager = player;
-        }
-        else return;
+        DamageSource source = event.getDamageSource();
+        if (!(source.getCausingEntity() instanceof Player damager)) return;
 
         if (!zone.isAvailable(damager)) {
-            Lang.ZONE_NOT_AVAILABLE.getMessage().send(attacker);
+            Lang.ZONE_NOT_AVAILABLE.getMessage().send(damager);
             event.setCancelled(true);
             return;
         }
 
         if (victim instanceof Player) {
-            Lang.ZONE_NO_PVP.getMessage().send(attacker);
+            Lang.ZONE_NO_PVP.getMessage().send(damager);
             event.setCancelled(!zone.isPvPAllowed());
         }
     }
@@ -187,19 +182,9 @@ public class GenericListener extends AbstractListener<JobsPlugin> {
     public void onZoneBlockBreak(BlockBreakEvent event) {
         Block block = event.getBlock();
         Zone zone = this.manager.getZone(block);
-        if (zone == null) return;
+        if (zone == null || !zone.isActive()) return;
 
-        //Player player = event.getPlayer();
-        World world = block.getWorld();
-        BlockList blockList = zone.getBlockList(block);
-        if (blockList != null/* && zone.isAvailable(player)*/) {
-            if (!blockList.isDropItems()) {
-                event.setExpToDrop(0);
-                event.setDropItems(false);
-            }
-            blockList.onBlockBreak(block);
-            this.plugin.runTask(task -> world.setBlockData(block.getLocation(), blockList.getFallbackMaterial().createBlockData()));
-        }
+        zone.handleBlockBreak(event, block);
     }
 
     @EventHandler(priority = EventPriority.NORMAL)

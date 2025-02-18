@@ -1,27 +1,24 @@
 package su.nightexpress.excellentjobs;
 
-import org.jetbrains.annotations.NotNull;
 import su.nightexpress.economybridge.api.Currency;
-import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Lang;
+import su.nightexpress.excellentjobs.data.impl.JobData;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.job.impl.JobState;
 import su.nightexpress.excellentjobs.job.reward.LevelReward;
 import su.nightexpress.excellentjobs.util.Modifier;
-import su.nightexpress.excellentjobs.util.report.ReportType;
-import su.nightexpress.excellentjobs.zone.impl.Zone;
 import su.nightexpress.excellentjobs.zone.impl.BlockList;
+import su.nightexpress.excellentjobs.zone.impl.Zone;
 import su.nightexpress.nightcore.core.CoreLang;
 import su.nightexpress.nightcore.language.LangAssets;
-import su.nightexpress.nightcore.util.*;
+import su.nightexpress.nightcore.util.Lists;
+import su.nightexpress.nightcore.util.NumberUtil;
+import su.nightexpress.nightcore.util.StringUtil;
+import su.nightexpress.nightcore.util.TimeUtil;
 import su.nightexpress.nightcore.util.placeholder.PlaceholderList;
-import su.nightexpress.nightcore.util.placeholder.PlaceholderMap;
 
-import java.time.LocalTime;
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
-
-import static su.nightexpress.nightcore.util.text.tag.Tags.*;
+import java.util.stream.Collectors;
 
 public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
 
@@ -31,10 +28,6 @@ public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
     public static final String URL_WIKI_CURRENCY       = URL_WIKI + "features/multi-currency";
     public static final String URL_WIKI_SPECIAL_ORDERS = URL_WIKI + "features/special-orders";
     public static final String URL_WIKI_ZONES          = URL_WIKI + "features/zones";
-
-    private static final String PREFIX_PROBLEM = RED.enclose("✘ ");
-    private static final String PREFIX_GOOD    = GREEN.enclose("✔ ");
-    private static final String PREFIX_WARN    = ORANGE.enclose("❗ ");
 
     public static final String GENERIC_AMOUNT   = "%amount%";
     public static final String GENERIC_NAME     = "%name%";
@@ -92,19 +85,19 @@ public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
     public static final String ZONE_ID                          = "%zone_id%";
     public static final String ZONE_NAME                        = "%zone_name%";
     public static final String ZONE_DESCRIPTION                 = "%zone_description%";
-    public static final String ZONE_JOB_ID                      = "%zone_job_id%";
-    public static final String ZONE_JOB_NAME                    = "%zone_job_name%";
+    public static final String ZONE_JOB_IDS                      = "%zone_job_ids%";
+    public static final String ZONE_JOB_NAMES                    = "%zone_job_names%";
     public static final String ZONE_JOB_MIN_LEVEL               = "%zone_job_min_level%";
     public static final String ZONE_JOB_MAX_LEVEL               = "%zone_job_max_level%";
-    public static final String ZONE_CLOSE_TIME                  = "%zone_close_time%";
-    public static final String ZONE_OPEN_TIME                   = "%zone_open_time%";
+    //public static final String ZONE_CLOSE_TIME                  = "%zone_close_time%";
+    //public static final String ZONE_OPEN_TIME                   = "%zone_open_time%";
+    public static final String ZONE_HOURS_ENABLED = "%zone_hours_enabled%";
     public static final String ZONE_DISABLED_BLOCK_INTERACTIONS = "%zone_disabled_block_interactions%";
     public static final String ZONE_PERMISSION                  = "%zone_permission%";
     public static final String ZONE_PERMISSION_REQUIRED         = "%zone_permission_required%";
     public static final String ZONE_PVP_ALLOWED                 = "%zone_pvp_allowed%";
 
-    public static final String                       ZONE_REPORT  = "%zone_report%";
-    public static final Function<ReportType, String> ZONE_INSPECT = type -> "%zone_inspect_" + type.name().toLowerCase() + "%";
+    public static final String ZONE_INSPECT_SELECTION = "%zone_inspect_zone_selection%";
 
     public static final String BLOCK_LIST_ID                = "%blocklist_id%";
     public static final String BLOCK_LIST_MATERIALS         = "%blocklist_materials%";
@@ -136,25 +129,35 @@ public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
         .add(CURRENCY_ID, Currency::getInternalId)
         .add(CURRENCY_NAME, Currency::getName);
 
-//    @NotNull
-//    public static UnaryOperator<String> forCurrency(@NotNull Currency currency) {
-//        return CURRENCY.replacer(currency);
-//    }
+    public static final PlaceholderList<Modifier> MODIFIER = PlaceholderList.create(list -> list
+        .add(MODIFIER_BASE, modifier -> NumberUtil.format(modifier.getBase()))
+        .add(MODIFIER_PER_LEVEL, modifier -> NumberUtil.format(modifier.getPerLevel()))
+        .add(MODIFIER_STEP, modifier -> NumberUtil.format(modifier.getStep()))
+        .add(MODIFIER_ACTION, modifier -> StringUtil.capitalizeFully(modifier.getAction().name()))
+    );
 
-    @NotNull
-    public static PlaceholderMap forJob(@NotNull Job job) {
-        return new PlaceholderMap()
-            .add(JOB_ID, job::getId)
-            .add(JOB_NAME, job::getName)
-            .add(JOB_DESCRIPTION, () -> String.join("\n", job.getDescription()))
-            .add(JOB_PERMISSION_REQUIRED, () -> CoreLang.getYesOrNo(job.isPermissionRequired()))
-            .add(JOB_PERMISSION_NODE, job::getPermission)
-            .add(JOB_MAX_LEVEL, () -> NumberUtil.format(job.getMaxLevel()))
-            .add(JOB_MAX_SECONDARY_LEVEL, () -> NumberUtil.format(job.getMaxSecondaryLevel()))
-            .add(JOB_EMPLOYEES_TOTAL, () -> NumberUtil.format(job.getEmployees()))
-            .add(JOB_EMPLOYEES_PRIMARY, () -> NumberUtil.format(job.getEmployeesAmount(JobState.PRIMARY)))
-            .add(JOB_EMPLOYEES_SECONDARY, () -> NumberUtil.format(job.getEmployeesAmount(JobState.SECONDARY)));
-    }
+    public static final PlaceholderList<Job> JOB = PlaceholderList.create(list -> list
+        .add(JOB_ID, Job::getId)
+        .add(JOB_NAME, Job::getName)
+        .add(JOB_DESCRIPTION, job -> String.join("\n", job.getDescription()))
+        .add(JOB_PERMISSION_REQUIRED, job -> CoreLang.getYesOrNo(job.isPermissionRequired()))
+        .add(JOB_PERMISSION_NODE, Job::getPermission)
+        .add(JOB_MAX_LEVEL, job -> NumberUtil.format(job.getMaxLevel()))
+        .add(JOB_MAX_SECONDARY_LEVEL, job -> NumberUtil.format(job.getMaxSecondaryLevel()))
+        .add(JOB_EMPLOYEES_TOTAL, job -> NumberUtil.format(job.getEmployees()))
+        .add(JOB_EMPLOYEES_PRIMARY, job -> NumberUtil.format(job.getEmployeesAmount(JobState.PRIMARY)))
+        .add(JOB_EMPLOYEES_SECONDARY, job -> NumberUtil.format(job.getEmployeesAmount(JobState.SECONDARY)))
+    );
+
+    public static final PlaceholderList<JobData> JOB_DATA = PlaceholderList.create(list -> list
+        .add(JOB_DATA_STATE, jobData -> Lang.JOB_STATE.getLocalized(jobData.getState()))
+        .add(JOB_DATA_LEVEL, jobData -> NumberUtil.format(jobData.getLevel()))
+        .add(JOB_DATA_LEVEL_MAX, jobData -> NumberUtil.format(jobData.getMaxLevel()))
+        .add(JOB_DATA_XP, jobData -> NumberUtil.format(jobData.getXP()))
+        .add(JOB_DATA_XP_MAX, jobData -> NumberUtil.format(jobData.getMaxXP()))
+        .add(JOB_DATA_XP_TO_UP, jobData -> NumberUtil.format(jobData.getXPToLevelUp()))
+        .add(JOB_DATA_XP_TO_DOWN, jobData -> NumberUtil.format(jobData.getXPToLevelDown()))
+    );
 
     public static final PlaceholderList<LevelReward> LEVEL_REWARD = PlaceholderList.create(list -> list
         .add(REWARD_NAME, LevelReward::getName)
@@ -164,98 +167,52 @@ public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
         .add(REWARD_REPEATABLE, reward -> Lang.getYesOrNo(reward.isRepeatable()))
     );
 
-//    @NotNull
-//    public static PlaceholderMap forReward(@NotNull LevelReward reward) {
-//        return new PlaceholderMap()
-//            .add(REWARD_NAME, reward::getName)
-//            .add(REWARD_DESCRIPTION, () -> String.join("\n", reward.getDescription()))
-//            .add(REWARD_REQUIREMENT, () -> String.join("\n", reward.getRequirementText()))
-//            .add(REWARD_LEVEL, () -> NumberUtil.format(reward.getLevel()))
-//            .add(REWARD_REPEATABLE, () -> Lang.getYesOrNo(reward.isRepeatable()));
-//    }
+    public static final PlaceholderList<Zone> ZONE = PlaceholderList.create(list -> list
+        .add(ZONE_ID, Zone::getId)
+        .add(ZONE_NAME, Zone::getName)
+        .add(ZONE_DESCRIPTION, zone -> String.join("\n", zone.getDescription()))
+        .add(ZONE_PVP_ALLOWED, zone -> Lang.getYesOrNo(zone.isPvPAllowed()))
+        .add(ZONE_JOB_IDS, zone -> String.join("\n", zone.getLinkedJobs()))
+        .add(ZONE_JOB_NAMES, zone -> zone.getLinkedJobs().stream().map(id -> {
+            Job job = JobsAPI.getJobById(id);
+            return job == null ? Lang.badEntry(id) : Lang.goodEntry(job.getName());
+        }).collect(Collectors.joining("\n")))
+        .add(ZONE_JOB_MIN_LEVEL, zone -> NumberUtil.format(zone.getMinJobLevel()))
+        .add(ZONE_JOB_MAX_LEVEL, zone -> NumberUtil.format(zone.getMaxJobLevel()))
+        .add(ZONE_HOURS_ENABLED, zone -> Lang.getEnabledOrDisabled(zone.isHoursEnabled()))
+//        .add(ZONE_CLOSE_TIME, zone -> {
+//            LocalTime time = zone.getNearestCloseTime();
+//            return time == null ? "-" : JobUtils.formatTime(time);
+//        })
+//        .add(ZONE_OPEN_TIME, zone -> {
+//            LocalTime time = zone.getNearestOpenTime();
+//            return time == null ? "-" : JobUtils.formatTime(time);
+//        })
+        .add(ZONE_DISABLED_BLOCK_INTERACTIONS, zone -> {
+            return String.join("\n", Lists.modify(zone.getDisabledInteractions(), type -> Lang.goodEntry(LangAssets.get(type))));
+        })
+    );
 
-    @NotNull
-    public static PlaceholderMap forZoneAll(@NotNull Zone zone) {
-        return PlaceholderMap.fusion(zone.getPlaceholders(), forZoneEditor(zone));
-    }
+    public static final PlaceholderList<Zone> ZONE_EDITOR = PlaceholderList.create(list -> list
+        .add(ZONE)
+        .add(ZONE_PERMISSION, Zone::getPermission)
+        .add(ZONE_PERMISSION_REQUIRED, zone -> Lang.getYesOrNo(zone.isPermissionRequired()))
+        .add(ZONE_INSPECT_SELECTION, zone -> {
+            if (zone.getCuboid().isEmpty()) return Lang.badEntry("Invalid cuboid selection.");
+            return Lang.goodEntry("Selection is valid.");
+        })
+    );
 
-    @NotNull
-    public static PlaceholderMap forZone(@NotNull Zone zone) {
-        return new PlaceholderMap()
-            .add(ZONE_ID, zone::getId)
-            .add(ZONE_NAME, zone::getName)
-            .add(ZONE_DESCRIPTION, () -> String.join("\n", zone.getDescription()))
-            .add(ZONE_PVP_ALLOWED, () -> Lang.getYesOrNo(zone.isPvPAllowed()))
-            .add(ZONE_JOB_ID, () -> zone.getLinkedJob() == null ? "null" : zone.getLinkedJob().getId())
-            .add(ZONE_JOB_NAME, () -> zone.getLinkedJob() == null ? "null" : zone.getLinkedJob().getName())
-            .add(ZONE_JOB_MIN_LEVEL, () -> NumberUtil.format(zone.getMinJobLevel()))
-            .add(ZONE_JOB_MAX_LEVEL, () -> NumberUtil.format(zone.getMaxJobLevel()))
-            .add(ZONE_CLOSE_TIME, () -> {
-                var times = zone.getCurrentOpenTimes();
-                if (times == null) return "-";
-
-                return times.getSecond().format(Config.GENERAL_TIME_FORMATTER.get());
-            })
-            .add(ZONE_OPEN_TIME, () -> {
-                LocalTime time = zone.getNearestOpenTime();
-                return time == null ? "-" : time.format(Config.GENERAL_TIME_FORMATTER.get());
-            })
-            .add(ZONE_DISABLED_BLOCK_INTERACTIONS, () -> {
-                return String.join("\n", Lists.modify(zone.getDisabledInteractions(), type -> good(LangAssets.get(type))));
-            })
-            ;
-    }
-
-    @NotNull
-    public static PlaceholderMap forZoneEditor(@NotNull Zone zone) {
-        PlaceholderMap placeholders = new PlaceholderMap()
-            .add(ZONE_REPORT, () -> String.join("\n", zone.getReport().getFullReport()))
-            .add(ZONE_PERMISSION, zone::getPermission)
-            .add(ZONE_PERMISSION_REQUIRED, Lang.getYesOrNo(zone.isPermissionRequired()));
-
-        zone.getReport().getKnownReports().forEach(type -> {
-            placeholders.add(ZONE_INSPECT.apply(type), () -> String.valueOf(zone.getReport().getProblem(type)));
-        });
-
-        return placeholders;
-    }
-
-    @NotNull
-    public static PlaceholderMap forModifier(@NotNull Modifier modifier) {
-        return new PlaceholderMap()
-            .add(MODIFIER_BASE, () -> NumberUtil.format(modifier.getBase()))
-            .add(MODIFIER_PER_LEVEL, () -> NumberUtil.format(modifier.getPerLevel()))
-            .add(MODIFIER_STEP, () -> NumberUtil.format(modifier.getStep()))
-            .add(MODIFIER_ACTION, () -> StringUtil.capitalizeFully(modifier.getAction().name()));
-    }
-
-    @NotNull
-    public static PlaceholderMap forBlockList(@NotNull BlockList blockList) {
-        return new PlaceholderMap()
-            .add(BLOCK_LIST_ID, blockList::getId)
-            .add(BLOCK_LIST_MATERIALS, () -> {
-                return String.join("\n", blockList.getMaterials().stream().map(mat -> good(LangAssets.get(mat))).toList());
-            })
-            .add(BLOCK_LIST_FALLBACK_MATERIAL, () -> good(LangAssets.get(blockList.getFallbackMaterial())))
-            .add(BLOCK_LIST_RESET_TIME, () -> good(TimeUtil.formatTime(blockList.getResetTime() * 1000L)))
-            .add(BLOCK_LIST_DROP_ITEMS, () -> {
-                String yesNo = Lang.getYesOrNo(blockList.isDropItems());
-                return blockList.isDropItems() ? good(yesNo) : problem(yesNo);
-            });
-    }
-
-    @NotNull
-    public static String problem(@NotNull String text) {
-        return PREFIX_PROBLEM + GRAY.enclose(text);
-    }
-
-    @NotNull
-    public static String good(@NotNull String text) {
-        return PREFIX_GOOD + GRAY.enclose(text);
-    }
-
-    @NotNull
-    public static String warn(@NotNull String text) {
-        return PREFIX_WARN + GRAY.enclose(text);
-    }
+    public static final PlaceholderList<BlockList> ZONE_BLOCK_LIST = PlaceholderList.create(list -> list
+        .add(BLOCK_LIST_ID, BlockList::getId)
+        .add(BLOCK_LIST_MATERIALS, blockList -> {
+            return String.join("\n", blockList.getMaterials().stream().map(mat -> Lang.goodEntry(LangAssets.get(mat))).toList());
+        })
+        .add(BLOCK_LIST_FALLBACK_MATERIAL, blockList -> Lang.goodEntry(LangAssets.get(blockList.getFallbackMaterial())))
+        .add(BLOCK_LIST_RESET_TIME, blockList -> Lang.goodEntry(TimeUtil.formatTime(blockList.getResetTime() * 1000L)))
+        .add(BLOCK_LIST_DROP_ITEMS, blockList -> {
+            String yesNo = Lang.getYesOrNo(blockList.isDropItems());
+            return blockList.isDropItems() ? Lang.goodEntry(yesNo) : Lang.badEntry(yesNo);
+        })
+    );
 }

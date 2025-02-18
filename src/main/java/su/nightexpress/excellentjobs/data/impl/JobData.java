@@ -4,17 +4,14 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import su.nightexpress.economybridge.api.Currency;
 import su.nightexpress.excellentjobs.Placeholders;
-import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.job.impl.JobState;
-import su.nightexpress.nightcore.util.NumberUtil;
-import su.nightexpress.nightcore.util.placeholder.Placeholder;
-import su.nightexpress.nightcore.util.placeholder.PlaceholderMap;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.UnaryOperator;
 
-public class JobData implements Placeholder {
+public class JobData  {
 
     private final Job          job;
     private final JobLimitData limitData;
@@ -27,7 +24,6 @@ public class JobData implements Placeholder {
     private int      xp;
 
     private final Set<Integer>   obtainedLevelRewards;
-    private final PlaceholderMap placeholderMap;
 
     @NotNull
     public static JobData create(@NotNull Job job) {
@@ -65,22 +61,16 @@ public class JobData implements Placeholder {
         if (!this.getOrderData().isEmpty()) {
             this.getOrderData().validateObjectives(job);
         }
-
-        this.placeholderMap = new PlaceholderMap(job.getPlaceholders())
-            .add(Placeholders.JOB_DATA_STATE, () -> Lang.JOB_STATE.getLocalized(this.getState()))
-            .add(Placeholders.JOB_DATA_LEVEL, () -> NumberUtil.format(this.getLevel()))
-            .add(Placeholders.JOB_DATA_LEVEL_MAX, () -> NumberUtil.format(this.getMaxLevel()))
-            .add(Placeholders.JOB_DATA_XP, () -> NumberUtil.format(this.getXP()))
-            .add(Placeholders.JOB_DATA_XP_MAX, () -> NumberUtil.format(this.getMaxXP()))
-            .add(Placeholders.JOB_DATA_XP_TO_UP, () -> NumberUtil.format(this.getXPToLevelUp()))
-            .add(Placeholders.JOB_DATA_XP_TO_DOWN, () -> NumberUtil.format(this.getXPToLevelDown()))
-        ;
     }
 
-    @Override
     @NotNull
-    public PlaceholderMap getPlaceholders() {
-        return this.placeholderMap;
+    public UnaryOperator<String> replacePlaceholders() {
+        return Placeholders.JOB_DATA.replacer(this);
+    }
+
+    @NotNull
+    public UnaryOperator<String> replaceAllPlaceholders() {
+        return str -> this.job.replacePlaceholders().apply(this.replacePlaceholders().apply(str));
     }
 
     public void reset() {

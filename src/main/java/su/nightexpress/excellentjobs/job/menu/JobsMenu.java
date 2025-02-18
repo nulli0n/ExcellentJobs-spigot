@@ -68,7 +68,25 @@ public class JobsMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<Job> 
     public JobsMenu(@NotNull JobsPlugin plugin) {
         super(plugin, FileConfig.loadOrExtract(plugin, Config.DIR_MENU, FILE_NAME));
 
+        plugin.getJobManager().getJobs().forEach(job -> {
+            this.addHandler(new ItemHandler("job:" + job.getId(), (viewer, event) -> {
+                this.onJobClick(viewer, job);
+            }));
+        });
+
         this.load();
+
+        this.getItems().forEach(menuItem -> {
+            if (menuItem.getHandler().getName().startsWith("job:")) {
+                String jobId = menuItem.getHandler().getName().substring("job:".length());
+                Job job = plugin.getJobManager().getJobById(jobId);
+                if (job == null) return;
+
+                menuItem.getOptions().setDisplayModifier((viewer, item) -> {
+                    this.replaceJobItem(viewer.getPlayer(), job, item);
+                });
+            }
+        });
     }
 
     @Override
@@ -89,28 +107,59 @@ public class JobsMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<Job> 
         autoFill.setSlots(this.jobSlots);
         autoFill.setItems(plugin.getJobManager().getJobs().stream().sorted(Comparator.comparing(Job::getName)).toList());
         autoFill.setItemCreator(job -> {
-            JobData jobData = user.getData(job);
-            JobLimitData limitData = jobData.getLimitData();
+            ItemStack item = job.getIcon();
+            this.replaceJobItem(player, job, item);
+            return item;
+        });
 
-            int level = jobData.getLevel();
-            Collection<Booster> boosters = plugin.getBoosterManager().getBoosters(player, job);
+        autoFill.setClickAction(job -> (viewer1, event) -> {
+            this.onJobClick(viewer1, job);
+        });
+    }
 
-            boolean hasAccess = job.hasPermission(player);
-            List<String> lore;
-            String name;
-            if (hasAccess) {
-                name = this.jobNameAvailable;
-                lore = new ArrayList<>(this.jobLoreAvailable);
-            }
-            else {
-                name = this.jobNameLockedPerm;
-                lore = new ArrayList<>(this.jobLoreLockedPerm);
-            }
+    private void onJobClick(MenuViewer viewer, @NotNull Job job) {
+        Player player = viewer.getPlayer();
 
-            List<String> status;
-            if (jobData.getState() != JobState.INACTIVE) {
-                status = new ArrayList<>(this.jobAvailSettingsLore);
-            }
+        JobUser user = this.plugin.getUserManager().getUserData(player);
+        if (user.getData(job).getState() != JobState.INACTIVE) {
+            this.plugin.getJobManager().openJobMenu(player, job);
+            return;
+        }
+
+        if (!job.hasPermission(player)) {
+            Lang.ERROR_NO_PERMISSION.getMessage().send(player);
+            return;
+        }
+
+        //if (this.plugin.getJobManager().canGetMoreJobs(player1)) {
+        this.runNextTick(() -> this.plugin.getJobManager().openPreviewMenu(player, job));
+        //}
+    }
+
+    private void replaceJobItem(@NotNull Player player, @NotNull Job job, @NotNull ItemStack item) {
+        JobUser user = plugin.getUserManager().getUserData(player);
+        JobData jobData = user.getData(job);
+        JobLimitData limitData = jobData.getLimitData();
+
+        int level = jobData.getLevel();
+        Collection<Booster> boosters = plugin.getBoosterManager().getBoosters(player, job);
+
+        boolean hasAccess = job.hasPermission(player);
+        List<String> lore;
+        String name;
+        if (hasAccess) {
+            name = this.jobNameAvailable;
+            lore = new ArrayList<>(this.jobLoreAvailable);
+        }
+        else {
+            name = this.jobNameLockedPerm;
+            lore = new ArrayList<>(this.jobLoreLockedPerm);
+        }
+
+        List<String> status;
+        if (jobData.getState() != JobState.INACTIVE) {
+            status = new ArrayList<>(this.jobAvailSettingsLore);
+        }
 //            else if (this.plugin.getJobManager().canGetMoreJobs(player, JobState.PRIMARY) && job.isAllowedState(JobState.PRIMARY)) {
 //                status = new ArrayList<>(this.jobAvailJoinPrimLore);
 //            }
@@ -120,129 +169,106 @@ public class JobsMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<Job> 
 //            else {
 //                status = new ArrayList<>(this.jobAvailLimitLore);
 //            }
-            else {
-                status = new ArrayList<>(this.jobAvailJoinPrimLore);
-            }
+        else {
+            status = new ArrayList<>(this.jobAvailJoinPrimLore);
+        }
 
-            List<String> dailyLimits = new ArrayList<>();
-            List<String> currencyLimits = new ArrayList<>();
-            List<String> xpLimits = new ArrayList<>();
-            if (job.hasDailyXPLimit(level)) {
-                xpLimits = new ArrayList<>(this.jobDailyXPLimit);
-                xpLimits.replaceAll(str -> str
-                    .replace(GENERIC_CURRENT, NumberUtil.format(limitData.getXPEarned()))
-                    .replace(GENERIC_TOTAL, NumberUtil.format(job.getDailyXPLimit(level)))
-                );
-            }
-            if (!job.getDailyPaymentLimits().isEmpty()) {
-                currencyLimits = new ArrayList<>();
-                for (String line : this.jobDailyCurrencyLimit) {
-                    if (line.contains(CURRENCY_NAME)) {
-                        for (Currency currency : EconomyBridge.getCurrencies()) {
-                            if (!job.hasDailyPaymentLimit(currency, level)) continue;
-
-                            currencyLimits.add(currency.replacePlaceholders().apply(line)
-                                .replace(GENERIC_CURRENT, currency.format(limitData.getCurrencyEarned(currency)))
-                                .replace(GENERIC_TOTAL, currency.format(job.getDailyPaymentLimit(currency, level)))
-                            );
-                        }
-                        continue;
-                    }
-                    currencyLimits.add(line);
-                }
-            }
-            if (!currencyLimits.isEmpty() || !xpLimits.isEmpty()) {
-                dailyLimits = new ArrayList<>(this.jobDailyLimits);
-                dailyLimits = Lists.replace(dailyLimits, GENERIC_CURRENCY, currencyLimits);
-                dailyLimits = Lists.replace(dailyLimits, GENERIC_XP, xpLimits);
-            }
-
-            List<String> boosterInfo = new ArrayList<>();
-            if (!boosters.isEmpty()) {
-                for (String line : this.jobBoosterLore) {
-                    if (line.contains(CURRENCY_BOOST_PERCENT) || line.contains(CURRENCY_BOOST_MODIFIER)) {
-                        for (Currency currency : EconomyBridge.getCurrencies()) {
-                            boosterInfo.add(currency.replacePlaceholders().apply(line)
-                                .replace(CURRENCY_BOOST_MODIFIER, NumberUtil.format(Booster.getCurrencyBoost(currency, boosters)))
-                                .replace(CURRENCY_BOOST_PERCENT, NumberUtil.format(Booster.getCurrencyPercent(currency, boosters)))
-                            );
-                        }
-                    }
-                    else boosterInfo.add(line
-                        .replace(XP_BOOST_MODIFIER, NumberUtil.format(Booster.getXPBoost(boosters)))
-                        .replace(XP_BOOST_PERCENT, NumberUtil.format(Booster.getXPPercent(boosters)))
-                    );
-                }
-            }
-
-            List<String> state = new ArrayList<>();
-            if (jobData.getState() == JobState.PRIMARY) {
-                state.addAll(this.jobPrimStateLore);
-            }
-            else if (jobData.getState() == JobState.SECONDARY) {
-                state.addAll(this.jobSecondStateLore);
-            }
-            else state.addAll(this.jobInactiveStateLore);
-
-            List<String> order = new ArrayList<>();
-            JobOrderData orderData = jobData.getOrderData();
-            if (!orderData.isEmpty() && !orderData.isExpired()) {
-                order.addAll(this.jobSpecOrderLore);
-                order.replaceAll(line -> line.replace(GENERIC_TIME, TimeUtil.formatDuration(orderData.getExpireDate())));
-            }
-
-            List<String> loreFinal = new ArrayList<>();
-            for (String line : lore) {
-                if (line.contains(CURRENCY_MULTIPLIER)) {
+        List<String> dailyLimits = new ArrayList<>();
+        List<String> currencyLimits = new ArrayList<>();
+        List<String> xpLimits = new ArrayList<>();
+        if (job.hasDailyXPLimit(level)) {
+            xpLimits = new ArrayList<>(this.jobDailyXPLimit);
+            xpLimits.replaceAll(str -> str
+                .replace(GENERIC_CURRENT, NumberUtil.format(limitData.getXPEarned()))
+                .replace(GENERIC_TOTAL, NumberUtil.format(job.getDailyXPLimit(level)))
+            );
+        }
+        if (!job.getDailyPaymentLimits().isEmpty()) {
+            currencyLimits = new ArrayList<>();
+            for (String line : this.jobDailyCurrencyLimit) {
+                if (line.contains(CURRENCY_NAME)) {
                     for (Currency currency : EconomyBridge.getCurrencies()) {
-                        double multiplier = job.getPaymentMultiplier(currency, level);
-                        if (multiplier == 0D) continue;
+                        if (!job.hasDailyPaymentLimit(currency, level)) continue;
 
-                        loreFinal.add(currency.replacePlaceholders().apply(line)
-                            .replace(CURRENCY_MULTIPLIER, NumberUtil.format(multiplier * 100D))
+                        currencyLimits.add(currency.replacePlaceholders().apply(line)
+                            .replace(GENERIC_CURRENT, currency.format(limitData.getCurrencyEarned(currency)))
+                            .replace(GENERIC_TOTAL, currency.format(job.getDailyPaymentLimit(currency, level)))
+                        );
+                    }
+                    continue;
+                }
+                currencyLimits.add(line);
+            }
+        }
+        if (!currencyLimits.isEmpty() || !xpLimits.isEmpty()) {
+            dailyLimits = new ArrayList<>(this.jobDailyLimits);
+            dailyLimits = Lists.replace(dailyLimits, GENERIC_CURRENCY, currencyLimits);
+            dailyLimits = Lists.replace(dailyLimits, GENERIC_XP, xpLimits);
+        }
+
+        List<String> boosterInfo = new ArrayList<>();
+        if (!boosters.isEmpty()) {
+            for (String line : this.jobBoosterLore) {
+                if (line.contains(CURRENCY_BOOST_PERCENT) || line.contains(CURRENCY_BOOST_MODIFIER)) {
+                    for (Currency currency : EconomyBridge.getCurrencies()) {
+                        boosterInfo.add(currency.replacePlaceholders().apply(line)
+                            .replace(CURRENCY_BOOST_MODIFIER, NumberUtil.format(Booster.getCurrencyBoost(currency, boosters)))
+                            .replace(CURRENCY_BOOST_PERCENT, NumberUtil.format(Booster.getCurrencyPercent(currency, boosters)))
                         );
                     }
                 }
-                else {
-                    loreFinal.add(line
-                        .replace(XP_MULTIPLIER, NumberUtil.format(job.getXPMultiplier(level) * 100D))
+                else boosterInfo.add(line
+                    .replace(XP_BOOST_MODIFIER, NumberUtil.format(Booster.getXPBoost(boosters)))
+                    .replace(XP_BOOST_PERCENT, NumberUtil.format(Booster.getXPPercent(boosters)))
+                );
+            }
+        }
+
+        List<String> state = new ArrayList<>();
+        if (jobData.getState() == JobState.PRIMARY) {
+            state.addAll(this.jobPrimStateLore);
+        }
+        else if (jobData.getState() == JobState.SECONDARY) {
+            state.addAll(this.jobSecondStateLore);
+        }
+        else state.addAll(this.jobInactiveStateLore);
+
+        List<String> order = new ArrayList<>();
+        JobOrderData orderData = jobData.getOrderData();
+        if (!orderData.isEmpty() && !orderData.isExpired()) {
+            order.addAll(this.jobSpecOrderLore);
+            order.replaceAll(line -> line.replace(GENERIC_TIME, TimeUtil.formatDuration(orderData.getExpireDate())));
+        }
+
+        List<String> loreFinal = new ArrayList<>();
+        for (String line : lore) {
+            if (line.contains(CURRENCY_MULTIPLIER)) {
+                for (Currency currency : EconomyBridge.getCurrencies()) {
+                    double multiplier = job.getPaymentMultiplier(currency, level);
+                    if (multiplier == 0D) continue;
+
+                    loreFinal.add(currency.replacePlaceholders().apply(line)
+                        .replace(CURRENCY_MULTIPLIER, NumberUtil.format(multiplier * 100D))
                     );
                 }
             }
-
-            ItemStack item = job.getIcon();
-            ItemReplacer.create(item).trimmed().hideFlags()
-                .setDisplayName(name).setLore(loreFinal)
-                .replace(DAILY_LIMITS, dailyLimits)
-                .replace(PLACEHOLDER_STATE, state)
-                .replace(PLACEHOLDER_BOOSTER, boosterInfo)
-                .replace(PLACEHOLDER_STATUS, status)
-                .replace(PLACEHOLDER_ORDER, order)
-                .replace(jobData.getPlaceholders())
-                .replace(job.getPlaceholders())
-                .writeMeta();
-
-            return item;
-        });
-
-        autoFill.setClickAction(job -> (viewer1, event) -> {
-            Player player1 = viewer1.getPlayer();
-
-            JobUser user1 = this.plugin.getUserManager().getUserData(player1);
-            if (user1.getData(job).getState() != JobState.INACTIVE) {
-                this.plugin.getJobManager().openJobMenu(player1, job);
-                return;
+            else {
+                loreFinal.add(line
+                    .replace(XP_MULTIPLIER, NumberUtil.format(job.getXPMultiplier(level) * 100D))
+                );
             }
+        }
 
-            if (!job.hasPermission(player1)) {
-                Lang.ERROR_NO_PERMISSION.getMessage().send(player1);
-                return;
-            }
-
-            //if (this.plugin.getJobManager().canGetMoreJobs(player1)) {
-                this.runNextTick(() -> this.plugin.getJobManager().openPreviewMenu(player1, job));
-            //}
-        });
+        ItemReplacer.create(item).trimmed().hideFlags()
+            .setDisplayName(name).setLore(loreFinal)
+            .replace(DAILY_LIMITS, dailyLimits)
+            .replace(PLACEHOLDER_STATE, state)
+            .replace(PLACEHOLDER_BOOSTER, boosterInfo)
+            .replace(PLACEHOLDER_STATUS, status)
+            .replace(PLACEHOLDER_ORDER, order)
+            .replace(jobData.replacePlaceholders())
+            .replace(job.replacePlaceholders())
+            .writeMeta();
     }
 
     @Override

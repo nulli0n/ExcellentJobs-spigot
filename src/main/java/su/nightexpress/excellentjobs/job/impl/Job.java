@@ -27,6 +27,7 @@ import su.nightexpress.nightcore.util.Lists;
 import su.nightexpress.nightcore.util.NumberUtil;
 import su.nightexpress.nightcore.util.StringUtil;
 import su.nightexpress.nightcore.util.placeholder.Placeholder;
+import su.nightexpress.nightcore.util.placeholder.PlaceholderList;
 import su.nightexpress.nightcore.util.placeholder.PlaceholderMap;
 import su.nightexpress.nightcore.util.random.Rnd;
 import su.nightexpress.nightcore.util.wrapper.UniInt;
@@ -34,11 +35,12 @@ import su.nightexpress.nightcore.util.wrapper.UniInt;
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 import static su.nightexpress.excellentjobs.Placeholders.PLAYER_NAME;
 
-public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
+public class Job extends AbstractFileData<JobsPlugin> {
 
     public static final String CONFIG_NAME = "settings.yml";
     public static final String OBJECTIVES_CONFIG_NAME = "objectives.yml";
@@ -72,7 +74,6 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
     private final Map<String, Modifier>      paymentMultiplier;
     private final Map<String, Modifier>      paymentDailyLimits;
     private final Map<String, JobObjective>  objectiveMap;
-    private final PlaceholderMap             placeholderMap;
 
     public Job(@NotNull JobsPlugin plugin, @NotNull File file, @NotNull String id) {
         super(plugin, file, id);
@@ -85,7 +86,6 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
         this.paymentMultiplier = new HashMap<>();
         this.paymentDailyLimits = new HashMap<>();
         this.objectiveMap = new HashMap<>();
-        this.placeholderMap = Placeholders.forJob(this);
     }
 
     @Override
@@ -337,10 +337,9 @@ public class Job extends AbstractFileData<JobsPlugin> implements Placeholder {
         }
     }
 
-    @Override
     @NotNull
-    public PlaceholderMap getPlaceholders() {
-        return this.placeholderMap;
+    public UnaryOperator<String> replacePlaceholders() {
+        return Placeholders.JOB.replacer(this);
     }
 
     @NotNull

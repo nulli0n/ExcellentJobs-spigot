@@ -57,7 +57,7 @@ public class JobJoinConfirmMenu extends ConfigMenu<JobsPlugin> implements Linked
             menuItem.getOptions().addDisplayModifier((viewer, item) -> {
                 Job job = this.getLink().get(viewer);
 
-                ItemReplacer.create(item).readMeta().replace(job.getPlaceholders()).writeMeta();
+                ItemReplacer.create(item).readMeta().replace(job.replacePlaceholders()).writeMeta();
             });
         });
     }

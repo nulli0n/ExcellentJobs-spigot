@@ -23,8 +23,8 @@ import su.nightexpress.excellentjobs.zone.editor.*;
 import su.nightexpress.excellentjobs.zone.impl.BlockList;
 import su.nightexpress.excellentjobs.zone.impl.Selection;
 import su.nightexpress.excellentjobs.zone.impl.Zone;
-import su.nightexpress.excellentjobs.zone.listener.GenericListener;
-import su.nightexpress.excellentjobs.zone.listener.SelectionListener;
+import su.nightexpress.excellentjobs.zone.listener.GenericZoneListener;
+import su.nightexpress.excellentjobs.zone.listener.SelectionZoneListener;
 import su.nightexpress.excellentjobs.zone.visual.BlockHighlighter;
 import su.nightexpress.excellentjobs.zone.visual.BlockPacketsHighlighter;
 import su.nightexpress.excellentjobs.zone.visual.BlockProtocolHighlighter;
@@ -40,13 +40,13 @@ public class ZoneManager extends AbstractManager<JobsPlugin> {
     private final Map<String, Zone>    zoneMap;
     private final Map<UUID, Selection> selectionMap;
 
-    private ZonesEditor     editor;
-    private ZoneEditor      settingsEditor;
-    private ZoneTimesEditor timesEditor;
-    private ModifiersEditor modifiersEditor;
-    private BlocksEditor    blocksEditor;
-    private BlockListEditor blockListEditor;
-    private ModifierEditor  modifierEditor;
+    private ZoneListEditor     zoneListEditor;
+    private ZoneEditor         zoneEditor;
+    private ZoneHoursEditor    zoneHoursEditor;
+    private ModifierListEditor modifierListEditor;
+    private ModifierEditor     modifierEditor;
+    private BlocksEditor       blocksEditor;
+    private BlockListEditor    blockListEditor;
 
     private BlockHighlighter highlighter;
 
@@ -63,20 +63,20 @@ public class ZoneManager extends AbstractManager<JobsPlugin> {
         this.loadZones();
         this.loadEditor();
 
-        this.addListener(new GenericListener(this.plugin, this));
-        this.addListener(new SelectionListener(this.plugin, this));
+        this.addListener(new GenericZoneListener(this.plugin, this));
+        this.addListener(new SelectionZoneListener(this.plugin, this));
 
-        this.addTask(this.plugin.createTask(this::regenerateBlocks).setSecondsInterval(Config.ZONES_REGENERATION_TASK_INTERVAL.get()));
+        this.addTask(this::regenerateBlocks, Config.ZONES_REGENERATION_TASK_INTERVAL.get());
     }
 
     @Override
     protected void onShutdown() {
         this.regenerateBlocks(true);
 
-        this.editor.clear();
-        this.settingsEditor.clear();
-        this.timesEditor.clear();
-        this.modifiersEditor.clear();
+        this.zoneListEditor.clear();
+        this.zoneEditor.clear();
+        this.zoneHoursEditor.clear();
+        this.modifierListEditor.clear();
         this.blocksEditor.clear();
         this.blockListEditor.clear();
         this.modifierEditor.clear();
@@ -104,10 +104,10 @@ public class ZoneManager extends AbstractManager<JobsPlugin> {
     }
 
     private void loadEditor() {
-        this.editor = new ZonesEditor(this.plugin);
-        this.settingsEditor = new ZoneEditor(this.plugin, this);
-        this.timesEditor = new ZoneTimesEditor(this.plugin, this);
-        this.modifiersEditor = new ModifiersEditor(this.plugin, this);
+        this.zoneListEditor = new ZoneListEditor(this.plugin);
+        this.zoneEditor = new ZoneEditor(this.plugin, this);
+        this.zoneHoursEditor = new ZoneHoursEditor(this.plugin, this);
+        this.modifierListEditor = new ModifierListEditor(this.plugin, this);
         this.blocksEditor = new BlocksEditor(this.plugin, this);
         this.blockListEditor = new BlockListEditor(this.plugin, this);
         this.modifierEditor = new ModifierEditor(this.plugin, this);
@@ -135,7 +135,7 @@ public class ZoneManager extends AbstractManager<JobsPlugin> {
         String id = StringUtil.lowerCaseUnderscoreStrict(name);
 
         if (this.getZoneById(id) != null) {
-            Lang.ZONE_ERROR_EXISTS.getMessage().replace(Placeholders.GENERIC_NAME, id).send(player);
+            Lang.ZONE_ERROR_EXISTS.getMessage().send(player, replacer -> replacer.replace(Placeholders.GENERIC_NAME, id));
             return false;
         }
 
@@ -157,7 +157,7 @@ public class ZoneManager extends AbstractManager<JobsPlugin> {
         this.exitSelection(player);
         this.openEditor(player, zone);
 
-        Lang.ZONE_CREATE_SUCCESS.getMessage().replace(zone.replacePlaceholders()).send(player);
+        Lang.ZONE_CREATE_SUCCESS.getMessage().send(player, replacer -> replacer.replace(zone.replacePlaceholders()));
         return true;
     }
 
@@ -197,6 +197,11 @@ public class ZoneManager extends AbstractManager<JobsPlugin> {
     @NotNull
     public Set<Zone> getZones() {
         return new HashSet<>(this.zoneMap.values());
+    }
+
+    @NotNull
+    public Set<Zone> getActiveZones() {
+        return this.getZones().stream().filter(Zone::isActive).collect(Collectors.toSet());
     }
 
     @NotNull
@@ -252,23 +257,23 @@ public class ZoneManager extends AbstractManager<JobsPlugin> {
     }
 
     public void openEditor(@NotNull Player player) {
-        this.editor.open(player, this);
+        this.zoneListEditor.open(player, this);
     }
 
     public void openEditor(@NotNull Player player, @NotNull Zone zone) {
-        this.settingsEditor.open(player, zone);
+        this.zoneEditor.open(player, zone);
     }
 
     public void openTimesEditor(@NotNull Player player, @NotNull Zone zone) {
-        this.timesEditor.open(player, zone);
+        this.zoneHoursEditor.open(player, zone);
     }
 
     public void openModifiersEditor(@NotNull Player player, @NotNull Zone zone) {
-        this.modifiersEditor.open(player, zone);
+        this.modifierListEditor.open(player, zone);
     }
 
     public void openModifierEditor(@NotNull Player player, @NotNull Zone zone, @NotNull Modifier modifier) {
-        this.modifierEditor.open(player, Pair.of(zone, modifier));
+        this.modifierEditor.open(player, zone, modifier);
     }
 
     public void openBlocksEditor(@NotNull Player player, @NotNull Zone zone) {
@@ -276,7 +281,7 @@ public class ZoneManager extends AbstractManager<JobsPlugin> {
     }
 
     public void openBlockListEditor(@NotNull Player player, @NotNull Zone zone, @NotNull BlockList blockList) {
-        this.blockListEditor.open(player, Pair.of(zone, blockList));
+        this.blockListEditor.open(player, zone, blockList);
     }
 
     public void regenerateBlocks() {
@@ -284,14 +289,7 @@ public class ZoneManager extends AbstractManager<JobsPlugin> {
     }
 
     public void regenerateBlocks(boolean force) {
-        this.getZones().forEach(zone -> {
-            if (!zone.isActive()) return;
-
-            World world = zone.getWorld();
-            if (world == null) return;
-
-            zone.getBlockLists().forEach(blockList -> blockList.regenerateBlocks(world, force));
-        });
+        this.getActiveZones().forEach(zone -> zone.regenerateBlocks(force));
     }
 
     @NotNull
@@ -355,7 +353,7 @@ public class ZoneManager extends AbstractManager<JobsPlugin> {
         else selection.setSecond(blockPos);
 
         int position = action == Action.LEFT_CLICK_BLOCK ? 1 : 2;
-        Lang.ZONE_SELECTION_INFO.getMessage().replace(Placeholders.GENERIC_VALUE, position).send(player);
+        Lang.ZONE_SELECTION_INFO.getMessage().send(player, replacer -> replacer.replace(Placeholders.GENERIC_VALUE, position));
 
         Cuboid cuboid = selection.toCuboid();
         Zone zone = this.getZoneByWandItem(itemStack);

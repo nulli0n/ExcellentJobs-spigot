@@ -73,6 +73,16 @@ public class Config {
         "Allowed values: " + StringUtil.inlineEnum(BarStyle.class, ", ")
     );
 
+    public static final ConfigValue<String> PLACEHOLDERS_JOBS_DELIMITER = ConfigValue.create("Placeholders.Jobs.Delimiter",
+        ", ",
+        "Sets delimiter for placeholders listing job name(s)."
+    );
+
+    public static final ConfigValue<String> PLACEHOLDERS_JOBS_FALLBACK = ConfigValue.create("Placeholders.Jobs.Fallback",
+        GRAY.enclose("<No Jobs>"),
+        "Sets fallback text for job listing placeholders if player has no jobs."
+    );
+
     public static final ConfigValue<RankMap<Integer>> JOBS_PRIMARY_AMOUNT = ConfigValue.create("Jobs.Primary_Amount",
         (cfg, path, def) -> RankMap.readInt(cfg, path, -1),
         (cfg, path, map) -> map.write(cfg, path),
@@ -141,7 +151,7 @@ public class Config {
     public static final ConfigValue<Boolean> ZONES_CONTROL_ENTRANCE = ConfigValue.create("Zones.Control_Entrance",
         true,
         "When enabled, prevents players from entering zones that are not available for them.",
-        "Examples: When player don't have permission to specific zone; when current server time is out of zone open times, etc.",
+        "Examples: When player don't have permission to specific zone; when current server time is not in zone hours, etc.",
         "You can disable this setting if you're experiencing performance issues related to the 'PlayerMoveEvent' from this plugin.",
         "Even if disabled, it still won't allow players to have zone bonuses and the whole ability to work there unless all conditions are met."
     );

@@ -19,11 +19,11 @@ import su.nightexpress.excellentjobs.zone.impl.Selection;
 import su.nightexpress.excellentjobs.zone.impl.Zone;
 import su.nightexpress.nightcore.manager.AbstractListener;
 
-public class SelectionListener extends AbstractListener<JobsPlugin> {
+public class SelectionZoneListener extends AbstractListener<JobsPlugin> {
 
     private final ZoneManager manager;
 
-    public SelectionListener(@NotNull JobsPlugin plugin, @NotNull ZoneManager manager) {
+    public SelectionZoneListener(@NotNull JobsPlugin plugin, @NotNull ZoneManager manager) {
         super(plugin);
         this.manager = manager;
     }
@@ -75,7 +75,8 @@ public class SelectionListener extends AbstractListener<JobsPlugin> {
 
     @EventHandler(priority = EventPriority.NORMAL)
     public void onWandMove(InventoryClickEvent event) {
-        if (event.getInventory().getType() == InventoryType.CRAFTING) return;
+        InventoryType type = event.getInventory().getType();
+        if (type == InventoryType.CRAFTING || type == InventoryType.CREATIVE) return;
 
         ItemStack itemStack = event.getCurrentItem();
         if (itemStack != null && this.manager.isCuboidWand(itemStack)) {

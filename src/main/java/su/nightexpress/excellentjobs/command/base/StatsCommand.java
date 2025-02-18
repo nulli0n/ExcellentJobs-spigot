@@ -47,7 +47,7 @@ public class StatsCommand extends AbstractCommand<JobsPlugin> {
                 .replace(Placeholders.PLAYER_NAME, user.getName())
                 .replace(Placeholders.GENERIC_ENTRY, list -> {
                     user.getDatas().forEach(jobData -> {
-                        list.add(jobData.replacePlaceholders().apply(Lang.COMMAND_STATS_ENTRY.getString()));
+                        list.add(jobData.replaceAllPlaceholders().apply(Lang.COMMAND_STATS_ENTRY.getString()));
                     });
                 }).send(sender);
         });

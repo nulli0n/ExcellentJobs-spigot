@@ -20,7 +20,6 @@ import su.nightexpress.nightcore.menu.link.ViewLink;
 import su.nightexpress.nightcore.util.ItemReplacer;
 import su.nightexpress.nightcore.util.ItemUtil;
 import su.nightexpress.nightcore.util.Lists;
-import su.nightexpress.nightcore.util.placeholder.PlaceholderMap;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +45,7 @@ public class JobResetMenu extends ConfigMenu<JobsPlugin> implements Linked<JobDa
             JobData jobData = this.getLink().get(player);
 
             jobData.reset();
-            Lang.JOB_RESET_NOTIFY.getMessage().replace(jobData.replacePlaceholders()).send(player);
+            Lang.JOB_RESET_NOTIFY.getMessage().replace(jobData.replaceAllPlaceholders()).send(player);
             player.closeInventory();
         }));
         this.addHandler(this.returnHanler = ItemHandler.forReturn(this, (viewer, event) -> {
@@ -59,7 +58,7 @@ public class JobResetMenu extends ConfigMenu<JobsPlugin> implements Linked<JobDa
             menuItem.getOptions().addDisplayModifier((viewer, item) -> {
                 JobData jobData = this.getLink().get(viewer);
 
-                ItemReplacer.create(item).readMeta().replace(jobData.getPlaceholders()).writeMeta();
+                ItemReplacer.create(item).readMeta().replace(jobData.replaceAllPlaceholders()).writeMeta();
             });
         });
     }
@@ -67,7 +66,7 @@ public class JobResetMenu extends ConfigMenu<JobsPlugin> implements Linked<JobDa
     @Override
     protected void onPrepare(@NotNull MenuViewer viewer, @NotNull MenuOptions options) {
         JobData jobData = this.getLink().get(viewer);
-        options.setTitle(PlaceholderMap.fusion(jobData, jobData.getJob()).replacer().apply(options.getTitle()));
+        options.setTitle(jobData.getJob().replacePlaceholders().apply(options.getTitle()));
     }
 
     @Override

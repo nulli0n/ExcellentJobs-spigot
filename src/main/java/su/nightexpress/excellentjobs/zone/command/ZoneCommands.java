@@ -33,24 +33,31 @@ public class ZoneCommands {
                 .description(Lang.COMMAND_ZONE_WAND_DESC)
                 .permission(Perms.COMMAND_ZONE_WAND)
                 .withArgument(zoneArgument(manager))
-                .executes((context, arguments) -> giveWand(plugin, manager, context, arguments))
+                .executes((context, arguments) -> giveWand(manager, context, arguments))
             )
             .addDirect(DEF_CREATE_NAME, child -> child
                 .playerOnly()
                 .description(Lang.COMMAND_ZONE_CREATE_DESC)
                 .permission(Perms.COMMAND_ZONE_CREATE)
                 .withArgument(ArgumentTypes.string(CommandArguments.NAME).localized(Lang.COMMAND_ARGUMENT_NAME_NAME).required())
-                .executes((context, arguments) -> createZone(plugin, manager, context, arguments))
+                .executes((context, arguments) -> createZone(manager, context, arguments))
             )
             .addDirect("editor", child -> child
                 .playerOnly()
                 .description(Lang.COMMAND_ZONE_EDITOR_DESC)
                 .permission(Perms.COMMAND_ZONE_EDITOR)
-                .executes((context, arguments) -> openEditor(plugin, manager, context, arguments))
+                .executes((context, arguments) -> openEditor(manager, context))
             )
         );
 
         plugin.getCommandManager().registerCommand(command);
+    }
+
+    public static void unload(@NotNull JobsPlugin plugin) {
+        if (command != null) {
+            plugin.getCommandManager().unregisterCommand(command);
+            command = null;
+        }
     }
 
     @NotNull
@@ -62,14 +69,7 @@ public class ZoneCommands {
             ;
     }
 
-    public static void unload(@NotNull JobsPlugin plugin) {
-        if (command != null) {
-            plugin.getCommandManager().unregisterCommand(command);
-            command = null;
-        }
-    }
-
-    private static boolean giveWand(@NotNull JobsPlugin plugin, @NotNull ZoneManager manager, @NotNull CommandContext context, @NotNull ParsedArguments arguments) {
+    private static boolean giveWand(@NotNull ZoneManager manager, @NotNull CommandContext context, @NotNull ParsedArguments arguments) {
         Zone zone = null;
         if (arguments.hasArgument(CommandArguments.ZONE)) {
             zone = arguments.getArgument(CommandArguments.ZONE, Zone.class);
@@ -80,13 +80,13 @@ public class ZoneCommands {
         return true;
     }
 
-    private static boolean createZone(@NotNull JobsPlugin plugin, @NotNull ZoneManager manager, @NotNull CommandContext context, @NotNull ParsedArguments arguments) {
+    private static boolean createZone(@NotNull ZoneManager manager, @NotNull CommandContext context, @NotNull ParsedArguments arguments) {
         Player player = context.getPlayerOrThrow();
         manager.defineZone(player, arguments.getStringArgument(CommandArguments.NAME));
         return true;
     }
 
-    private static boolean openEditor(@NotNull JobsPlugin plugin, @NotNull ZoneManager manager, @NotNull CommandContext context, @NotNull ParsedArguments arguments) {
+    private static boolean openEditor(@NotNull ZoneManager manager, @NotNull CommandContext context) {
         Player player = context.getPlayerOrThrow();
         manager.openEditor(player);
         return true;

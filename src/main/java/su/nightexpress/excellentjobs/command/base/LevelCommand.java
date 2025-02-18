@@ -101,7 +101,7 @@ public class LevelCommand extends AbstractCommand<JobsPlugin> {
             case REMOVE -> Lang.COMMAND_LEVEL_REMOVE_DONE;
             case SET -> Lang.COMMAND_LEVEL_SET_DONE;
         }).getMessage()
-            .replace(jobData.replacePlaceholders())
+            .replace(jobData.replaceAllPlaceholders())
             .replace(Placeholders.PLAYER_NAME, user.getName())
             .replace(Placeholders.GENERIC_AMOUNT, amount)
             .send(sender);
@@ -113,7 +113,7 @@ public class LevelCommand extends AbstractCommand<JobsPlugin> {
                 case REMOVE -> Lang.COMMAND_LEVEL_REMOVE_NOTIFY;
                 case SET -> Lang.COMMAND_LEVEL_SET_NOTIFY;
             }).getMessage()
-                .replace(jobData.replacePlaceholders())
+                .replace(jobData.replaceAllPlaceholders())
                 .replace(Placeholders.GENERIC_AMOUNT, amount)
                 .send(target);
         }
