@@ -3,18 +3,17 @@ package su.nightexpress.excellentjobs.stats;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.excellentjobs.JobsPlugin;
-import su.nightexpress.excellentjobs.command.base.TopCommand;
 import su.nightexpress.excellentjobs.config.Config;
-import su.nightexpress.excellentjobs.data.impl.JobUser;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.job.impl.JobState;
+import su.nightexpress.excellentjobs.stats.command.StatsCommands;
 import su.nightexpress.excellentjobs.stats.impl.DayStats;
-import su.nightexpress.excellentjobs.stats.menu.StatsMenu;
 import su.nightexpress.excellentjobs.stats.impl.JobStats;
 import su.nightexpress.excellentjobs.stats.impl.TopEntry;
 import su.nightexpress.excellentjobs.stats.listener.StatsListener;
+import su.nightexpress.excellentjobs.stats.menu.StatsMenu;
+import su.nightexpress.excellentjobs.user.JobUser;
 import su.nightexpress.nightcore.manager.AbstractManager;
-import su.nightexpress.nightcore.util.Lists;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,19 +33,19 @@ public class StatsManager extends AbstractManager<JobsPlugin> {
 
     @Override
     protected void onLoad() {
-        this.plugin.getBaseCommand().addChildren(new TopCommand(this.plugin, this));
+        StatsCommands.load(this.plugin, this);
 
         this.loadUI();
         this.loadStats();
 
         this.addListener(new StatsListener(this.plugin, this));
 
-        this.addTask(this.plugin.createAsyncTask(this::updateJobLevelsAndEmployees).setSecondsInterval(Config.STATISTIC_UPDATE_INTERVAL.get()));
+        this.addAsyncTask(this::updateJobLevelsAndEmployees, Config.STATISTIC_UPDATE_INTERVAL.get());
     }
 
     @Override
     protected void onShutdown() {
-
+        StatsCommands.unload(this.plugin);
     }
 
     private void loadUI() {
@@ -58,14 +57,14 @@ public class StatsManager extends AbstractManager<JobsPlugin> {
     }
 
     private void loadStats(@NotNull Player player) {
-        Map<String, JobStats> stats = this.plugin.getData().getStats(player.getUniqueId());
-        JobUser user = this.plugin.getUserManager().getUserData(player);
+        Map<String, JobStats> stats = this.plugin.getDataHandler().getStats(player.getUniqueId());
+        JobUser user = this.plugin.getUserManager().getOrFetch(player);
         user.loadStats(stats);
     }
 
     @NotNull
     public Map<String, List<TopEntry>> getLevelTopMap() {
-        return levelTopMap;
+        return this.levelTopMap;
     }
 
     @NotNull
@@ -87,7 +86,7 @@ public class StatsManager extends AbstractManager<JobsPlugin> {
     }
 
     public void addStats(@NotNull Player player, @NotNull Job job, @NotNull Consumer<DayStats> consumer) {
-        JobUser user = plugin.getUserManager().getUserData(player);
+        JobUser user = plugin.getUserManager().getOrFetch(player);
         JobStats jobStats = user.getStats(job);
         DayStats stats = jobStats.getTodayStats();
 
@@ -95,28 +94,47 @@ public class StatsManager extends AbstractManager<JobsPlugin> {
     }
 
     public void updateJobLevelsAndEmployees() {
-        this.updateEmployeesAmount();
-        this.updateTopLevelLeaderboard();
-    }
-
-    public void updateEmployeesAmount() {
-        Map<Job, Map<JobState, Integer>> dataMap = this.plugin.getData().getEmployees();
-
-        dataMap.forEach((job, map) -> {
-            map.forEach(job::setEmployeesAmount);
-        });
-    }
-
-    public void updateTopLevelLeaderboard() {
-        Map<Job, Map<String, Integer>> dataMap = this.plugin.getData().getLevels();
-
+        //this.updateEmployeesAmount();
+        //this.updateTopLevelLeaderboard();
         this.levelTopMap.clear();
 
-        dataMap.forEach((job, userLevelMap) -> {
-            AtomicInteger count = new AtomicInteger();
-            Lists.sortDescent(userLevelMap).forEach((name, level) -> {
-                this.levelTopMap.computeIfAbsent(job.getId(), k -> new ArrayList<>()).add(new TopEntry(name, level, count.incrementAndGet()));
+        List<JobUser> users = this.plugin.getDataHandler().getUsers();
+
+        this.plugin.getJobManager().getJobs().forEach(job -> {
+            for (JobState state : JobState.values()) {
+                if (state == JobState.INACTIVE) continue;
+                int employess = (int) users.stream().filter(user -> user.getData(job).getState() == state).count();
+
+                job.setEmployeesAmount(state, employess);
+            }
+
+            var topList = this.levelTopMap.computeIfAbsent(job.getId(), k -> new ArrayList<>());
+            AtomicInteger position = new AtomicInteger();
+
+            users.stream().sorted(Comparator.comparingInt((JobUser user) -> user.getData(job).getLevel()).reversed()).forEach(user -> {
+                topList.add(new TopEntry(user.getName(), user.getData(job).getLevel(), position.incrementAndGet()));
             });
         });
     }
+
+//    public void updateEmployeesAmount() {
+//        Map<Job, Map<JobState, Integer>> dataMap = this.plugin.getData().getEmployees();
+//
+//        dataMap.forEach((job, map) -> {
+//            map.forEach(job::setEmployeesAmount);
+//        });
+//    }
+//
+//    public void updateTopLevelLeaderboard() {
+//        Map<Job, Map<String, Integer>> dataMap = this.plugin.getData().getLevels();
+//
+//        this.levelTopMap.clear();
+//
+//        dataMap.forEach((job, userLevelMap) -> {
+//            AtomicInteger count = new AtomicInteger();
+//            Lists.sortDescent(userLevelMap).forEach((name, level) -> {
+//                this.levelTopMap.computeIfAbsent(job.getId(), k -> new ArrayList<>()).add(new TopEntry(name, level, count.incrementAndGet()));
+//            });
+//        });
+//    }
 }

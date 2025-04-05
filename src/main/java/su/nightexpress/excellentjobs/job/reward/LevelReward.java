@@ -8,6 +8,7 @@ import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.util.Lists;
 import su.nightexpress.nightcore.util.Players;
 import su.nightexpress.nightcore.util.StringUtil;
+import su.nightexpress.nightcore.util.placeholder.Replacer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -108,29 +109,29 @@ public class LevelReward {
     }
 
     @NotNull
-    public LevelReward parse(@NotNull UnaryOperator<String> modifierReplacer) {
+    public LevelReward parse(@NotNull Replacer modifierReplacer) {
         String name = modifierReplacer.apply(this.name);
-        List<String> description = this.parseDescription(modifierReplacer);
-        List<String> commands = this.parseCommands(modifierReplacer);
+        List<String> description = this.parseList(this.description, modifierReplacer);
+        List<String> commands = this.parseList(this.commands, modifierReplacer);
         List<String> ranks = this.parseList(this.requiredRanks, modifierReplacer);
         List<String> requirementInfo = this.parseList(this.requirementText, modifierReplacer);
 
         return new LevelReward(this.id, this.level, this.repeatable, name, description, commands, this.requiredPermission, ranks, requirementInfo);
     }
 
-    @NotNull
-    public List<String> parseDescription(@NotNull UnaryOperator<String> modifierReplacer) {
-        return this.parseList(this.description, modifierReplacer);
-    }
+//    @NotNull
+//    public List<String> parseDescription(@NotNull UnaryOperator<String> modifierReplacer) {
+//        return this.parseList(this.description, modifierReplacer);
+//    }
+//
+//    @NotNull
+//    public List<String> parseCommands(@NotNull UnaryOperator<String> modifierReplacer) {
+//        return parseList(this.commands, modifierReplacer);
+//    }
 
     @NotNull
-    public List<String> parseCommands(@NotNull UnaryOperator<String> modifierReplacer) {
-        return parseList(this.commands, modifierReplacer);
-    }
-
-    @NotNull
-    private List<String> parseList(@NotNull List<String> list, @NotNull UnaryOperator<String> modifierReplacer) {
-        return list.stream().map(modifierReplacer).toList();
+    private List<String> parseList(@NotNull List<String> list, @NotNull Replacer modifierReplacer) {
+        return list.stream().map(modifierReplacer::apply).toList();
     }
 
     @NotNull

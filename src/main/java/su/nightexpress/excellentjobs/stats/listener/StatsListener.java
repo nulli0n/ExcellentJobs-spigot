@@ -43,7 +43,7 @@ public class StatsListener extends AbstractListener<JobsPlugin> {
         Job job = event.getJob();
 
         this.statsManager.addStats(player, job, stats -> {
-            stats.addObjective(event.getObjective(), event.getObjectName(), 1);
+            stats.addObjective(event.getObjective(), event.getWorkObjective().getObjectName(), 1);
             //player.sendMessage("Objectives: " + stats.getObjectivesCompleted());
         });
     }

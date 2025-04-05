@@ -3,7 +3,7 @@ package su.nightexpress.excellentjobs.api.event;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.jetbrains.annotations.NotNull;
-import su.nightexpress.excellentjobs.data.impl.JobUser;
+import su.nightexpress.excellentjobs.user.JobUser;
 import su.nightexpress.excellentjobs.data.impl.JobData;
 
 public abstract class JobXPEvent extends JobDataEvent implements Cancellable {

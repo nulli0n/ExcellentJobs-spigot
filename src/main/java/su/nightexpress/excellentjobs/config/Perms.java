@@ -21,7 +21,8 @@ public class Perms {
     public static final UniPermission JOB     = new UniPermission(PREFIX_JOB + Placeholders.WILDCARD);
     public static final UniPermission ZONE    = new UniPermission(PREFIX_ZONE + Placeholders.WILDCARD);
 
-    public static final UniPermission COMMAND_BOOSTER      = new UniPermission(PREFIX_COMMAND + "booster");
+    public static final UniPermission COMMAND_BOOSTER           = new UniPermission(PREFIX_COMMAND + "booster");
+    public static final UniPermission COMMAND_BOOSTS            = new UniPermission(PREFIX_COMMAND + "boosts");
     public static final UniPermission COMMAND_STATS        = new UniPermission(PREFIX_COMMAND + "stats");
     public static final UniPermission COMMAND_STATS_OTHERS = new UniPermission(PREFIX_COMMAND + "stats.others");
     public static final UniPermission COMMAND_JOIN         = new UniPermission(PREFIX_COMMAND + "join");
@@ -60,6 +61,7 @@ public class Perms {
             COMMAND_RESET, COMMAND_RESET_OTHERS,
             COMMAND_SET_STATE,
             COMMAND_BOOSTER,
+            COMMAND_BOOSTS,
             COMMAND_STATS, COMMAND_STATS_OTHERS,
             COMMAND_ZONE,
             COMMAND_ZONE_CREATE,

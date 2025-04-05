@@ -33,15 +33,10 @@ public class Modifier implements Writeable {
         return new Modifier(base, perLevel, step, ModifierAction.MULTIPLY);
     }
 
-    @NotNull
-    public static Modifier read(@NotNull FileConfig config, @NotNull String path, @NotNull Modifier defaultValue, String ... comments) {
-        return ConfigValue.create(path,
-            (cfg, path2, modifier) -> Modifier.read(cfg, path2),
-            (cfg, path2, mod) -> mod.write(cfg, path2),
-            () -> defaultValue,
-            comments
-        ).read(config);
-    }
+//    @NotNull
+//    public static Modifier load(@NotNull FileConfig config, @NotNull String path, @NotNull Modifier defaultValue, String ... comments) {
+//        return ConfigValue.create(path, Modifier::read, defaultValue, comments).read(config);
+//    }
 
     @NotNull
     public static Modifier read(@NotNull FileConfig config, @NotNull String path) {

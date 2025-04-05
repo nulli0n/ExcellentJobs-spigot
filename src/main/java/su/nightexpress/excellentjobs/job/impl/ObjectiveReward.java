@@ -19,18 +19,19 @@ public class ObjectiveReward {
         this.max = max;
     }
 
-    public static ObjectiveReward read(@NotNull FileConfig cfg, @NotNull String path) {
-        double chance = cfg.getDouble(path + ".Chance");
-        double min = cfg.getDouble(path + ".Min");
-        double max = cfg.getDouble(path + ".Max");
+    @NotNull
+    public static ObjectiveReward read(@NotNull FileConfig config, @NotNull String path) {
+        double chance = config.getDouble(path + ".Chance");
+        double min = config.getDouble(path + ".Min");
+        double max = config.getDouble(path + ".Max");
 
         return new ObjectiveReward(chance, min, max);
     }
 
-    public void write(@NotNull FileConfig cfg, @NotNull String path) {
-        cfg.set(path + ".Chance", this.getChance());
-        cfg.set(path + ".Min", this.getMin());
-        cfg.set(path + ".Max", this.getMax());
+    public void write(@NotNull FileConfig config, @NotNull String path) {
+        config.set(path + ".Chance", this.getChance());
+        config.set(path + ".Min", this.getMin());
+        config.set(path + ".Max", this.getMax());
     }
 
     @NotNull

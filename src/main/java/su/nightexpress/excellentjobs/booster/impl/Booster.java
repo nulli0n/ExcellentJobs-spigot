@@ -1,62 +1,84 @@
 package su.nightexpress.excellentjobs.booster.impl;
 
 import org.jetbrains.annotations.NotNull;
-import su.nightexpress.economybridge.api.Currency;
-import su.nightexpress.excellentjobs.booster.BoosterMultiplier;
-import su.nightexpress.excellentjobs.booster.config.BoosterInfo;
+import org.jetbrains.annotations.Nullable;
+import su.nightexpress.excellentjobs.Placeholders;
+import su.nightexpress.excellentjobs.api.booster.Multiplier;
+import su.nightexpress.excellentjobs.api.booster.MultiplierType;
+import su.nightexpress.excellentjobs.booster.BoosterUtils;
+import su.nightexpress.nightcore.util.TimeUtil;
 
-import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.UnaryOperator;
 
 public class Booster {
 
-    private final BoosterMultiplier multiplier;
+    private final Map<MultiplierType, Multiplier> multiplierMap;
 
-    public Booster(@NotNull BoosterInfo parent) {
-        this(parent.getMultiplier());
-    }
+    private long expireDate;
 
-    public Booster(@NotNull BoosterMultiplier multiplier) {
-        this.multiplier = multiplier;
+    public Booster(long expireDate) {
+        this.multiplierMap = new HashMap<>();
+        this.setExpireDate(expireDate);
     }
 
     @NotNull
-    public BoosterMultiplier getMultiplier() {
-        return this.multiplier;
+    public static Booster create(double paymentMult, double xpMult, int duration) {
+        Booster booster = new Booster(TimeUtil.createFutureTimestamp(duration));
+        booster.setMultiplier(MultiplierType.INCOME, paymentMult);
+        booster.setMultiplier(MultiplierType.XP, xpMult);
+        return booster;
     }
 
-    public static double getCurrencyBoost(@NotNull Currency currency, @NotNull Collection<Booster> boosters) {
-        return getCurrencyBoost(currency.getInternalId(), boosters);
+    @NotNull
+    public UnaryOperator<String> replacePlaceholers() {
+        return Placeholders.BOOSTER.replacer(this);
     }
 
-    public static double getCurrencyBoost(@NotNull String id, @NotNull Collection<Booster> boosters) {
-        return 1D + getCurrencyPlainBoost(id, boosters);
+    public boolean isValid() {
+        return !this.multiplierMap.isEmpty() && this.multiplierMap.values().stream().anyMatch(Multiplier::isValid) && !this.isExpired();
     }
 
-    public static double getCurrencyPlainBoost(@NotNull Currency currency, @NotNull Collection<Booster> boosters) {
-        return getCurrencyPlainBoost(currency.getInternalId(), boosters);
+    public boolean isExpired() {
+        return TimeUtil.isPassed(this.expireDate);
     }
 
-    public static double getCurrencyPlainBoost(@NotNull String id, @NotNull Collection<Booster> boosters) {
-        return boosters.stream().mapToDouble(b -> b.getMultiplier().getCurrencyMultiplier(id)).sum();
+    public void setMultiplier(@NotNull MultiplierType type, double multiplier) {
+        this.multiplierMap.put(type, new Multiplier(multiplier));
     }
 
-    public static double getXPBoost(@NotNull Collection<Booster> boosters) {
-        return 1D + getPlainXPBoost(boosters);
+    @Nullable
+    public Multiplier getMultiplier(@NotNull MultiplierType type) {
+        return this.multiplierMap.get(type);
     }
 
-    public static double getPlainXPBoost(@NotNull Collection<Booster> boosters) {
-        return boosters.stream().mapToDouble(b -> b.getMultiplier().getXPMultiplier()).sum();
+    public boolean hasMultiplier(@NotNull MultiplierType type) {
+        Multiplier multiplier = this.getMultiplier(type);
+        return multiplier != null && multiplier.isValid();
     }
 
-    public static double getCurrencyPercent(@NotNull Currency currency, @NotNull Collection<Booster> boosters) {
-        return getCurrencyPercent(currency.getInternalId(), boosters);
+    @NotNull
+    public String formattedPercent(@NotNull MultiplierType type) {
+        Multiplier multiplier = this.getMultiplier(type);
+        return BoosterUtils.formatMultiplier(multiplier == null ? 1D : multiplier.getValue());
     }
 
-    public static double getCurrencyPercent(@NotNull String id, @NotNull Collection<Booster> boosters) {
-        return boosters.stream().mapToDouble(b -> b.getMultiplier().getCurrencyPercent(id)).sum();
+    public double getAsPercent(@NotNull MultiplierType type) {
+        Multiplier multiplier = this.getMultiplier(type);
+        return BoosterUtils.getAsPercent(multiplier == null ? 1D : multiplier.getValue());
     }
 
-    public static double getXPPercent(@NotNull Collection<Booster> boosters) {
-        return boosters.stream().mapToDouble(b -> b.getMultiplier().getXPPercent()).sum();
+    public double getValue(@NotNull MultiplierType type) {
+        Multiplier multiplier = this.getMultiplier(type);
+        return multiplier == null ? 0D : multiplier.getValue();
+    }
+
+    public long getExpireDate() {
+        return this.expireDate;
+    }
+
+    public void setExpireDate(long expireDate) {
+        this.expireDate = expireDate;
     }
 }

@@ -4,17 +4,16 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
-import su.nightexpress.excellentjobs.action.ActionType;
+import su.nightexpress.excellentjobs.job.work.WorkObjective;
 import su.nightexpress.excellentjobs.data.impl.JobData;
-import su.nightexpress.excellentjobs.data.impl.JobUser;
 import su.nightexpress.excellentjobs.job.impl.JobObjective;
+import su.nightexpress.excellentjobs.user.JobUser;
 
 public class JobObjectiveXPEvent extends JobObjectiveEvent implements Cancellable {
 
     private static final HandlerList HANDLER_LIST = new HandlerList();
 
-    private final ActionType<?, ?> actionType;
-    private final Object           object;
+    private final WorkObjective workObjective;
 
     private boolean cancelled;
     private double xpAmount;
@@ -24,13 +23,11 @@ public class JobObjectiveXPEvent extends JobObjectiveEvent implements Cancellabl
                                    @NotNull JobUser user,
                                    @NotNull JobData jobData,
                                    @NotNull JobObjective objective,
-                                   @NotNull ActionType<?, ?> actionType,
-                                   @NotNull Object object,
+                                   @NotNull WorkObjective workObjective,
                                    double xpAmount,
                                    double xpMultiplier) {
         super(player, user, jobData, objective);
-        this.actionType = actionType;
-        this.object = object;
+        this.workObjective = workObjective;
 
         this.setXPAmount(xpAmount);
         this.setXPMultiplier(xpMultiplier);
@@ -58,13 +55,8 @@ public class JobObjectiveXPEvent extends JobObjectiveEvent implements Cancellabl
     }
 
     @NotNull
-    public final ActionType<?, ?> getActionType() {
-        return actionType;
-    }
-
-    @NotNull
-    public final Object getObject() {
-        return object;
+    public WorkObjective getWorkObjective() {
+        return this.workObjective;
     }
 
     public double getXPAmount() {

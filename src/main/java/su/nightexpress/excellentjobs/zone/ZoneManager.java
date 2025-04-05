@@ -15,9 +15,7 @@ import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Keys;
 import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.hook.HookPlugin;
-import su.nightexpress.excellentjobs.util.Cuboid;
 import su.nightexpress.excellentjobs.util.Modifier;
-import su.nightexpress.excellentjobs.util.pos.BlockPos;
 import su.nightexpress.excellentjobs.zone.command.ZoneCommands;
 import su.nightexpress.excellentjobs.zone.editor.*;
 import su.nightexpress.excellentjobs.zone.impl.BlockList;
@@ -30,6 +28,8 @@ import su.nightexpress.excellentjobs.zone.visual.BlockPacketsHighlighter;
 import su.nightexpress.excellentjobs.zone.visual.BlockProtocolHighlighter;
 import su.nightexpress.nightcore.manager.AbstractManager;
 import su.nightexpress.nightcore.util.*;
+import su.nightexpress.nightcore.util.geodata.Cuboid;
+import su.nightexpress.nightcore.util.geodata.pos.BlockPos;
 
 import java.io.File;
 import java.util.*;

@@ -1,6 +1,8 @@
 package su.nightexpress.excellentjobs;
 
 import su.nightexpress.economybridge.api.Currency;
+import su.nightexpress.excellentjobs.booster.impl.Booster;
+import su.nightexpress.excellentjobs.api.booster.MultiplierType;
 import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.data.impl.JobData;
 import su.nightexpress.excellentjobs.job.impl.Job;
@@ -14,8 +16,8 @@ import su.nightexpress.nightcore.language.LangAssets;
 import su.nightexpress.nightcore.util.Lists;
 import su.nightexpress.nightcore.util.NumberUtil;
 import su.nightexpress.nightcore.util.StringUtil;
-import su.nightexpress.nightcore.util.TimeUtil;
 import su.nightexpress.nightcore.util.placeholder.PlaceholderList;
+import su.nightexpress.nightcore.util.time.TimeFormats;
 
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -29,37 +31,44 @@ public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
     public static final String URL_WIKI_SPECIAL_ORDERS = URL_WIKI + "features/special-orders";
     public static final String URL_WIKI_ZONES          = URL_WIKI + "features/zones";
 
-    public static final String GENERIC_AMOUNT   = "%amount%";
-    public static final String GENERIC_NAME     = "%name%";
-    public static final String GENERIC_BALANCE = "%balance%";
-    public static final String GENERIC_XP      = "%exp%";
-    public static final String GENERIC_TIME    = "%time%";
-    public static final String GENERIC_CURRENCY = "%currency%";
-    public static final String GENERIC_POS      = "%pos%";
-    public static final String GENERIC_CURRENT  = "%current%";
-    public static final String GENERIC_MIN      = "%min%";
-    public static final String GENERIC_MAX      = "%max%";
-    public static final String GENERIC_STATE    = "%state%";
-    public static final String GENERIC_ENTRY    = "%entry%";
-    public static final String GENERIC_TYPE     = "%type%";
-    public static final String GENERIC_TOTAL    = "%total%";
-    public static final String GENERIC_REWARD   = "%reward%";
-    public static final String GENERIC_INCOME   = "%income%";
-    public static final String GENERIC_LEVEL    = "%level%";
+    public static final String URL_ECO_BRIDGE = "https://nightexpressdev.com/economy-bridge/currencies/";
+
+    public static final String GENERIC_AMOUNT        = "%amount%";
+    public static final String GENERIC_NAME          = "%name%";
+    public static final String GENERIC_BALANCE       = "%balance%";
+    public static final String GENERIC_XP            = "%exp%";
+    public static final String GENERIC_TIME          = "%time%";
+    public static final String GENERIC_CURRENCY      = "%currency%";
+    public static final String GENERIC_POS           = "%pos%";
+    public static final String GENERIC_CURRENT       = "%current%";
+    public static final String GENERIC_MIN           = "%min%";
+    public static final String GENERIC_MAX           = "%max%";
+    public static final String GENERIC_STATE         = "%state%";
+    public static final String GENERIC_ENTRY         = "%entry%";
+    public static final String GENERIC_TYPE          = "%type%";
+    public static final String GENERIC_TOTAL         = "%total%";
+    public static final String GENERIC_REWARD        = "%reward%";
+    public static final String GENERIC_INCOME        = "%income%";
+    public static final String GENERIC_LEVEL         = "%level%";
+
+    public static final String GENERIC_XP_BONUS          = "%xp_bonus%";
+    public static final String GENERIC_XP_BOOST          = "%xp_boost%";
+    public static final String GENERIC_XP_MULTIPLIER     = "%xp_multiplier%";
+    public static final String GENERIC_INCOME_BONUS      = "%income_bonus%";
+    public static final String GENERIC_INCOME_BOOST      = "%income_boost%";
+    public static final String GENERIC_INCOME_MULTIPLIER = "%income_multiplier%";
 
     public static final String MODIFIER_BASE      = "%modifier_base%";
     public static final String MODIFIER_PER_LEVEL = "%modifier_per_level%";
     public static final String MODIFIER_STEP      = "%modifier_step%";
     public static final String MODIFIER_ACTION    = "%modifier_action%";
 
-    public static final String XP_MULTIPLIER           = "%xp_multiplier%";
-    public static final String XP_BOOST_MODIFIER       = "%xp_boost_modifier%";
-    public static final String XP_BOOST_PERCENT        = "%xp_boost_percent%";
-    public static final String CURRENCY_MULTIPLIER     = "%currency_multiplier%";
-    public static final String CURRENCY_BOOST_PERCENT  = "%currency_boost_percent%";
-    public static final String CURRENCY_BOOST_MODIFIER = "%currency_boost_modifier%";
+    public static final String BOOSTER_XP_MODIFIER     = "%booster_xp_modifier%";
+    public static final String BOOSTER_XP_PERCENT      = "%booster_xp_percent%";
+    public static final String BOOSTER_INCOME_PERCENT  = "%booster_income_percent%";
+    public static final String BOOSTER_INCOME_MODIFIER = "%booster_income_modifier%";
 
-    public static final String CURRENCY_ID = "%currency_id%";
+    public static final String CURRENCY_ID   = "%currency_id%";
     public static final String CURRENCY_NAME = "%currency_name%";
 
     public static final String JOB_DATA_STATE      = "%job_state%";
@@ -136,6 +145,13 @@ public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
         .add(MODIFIER_ACTION, modifier -> StringUtil.capitalizeFully(modifier.getAction().name()))
     );
 
+    public static final PlaceholderList<Booster> BOOSTER = PlaceholderList.create(list -> list
+        .add(BOOSTER_XP_MODIFIER, booster -> NumberUtil.format(booster.getValue(MultiplierType.XP)))
+        .add(BOOSTER_XP_PERCENT, booster -> booster.formattedPercent(MultiplierType.XP))
+        .add(BOOSTER_INCOME_MODIFIER, booster -> NumberUtil.format(booster.getValue(MultiplierType.INCOME)))
+        .add(BOOSTER_INCOME_PERCENT, booster -> booster.formattedPercent(MultiplierType.INCOME))
+    );
+
     public static final PlaceholderList<Job> JOB = PlaceholderList.create(list -> list
         .add(JOB_ID, Job::getId)
         .add(JOB_NAME, Job::getName)
@@ -209,7 +225,7 @@ public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
             return String.join("\n", blockList.getMaterials().stream().map(mat -> Lang.goodEntry(LangAssets.get(mat))).toList());
         })
         .add(BLOCK_LIST_FALLBACK_MATERIAL, blockList -> Lang.goodEntry(LangAssets.get(blockList.getFallbackMaterial())))
-        .add(BLOCK_LIST_RESET_TIME, blockList -> Lang.goodEntry(TimeUtil.formatTime(blockList.getResetTime() * 1000L)))
+        .add(BLOCK_LIST_RESET_TIME, blockList -> Lang.goodEntry(TimeFormats.toLiteral(blockList.getResetTime() * 1000L)))
         .add(BLOCK_LIST_DROP_ITEMS, blockList -> {
             String yesNo = Lang.getYesOrNo(blockList.isDropItems());
             return blockList.isDropItems() ? Lang.goodEntry(yesNo) : Lang.badEntry(yesNo);

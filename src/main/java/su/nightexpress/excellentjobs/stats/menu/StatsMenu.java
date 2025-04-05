@@ -10,7 +10,7 @@ import su.nightexpress.economybridge.api.Currency;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Lang;
-import su.nightexpress.excellentjobs.data.impl.JobUser;
+import su.nightexpress.excellentjobs.user.JobUser;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.job.impl.JobObjective;
 import su.nightexpress.excellentjobs.stats.impl.DayStats;
@@ -84,7 +84,7 @@ public class StatsMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
     private void displayStats(@NotNull MenuViewer viewer, @NotNull MenuOptions options) {
         Player player = viewer.getPlayer();
         Job job = this.getLink(player);
-        JobUser user = plugin.getUserManager().getUserData(player);
+        JobUser user = plugin.getUserManager().getOrFetch(player);
         JobStats stats = user.getStats(job);
 
         options.editTitle(job.replacePlaceholders());

@@ -3,12 +3,13 @@ package su.nightexpress.excellentjobs.hook.impl;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import su.nightexpress.excellentjobs.JobsAPI;
 import su.nightexpress.excellentjobs.JobsPlugin;
-import su.nightexpress.excellentjobs.booster.impl.Booster;
+import su.nightexpress.excellentjobs.api.booster.MultiplierType;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.data.impl.JobData;
-import su.nightexpress.excellentjobs.data.impl.JobUser;
+import su.nightexpress.excellentjobs.user.JobUser;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.job.impl.JobState;
 import su.nightexpress.excellentjobs.stats.StatsManager;
@@ -16,7 +17,6 @@ import su.nightexpress.excellentjobs.stats.impl.TopEntry;
 import su.nightexpress.nightcore.util.NumberUtil;
 import su.nightexpress.nightcore.util.text.NightMessage;
 
-import java.util.Collection;
 import java.util.List;
 
 public class PlaceholderHook {
@@ -72,7 +72,7 @@ public class PlaceholderHook {
         public String onPlaceholderRequest(Player player, @NotNull String params) {
             if (player == null) return null;
 
-            JobUser user = this.plugin.getUserManager().getUserData(player);
+            JobUser user = this.plugin.getUserManager().getOrFetch(player);
 
             if (params.equalsIgnoreCase("total_level")) {
                 return String.valueOf(user.countTotalLevel());
@@ -116,28 +116,22 @@ public class PlaceholderHook {
                 if (rest.equalsIgnoreCase("xp_multiplier")) {
                     return NumberUtil.format(job.getXPMultiplier(data.getLevel()));
                 }
+                if (rest.equalsIgnoreCase("payment_multiplier")) {
+                    return NumberUtil.format(job.getPaymentMultiplier(data.getLevel()));
+                }
                 if (rest.equalsIgnoreCase("xp_boost_multiplier")) {
-                    Collection<Booster> boosters = plugin.getBoosterManager().getBoosters(player, job);
-                    return NumberUtil.format(Booster.getXPBoost(boosters));
+                    return NumberUtil.format(JobsAPI.getBoost(player, job, MultiplierType.XP));
                 }
                 if (rest.equalsIgnoreCase("xp_boost_percent")) {
-                    Collection<Booster> boosters = plugin.getBoosterManager().getBoosters(player, job);
-                    return NumberUtil.format(Booster.getXPPercent(boosters));
+                    return NumberUtil.format(JobsAPI.getBoostPercent(player, job, MultiplierType.XP));
                 }
-                if (rest.startsWith("currency_multiplier_")) {
-                    String curId = rest.substring("currency_multiplier_".length());
-                    return NumberUtil.format(job.getPaymentMultiplier(curId, data.getLevel()));
+                if (rest.equalsIgnoreCase("income_boost_multiplier")) {
+                    return NumberUtil.format(JobsAPI.getBoost(player, job, MultiplierType.INCOME));
                 }
-                if (rest.startsWith("currency_boost_multiplier_")) {
-                    String curId = rest.substring("currency_boost_multiplier_".length());
-                    Collection<Booster> boosters = plugin.getBoosterManager().getBoosters(player, job);
-                    return NumberUtil.format(Booster.getCurrencyBoost(curId, boosters));
+                if (rest.equalsIgnoreCase("income_boost_percent")) {
+                    return NumberUtil.format(JobsAPI.getBoostPercent(player, job, MultiplierType.INCOME));
                 }
-                if (rest.startsWith("currency_boost_percent_")) {
-                    String curId = rest.substring("currency_boost_percent_".length());
-                    Collection<Booster> boosters = plugin.getBoosterManager().getBoosters(player, job);
-                    return NumberUtil.format(Booster.getCurrencyPercent(curId, boosters));
-                }
+
                 if (rest.startsWith("top_level_")) {
                     String[] info = rest.substring("top_level_".length()).split("_");
                     if (info.length < 2) return null;

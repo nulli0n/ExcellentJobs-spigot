@@ -4,7 +4,6 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.boss.BarColor;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import su.nightexpress.economybridge.EconomyBridge;
@@ -12,13 +11,16 @@ import su.nightexpress.economybridge.api.Currency;
 import su.nightexpress.economybridge.currency.CurrencyId;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.Placeholders;
-import su.nightexpress.excellentjobs.action.ActionType;
+import su.nightexpress.excellentjobs.job.work.Work;
+import su.nightexpress.excellentjobs.job.work.WorkObjective;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Perms;
 import su.nightexpress.excellentjobs.data.impl.JobOrderCount;
 import su.nightexpress.excellentjobs.data.impl.JobOrderData;
 import su.nightexpress.excellentjobs.data.impl.JobOrderObjective;
 import su.nightexpress.excellentjobs.job.reward.JobRewards;
+import su.nightexpress.excellentjobs.job.work.WorkRegistry;
+import su.nightexpress.excellentjobs.util.JobUtils;
 import su.nightexpress.excellentjobs.util.Modifier;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
@@ -26,9 +28,7 @@ import su.nightexpress.nightcore.manager.AbstractFileData;
 import su.nightexpress.nightcore.util.Lists;
 import su.nightexpress.nightcore.util.NumberUtil;
 import su.nightexpress.nightcore.util.StringUtil;
-import su.nightexpress.nightcore.util.placeholder.Placeholder;
-import su.nightexpress.nightcore.util.placeholder.PlaceholderList;
-import su.nightexpress.nightcore.util.placeholder.PlaceholderMap;
+import su.nightexpress.nightcore.util.bukkit.NightItem;
 import su.nightexpress.nightcore.util.random.Rnd;
 import su.nightexpress.nightcore.util.wrapper.UniInt;
 
@@ -47,15 +47,16 @@ public class Job extends AbstractFileData<JobsPlugin> {
 
     private String       name;
     private List<String> description;
-    private boolean      permissionRequired;
-    private ItemStack    icon;
-    private JobState     initialState;
+    private boolean   permissionRequired;
+    private NightItem icon;
+    private JobState  initialState;
     private int          maxLevel;
     private int          maxSecondaryLevel;
     private int          initialXP;
     private double       xpFactor;
     private Modifier     xpMultiplier;
     private Modifier     xpDailyLimits;
+    private Modifier      paymentMultiplier;
     private BarColor progressBarColor;
 
     private boolean                        specialOrdersAllowed;
@@ -71,7 +72,7 @@ public class Job extends AbstractFileData<JobsPlugin> {
     private final TreeMap<Integer, Integer>  xpTable;
     private final Map<Integer, List<String>> levelUpCommands;
     private final JobRewards rewards;
-    private final Map<String, Modifier>      paymentMultiplier;
+    //private final Map<String, Modifier>      paymentMultiplier;
     private final Map<String, Modifier>      paymentDailyLimits;
     private final Map<String, JobObjective>  objectiveMap;
 
@@ -83,7 +84,7 @@ public class Job extends AbstractFileData<JobsPlugin> {
         this.xpTable = new TreeMap<>();
         this.levelUpCommands = new HashMap<>();
         this.rewards = new JobRewards();
-        this.paymentMultiplier = new HashMap<>();
+        //this.paymentMultiplier = new HashMap<>();
         this.paymentDailyLimits = new HashMap<>();
         this.objectiveMap = new HashMap<>();
     }
@@ -94,17 +95,17 @@ public class Job extends AbstractFileData<JobsPlugin> {
 
         this.setName(ConfigValue.create("Name", StringUtil.capitalizeUnderscored(this.getId()),
             "Job display name.",
-            Placeholders.WIKI_TEXT_URL
+            Placeholders.URL_WIKI_TEXT
         ).read(config));
 
         this.setDescription(ConfigValue.create("Description", new ArrayList<>(),
             "Job description.",
-            Placeholders.WIKI_TEXT_URL
+            Placeholders.URL_WIKI_TEXT
         ).read(config));
 
-        this.setIcon(ConfigValue.create("Icon", new ItemStack(Material.GOLDEN_HOE),
+        this.setIcon(ConfigValue.create("Icon", new NightItem(Material.GOLDEN_HOE),
             "Job icon.",
-            Placeholders.WIKI_TEXT_URL
+            Placeholders.URL_WIKI_ITEMS
         ).read(config));
 
         this.setPermissionRequired(ConfigValue.create("Permission_Required", false,
@@ -187,16 +188,16 @@ public class Job extends AbstractFileData<JobsPlugin> {
             "Use '0' as a level key to run command(s) on every level up."
         ).read(config));
 
-        this.paymentMultiplier.putAll(ConfigValue.forMap("Payment_Modifier.Currency",
-            CurrencyId::reroute,
-            (cfg, path, key) -> Modifier.read(cfg, path + "." + key),
-            (cfg, path, map) -> map.forEach((id, mod) -> mod.write(cfg, path + "." + id)),
-            () -> Map.of(
-                CurrencyId.VAULT, Modifier.add(1.00, 0.01, 1)
-            ),
-            "Sets payment multipliers for each currency adjustable by player's job level.",
-            "You can use '" + Placeholders.DEFAULT + "' keyword for all currencies not included here."
-        ).read(config));
+//        this.paymentMultiplier.putAll(ConfigValue.forMap("Payment_Modifier.Currency",
+//            CurrencyId::reroute,
+//            (cfg, path, key) -> Modifier.read(cfg, path + "." + key),
+//            (cfg, path, map) -> map.forEach((id, mod) -> mod.write(cfg, path + "." + id)),
+//            () -> Map.of(
+//                CurrencyId.VAULT, Modifier.add(1.00, 0.01, 1)
+//            ),
+//            "Sets payment multipliers for each currency adjustable by player's job level.",
+//            "You can use '" + Placeholders.DEFAULT + "' keyword for all currencies not included here."
+//        ).read(config));
 
         this.paymentDailyLimits.putAll(ConfigValue.forMap("Daily_Limits.Currency",
             CurrencyId::reroute,
@@ -209,15 +210,24 @@ public class Job extends AbstractFileData<JobsPlugin> {
             "You can use '" + Placeholders.DEFAULT + "' keyword for all currencies not included here."
         ).read(config));
 
-        this.xpMultiplier = Modifier.read(config, "Payment_Modifier.XP",
-            Modifier.add(1.00, 0.01, 5),
-            "Sets job's objective XP multiplier adjustable by player's job level."
-        );
+        // TODO Config option to excempt currencies from payment modifiers
+        this.paymentMultiplier = ConfigValue.create("Payment_Modifier.Income",
+            Modifier::read,
+            JobUtils.getDefaultPaymentModifier(),
+            "Sets job's objective income multiplier adjustable by player's job level."
+        ).read(config);
 
-        this.xpDailyLimits = Modifier.read(config, "Daily_Limits.XP",
+        this.xpMultiplier = ConfigValue.create("Payment_Modifier.XP",
+            Modifier::read,
+            JobUtils.getDefaultXPModifier(),
+            "Sets job's objective XP multiplier adjustable by player's job level."
+        ).read(config);
+
+        this.xpDailyLimits = ConfigValue.create("Daily_Limits.XP",
+            Modifier::read,
             Modifier.add(-1, 0, 0),
             "Sets job's objective XP daily limit adjustable by player's job level."
-        );
+        ).read(config);
 
         if (Config.SPECIAL_ORDERS_ENABLED.get()) {
             this.specialOrdersAllowed = ConfigValue.create("SpecialOrder.Enabled",
@@ -227,23 +237,20 @@ public class Job extends AbstractFileData<JobsPlugin> {
             ).read(config);
 
             this.specialOrdersObjectivesAmount = ConfigValue.create("SpecialOrder.Objectives_Amount",
-                (cfg2, path2, def) -> UniInt.read(cfg2, path2),
-                (cfg2, path2, obj) -> obj.write(cfg2, path2),
-                () -> UniInt.of(1, 2),
+                UniInt::read,
+                UniInt.of(1, 2),
                 "Sets possible amount of objectives picked for Special Orders of this job."
             ).read(config);
 
             this.specialOrdersCompleteTime = ConfigValue.create("SpecialOrder.Time_To_Complete",
-                (cfg, path, def) -> UniInt.read(cfg, path),
-                (cfg, path, obj) -> obj.write(cfg, path),
-                () -> UniInt.of(14400, 43200),
+                UniInt::read,
+                UniInt.of(14400, 43200),
                 "Sets possible amount of completion time (in seconds) picked for Special Orders of this job."
             ).read(config);
 
             this.specialOrdersRewardsAmount = ConfigValue.create("SpecialOrder.Rewards_Amount",
-                (cfg, path, def) -> UniInt.read(cfg, path),
-                (cfg, path, obj) -> obj.write(cfg, path),
-                () -> UniInt.of(1, 3),
+                UniInt::read,
+                UniInt.of(1, 3),
                 "Sets possible amount of rewards picked for Special Orders of this job."
             ).read(config);
 
@@ -281,26 +288,44 @@ public class Job extends AbstractFileData<JobsPlugin> {
             "=".repeat(50),
             "For a list of available Types and acceptable Objects, please refer to " + Placeholders.URL_WIKI_ACTION_TYPES,
             "For a list of available currencies, please refer to " + Placeholders.URL_WIKI_CURRENCY,
-            "For a list of available Icon options, please refer to " + Placeholders.WIKI_ITEMS_URL,
+            "For a list of available Icon options, please refer to " + Placeholders.URL_WIKI_ITEMS,
             "=".repeat(50)
         ));
 
         for (String sId : config.getSection("")) {
             JobObjective objective = JobObjective.read(plugin, config, sId, sId);
-            if (objective == null) {
-                this.plugin.warn("Could not load '" + sId + "' objective in '" + getId() + "' job! File: " + config.getFile().getName());
-                continue;
-            }
-            this.getObjectiveMap().put(objective.getId(), objective);
+            if (!this.validateObjective(objective, config)) continue;
+
+            this.objectiveMap.put(objective.getId(), objective);
         }
         config.saveChanges();
+    }
+
+    private boolean validateObjective(@NotNull JobObjective objective, @NotNull FileConfig config) {
+        String id = objective.getId();
+        String fileName = "'" + config.getFile().getPath() + "' -> '" + id + "'";
+
+        var workType = WorkRegistry.getByName(objective.getWorkId());
+        if (workType == null) {
+            plugin.error("Invalid objective type '" + objective.getWorkId() + "'. Found in " + fileName + ".");
+            return false;
+        }
+
+        objective.getObjects().forEach(objectId -> {
+            if (objectId.equalsIgnoreCase(Placeholders.WILDCARD)) return;
+            if (workType.parse(objectId) == null) {
+                plugin.warn("Unknown object '" + objectId + "'. Found in " + fileName + ".");
+            }
+        });
+
+        return true;
     }
 
     @Override
     protected void onSave(@NotNull FileConfig config) {
         config.set("Name", this.getName());
         config.set("Description", this.getDescription());
-        config.setItem("Icon", this.getIcon());
+        config.set("Icon", this.getIcon());
         config.set("Permission_Required", this.isPermissionRequired());
         config.set("ProgressBar.Color", this.getProgressBarColor().name());
         config.set("Initial_State", this.getInitialState().name());
@@ -314,15 +339,18 @@ public class Job extends AbstractFileData<JobsPlugin> {
         this.getLevelUpCommands().forEach((level, list) -> {
             config.set("Leveling.LevelUp_Commands." + level, list);
         });
+
         config.remove("Payment_Modifier.Currency");
-        this.getPaymentMultiplier().forEach((id, mod) -> {
-            mod.write(config, "Payment_Modifier.Currency." + id);
-        });
+//        this.getPaymentMultiplier().forEach((id, mod) -> {
+//            mod.write(config, "Payment_Modifier.Currency." + id);
+//        });
+
         config.remove("Daily_Limits.Currency");
         this.getDailyPaymentLimits().forEach((id, mod) -> {
             mod.write(config, "Daily_Limits.Currency." + id);
         });
 
+        this.paymentMultiplier.write(config, "Payment_Modifier.Money");
         this.getXPMultiplier().write(config, "Payment_Modifier.XP");
         this.getDailyXPLimits().write(config, "Daily_Limits.XP");
 
@@ -358,7 +386,7 @@ public class Job extends AbstractFileData<JobsPlugin> {
     }
 
     public boolean hasPermission(@NotNull Player player) {
-        return player.hasPermission(this.getPermission());
+        return !this.isPermissionRequired() || player.hasPermission(this.getPermission());
     }
 
     public boolean isGoodWorld(@NotNull World world) {
@@ -486,13 +514,17 @@ public class Job extends AbstractFileData<JobsPlugin> {
 
 
 
-    public double getPaymentMultiplier(@NotNull Currency currency, int level) {
-        return this.getPaymentMultiplier(currency.getInternalId(), level);
-    }
+//    public double getPaymentMultiplier(@NotNull Currency currency, int level) {
+//        return this.getPaymentMultiplier(currency.getInternalId(), level);
+//    }
+//
+//    public double getPaymentMultiplier(@NotNull String id, int level) {
+//        Modifier scaler = this.getPaymentMultiplier().getOrDefault(id.toLowerCase(), this.getPaymentMultiplier().get(Placeholders.DEFAULT));
+//        return scaler == null ? 0D : scaler.getValue(level);
+//    }
 
-    public double getPaymentMultiplier(@NotNull String id, int level) {
-        Modifier scaler = this.getPaymentMultiplier().getOrDefault(id.toLowerCase(), this.getPaymentMultiplier().get(Placeholders.DEFAULT));
-        return scaler == null ? 0D : scaler.getValue(level);
+    public double getPaymentMultiplier(int level) {
+        return this.paymentMultiplier.getValue(level);
     }
 
     public boolean hasDailyPaymentLimit(@NotNull Currency currency, int level) {
@@ -528,38 +560,47 @@ public class Job extends AbstractFileData<JobsPlugin> {
 
 
     @NotNull
-    public Collection<JobObjective> getObjectives() {
-        return this.getObjectiveMap().values();
+    public Set<JobObjective> getObjectives() {
+        return new HashSet<>(this.objectiveMap.values());
     }
 
     @NotNull
-    public Collection<JobObjective> getObjectives(@NotNull ActionType<?, ?> type) {
-        return this.getObjectives().stream().filter(objective -> objective.getType() == type).collect(Collectors.toSet());
+    public Set<JobObjective> getObjectives(@NotNull Work<?, ?> type) {
+        return this.objectiveMap.values().stream().filter(objective -> objective.isWork(type)).collect(Collectors.toSet());
     }
 
-    public <O> boolean hasObjective(@NotNull ActionType<?, O> type, @NotNull O objective) {
-        return this.getObjectiveByObject(type, objective) != null;
-    }
+//    @Deprecated
+//    public <O> boolean hasObjective(@NotNull Work<?, O> type, @NotNull O objective) {
+//        return this.getObjectiveByObject(type, objective) != null;
+//    }
 
-    public boolean hasObjective(@NotNull ActionType<?, ?> type, @NotNull String name) {
-        return this.getObjectiveByObject(type, name) != null;
-    }
+//    @Deprecated
+//    public boolean hasObjective(@NotNull Work<?, ?> type, @NotNull String name) {
+//        return this.getObjectiveByObject(type, name) != null;
+//    }
 
     @Nullable
     public JobObjective getObjectiveById(@NotNull String id) {
-        return this.getObjectiveMap().get(id.toLowerCase());
+        return this.objectiveMap.get(id.toLowerCase());
     }
 
-    @Nullable
-    public <O> JobObjective getObjectiveByObject(@NotNull ActionType<?, O> type, @NotNull O object) {
-        return this.getObjectiveByObject(type, type.getObjectName(object));
-    }
+//    @Nullable
+//    @Deprecated
+//    public <O> JobObjective getObjectiveByObject(@NotNull Work<?, O> type, @NotNull O object) {
+//        return this.getObjectiveByObject(type, type.getObjectName(object));
+//    }
+
+//    @Nullable
+//    @Deprecated
+//    public JobObjective getObjectiveByObject(@NotNull Work<?, ?> type, @NotNull String name) {
+//        return this.getObjectiveMap().values().stream()
+//            .filter(objective -> objective.isWork(type) && objective.hasObject(name))
+//            .findFirst().orElse(null);
+//    }
 
     @Nullable
-    public JobObjective getObjectiveByObject(@NotNull ActionType<?, ?> type, @NotNull String name) {
-        return this.getObjectiveMap().values().stream()
-            .filter(objective -> objective.getType() == type && objective.hasObject(name))
-            .findFirst().orElse(null);
+    public JobObjective getObjectiveByWork(@NotNull WorkObjective workObjective) {
+        return this.objectiveMap.values().stream().filter(objective -> objective.isObjective(workObjective)).findFirst().orElse(null);
     }
 
     /**
@@ -619,12 +660,12 @@ public class Job extends AbstractFileData<JobsPlugin> {
     }
 
     @NotNull
-    public ItemStack getIcon() {
-        return new ItemStack(this.icon);
+    public NightItem getIcon() {
+        return this.icon.copy();
     }
 
-    public void setIcon(@NotNull ItemStack icon) {
-        this.icon = new ItemStack(icon);
+    public void setIcon(@NotNull NightItem icon) {
+        this.icon = icon.copy();
     }
 
     public int getMaxLevel() {
@@ -707,9 +748,19 @@ public class Job extends AbstractFileData<JobsPlugin> {
         return levelUpCommands;
     }
 
+//    @NotNull
+//    public Map<String, Modifier> getPaymentMultiplier() {
+//        return paymentMultiplier;
+//    }
+
+
     @NotNull
-    public Map<String, Modifier> getPaymentMultiplier() {
-        return paymentMultiplier;
+    public Modifier getPaymentMultiplier() {
+        return this.paymentMultiplier;
+    }
+
+    public void setPaymentMultiplier(@NotNull Modifier paymentMultiplier) {
+        this.paymentMultiplier = paymentMultiplier;
     }
 
     @NotNull

@@ -5,18 +5,16 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.economybridge.api.Currency;
-import su.nightexpress.excellentjobs.action.ActionType;
+import su.nightexpress.excellentjobs.job.work.WorkObjective;
 import su.nightexpress.excellentjobs.data.impl.JobData;
-import su.nightexpress.excellentjobs.data.impl.JobUser;
 import su.nightexpress.excellentjobs.job.impl.JobObjective;
+import su.nightexpress.excellentjobs.user.JobUser;
 
 public class JobObjectiveIncomeEvent extends JobObjectiveEvent implements Cancellable {
 
     private static final HandlerList HANDLER_LIST = new HandlerList();
 
-    private final ActionType<?, ?> actionType;
-    private final Object object;
-    private final String objectName;
+    private final WorkObjective workObjective;
 
     private boolean cancelled;
     private Currency currency;
@@ -27,16 +25,13 @@ public class JobObjectiveIncomeEvent extends JobObjectiveEvent implements Cancel
                                    @NotNull JobUser user,
                                    @NotNull JobData jobData,
                                    @NotNull JobObjective objective,
-                                   @NotNull ActionType<?, ?> actionType,
-                                   @NotNull Object object,
+                                   @NotNull WorkObjective workObjective,
                                    @NotNull String objectName,
                                    @NotNull Currency currency,
                                    double payment,
                                    double paymentMultiplier) {
         super(player, user, jobData, objective);
-        this.actionType = actionType;
-        this.object = object;
-        this.objectName = objectName;
+        this.workObjective = workObjective;
 
         this.setCurrency(currency);
         this.setPayment(payment);
@@ -65,18 +60,8 @@ public class JobObjectiveIncomeEvent extends JobObjectiveEvent implements Cancel
     }
 
     @NotNull
-    public final ActionType<?, ?> getActionType() {
-        return actionType;
-    }
-
-    @NotNull
-    public final Object getObject() {
-        return object;
-    }
-
-    @NotNull
-    public final String getObjectName() {
-        return objectName;
+    public WorkObjective getWorkObjective() {
+        return this.workObjective;
     }
 
     @NotNull

@@ -3,126 +3,246 @@ package su.nightexpress.excellentjobs.booster;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import su.nightexpress.economybridge.EconomyBridge;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.Placeholders;
-import su.nightexpress.excellentjobs.booster.config.BoosterInfo;
-import su.nightexpress.excellentjobs.booster.config.RankBoosterInfo;
-import su.nightexpress.excellentjobs.booster.config.TimedBoosterInfo;
+import su.nightexpress.excellentjobs.booster.command.BoosterCommands;
+import su.nightexpress.excellentjobs.booster.config.BoosterConfig;
 import su.nightexpress.excellentjobs.booster.impl.Booster;
-import su.nightexpress.excellentjobs.booster.impl.ExpirableBooster;
-import su.nightexpress.excellentjobs.booster.listener.BoosterListenerGeneric;
-import su.nightexpress.excellentjobs.config.Config;
+import su.nightexpress.excellentjobs.booster.impl.BoosterSchedule;
+import su.nightexpress.excellentjobs.booster.impl.BoosterType;
+import su.nightexpress.excellentjobs.api.booster.MultiplierType;
+import su.nightexpress.excellentjobs.booster.listener.BoosterListener;
 import su.nightexpress.excellentjobs.config.Lang;
-import su.nightexpress.excellentjobs.data.impl.JobUser;
 import su.nightexpress.excellentjobs.job.impl.Job;
+import su.nightexpress.excellentjobs.user.JobUser;
+import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.manager.AbstractManager;
-import su.nightexpress.nightcore.util.NumberUtil;
 import su.nightexpress.nightcore.util.Players;
-import su.nightexpress.nightcore.util.TimeUtil;
+import su.nightexpress.nightcore.util.placeholder.Replacer;
+import su.nightexpress.nightcore.util.time.TimeFormatType;
+import su.nightexpress.nightcore.util.time.TimeFormats;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
+import java.util.HashSet;
+import java.util.Set;
 
 public class BoosterManager extends AbstractManager<JobsPlugin> {
 
-    private final Map<String, ExpirableBooster> globalBoosterMap;
+    private static final String FILE_NAME = "boosters.yml";
+
+    private Booster globalBooster;
 
     public BoosterManager(@NotNull JobsPlugin plugin) {
         super(plugin);
-        this.globalBoosterMap = new ConcurrentHashMap<>();
     }
 
     @Override
     protected void onLoad() {
-        Config.BOOSTERS_CUSTOM.get().values().forEach(BoosterInfo::validate);
-        Config.BOOSTERS_GLOBAL.get().values().forEach(BoosterInfo::validate);
-        Config.BOOSTERS_RANK.get().values().forEach(BoosterInfo::validate);
+        this.loadConfig();
 
-        this.addListener(new BoosterListenerGeneric(this.plugin));
+        BoosterCommands.load(this.plugin, this);
 
-        this.addTask(this.plugin.createAsyncTask(this::updateGlobal).setSecondsInterval(30));
+        this.addListener(new BoosterListener(this.plugin, this));
+
+        this.addAsyncTask(this::tickBoosters, BoosterConfig.TICK_INTERVAL.get());
     }
 
     @Override
     protected void onShutdown() {
-        this.getGlobalBoosterMap().clear();
+        this.globalBooster = null;
+
+        BoosterCommands.unload(this.plugin);
     }
 
-    @NotNull
-    public Map<String, ExpirableBooster> getGlobalBoosterMap() {
-        this.globalBoosterMap.values().removeIf(ExpirableBooster::isExpired);
-        return globalBoosterMap;
+    private void loadConfig() {
+        FileConfig config = FileConfig.loadOrExtract(this.plugin, FILE_NAME);
+        config.initializeOptions(BoosterConfig.class);
+        config.saveChanges();
     }
 
-    @Nullable
-    public ExpirableBooster getGlobalBooster(@NotNull Job job) {
-        return this.getGlobalBoosterMap().get(job.getId());
+    public void tickBoosters() {
+        this.tickGlobal();
+        this.tickSchedules();
+        this.tickPersonal();
     }
 
-    @Nullable
-    public Booster getRankBooster(@NotNull Player player) {
-        return Config.BOOSTERS_RANK.get().values().stream()
-            .filter(booster -> Players.getPermissionGroups(player).contains(booster.getRank()))
-            .max(Comparator.comparingInt(RankBoosterInfo::getPriority)).map(BoosterInfo::createBooster).orElse(null);
-    }
-
-    @NotNull
-    public Collection<Booster> getBoosters(@NotNull Player player, @NotNull Job job) {
-        Set<Booster> boosters = new HashSet<>();
-
-        JobUser user = plugin.getUserManager().getUserData(player);
-        boosters.add(user.getBooster(job));
-        boosters.add(this.getGlobalBooster(job));
-        boosters.add(this.getRankBooster(player));
-        boosters.removeIf(Objects::isNull);
-
-        return boosters;
-    }
-
-    public void updateGlobal() {
-        TimedBoosterInfo boosterInfo = Config.BOOSTERS_GLOBAL.get().values().stream()
-            .filter(TimedBoosterInfo::isReady).findFirst().orElse(null);
-        if (boosterInfo == null) return;
-
-        var map = this.getGlobalBoosterMap();
-        AtomicBoolean anyNew = new AtomicBoolean(false);
-
-        this.plugin.getJobManager().getJobs().forEach(skill -> {
-            if (boosterInfo.isApplicable(skill)) {
-                if (!map.containsKey(skill.getId())) anyNew.set(true);
-
-                map.put(skill.getId(), boosterInfo.createBooster());
-            }
-        });
-
-        if (anyNew.get()) {
-            ExpirableBooster booster = boosterInfo.createBooster();
-            String jobNames = boosterInfo.getJobs().stream()
-                .map(id -> plugin.getJobManager().getJobById(id))
-                .filter(Objects::nonNull)
-                .map(Job::getName).collect(Collectors.joining(", "));
-
-            Lang.BOOSTER_NOTIFY_GLOBAL.getMessage()
-                .replace(Placeholders.JOB_NAME, jobNames)
-                .replace(Placeholders.GENERIC_TIME, TimeUtil.formatDuration(booster.getExpireDate()))
-                .replace(Placeholders.XP_BOOST_MODIFIER, 1D + NumberUtil.format(booster.getMultiplier().getXPMultiplier()))
-                .replace(Placeholders.XP_BOOST_PERCENT, NumberUtil.format(booster.getMultiplier().getXPPercent()))
-                .replace(Placeholders.GENERIC_CURRENCY, list -> {
-                    EconomyBridge.getCurrencies().forEach(currency -> {
-                        double percent = booster.getMultiplier().getCurrencyPercent(currency);
-                        double modifier = booster.getMultiplier().getCurrencyMultiplier(currency);
-                        if (percent == 0D || modifier == 0D) return;
-
-                        list.add(currency.replacePlaceholders().apply(Lang.BOOSTER_CURRENCY_INFO.getString())
-                            .replace(Placeholders.CURRENCY_BOOST_PERCENT, NumberUtil.format(percent))
-                            .replace(Placeholders.CURRENCY_BOOST_MODIFIER, 1D + NumberUtil.format(modifier))
-                        );
-                    });
-                })
-                .broadcast();
+    private void tickGlobal() {
+        if (this.globalBooster == null) return;
+        if (this.globalBooster.isExpired()) {
+            Lang.BOOSTER_EXPIRED_GLOBAL.getMessage().broadcast(replacer -> replacer.replace(this.globalBooster.replacePlaceholers()));
+            this.globalBooster = null;
         }
+    }
+
+    private void tickSchedules() {
+        if (this.hasGlobalBoost()) return;
+
+        BoosterSchedule ready = this.getBoosterSchedules().stream().filter(BoosterSchedule::isReady).findFirst().orElse(null);
+        if (ready == null) return;
+
+        this.activateBooster(ready, true);
+    }
+
+    private void tickPersonal() {
+        Players.getOnline().forEach(player -> {
+            JobUser user = plugin.getUserManager().getOrFetch(player);
+
+            user.getBoosterMap().forEach((jobId, booster) -> {
+                if (!booster.isExpired()) return;
+
+                Job job = plugin.getJobManager().getJobById(jobId);
+                if (job != null) {
+                    Lang.BOOSTER_EXPIRED_PERSONAL.getMessage().send(player, replacer -> replacer
+                        .replace(job.replacePlaceholders())
+                        .replace(booster.replacePlaceholers()));
+                }
+
+                user.removeBooster(jobId);
+            });
+        });
+    }
+
+    public boolean hasGlobalBoost() {
+        return this.globalBooster != null && this.globalBooster.isValid();
+    }
+
+    @NotNull
+    public Set<BoosterSchedule> getBoosterSchedules() {
+        return new HashSet<>(BoosterConfig.getBoosterScheduleMap().values());
+    }
+
+    @Nullable
+    public BoosterSchedule getBoosterScheduleById(@NotNull String id) {
+        return BoosterConfig.getBoosterScheduleMap().get(id.toLowerCase());
+    }
+
+    @Nullable
+    public Booster getGlobalBooster() {
+        return this.globalBooster;
+    }
+
+    public double getRankBoost(@NotNull Player player, @NotNull MultiplierType type) {
+        return (type == MultiplierType.INCOME ? BoosterConfig.BOOSTERS_BY_RANK_INCOME : BoosterConfig.BOOSTERS_BY_RANK_XP).get().getGreatest(player);
+    }
+
+    public double getGlobalBoost(@NotNull MultiplierType type) {
+        return this.getBoosterValue(this.globalBooster, type);
+    }
+
+    public double getPersonalBoost(@NotNull Player player, @NotNull Job job, @NotNull MultiplierType type) {
+        JobUser user = plugin.getUserManager().getOrFetch(player);
+        return this.getBoosterValue(user.getBooster(job), type);
+    }
+
+    public double getTotalBoostPercent(@NotNull Player player, @NotNull Job job, @NotNull MultiplierType multiplierType) {
+        double percent = 0D;
+        for (BoosterType type : BoosterType.values()) {
+            percent += BoosterUtils.getAsPercent(this.getBoosterMultiplier(player, job, type, multiplierType));
+        }
+        return percent;
+    }
+
+    public double getTotalBoost(@NotNull Player player, @NotNull Job job, @NotNull MultiplierType multiplierType) {
+        return this.getTotalBoostPercent(player, job, multiplierType) / 100D;
+    }
+
+    private double getBoosterValue(@Nullable Booster booster, @NotNull MultiplierType type) {
+        return booster == null || !booster.hasMultiplier(type) ? 1D : booster.getValue(type);
+    }
+
+    public double getBoosterMultiplier(@NotNull Player player, @NotNull Job job, @NotNull BoosterType type, @NotNull MultiplierType multiplierType) {
+        return switch (type) {
+            case RANK -> this.getRankBoost(player, multiplierType);
+            case GLOBAL -> this.getGlobalBoost(multiplierType);
+            case PERSONAL -> this.getPersonalBoost(player, job, multiplierType);
+        };
+    }
+
+    public long getBoosterExpireDate(@NotNull Player player, @NotNull Job job, @NotNull BoosterType type) {
+        return switch (type) {
+            case PERSONAL -> {
+                JobUser user = plugin.getUserManager().getOrFetch(player);
+                Booster booster = user.getBooster(job);
+                yield booster == null ? 0L : booster.getExpireDate();
+            }
+            case GLOBAL -> this.hasGlobalBoost() ? this.globalBooster.getExpireDate() : 0L;
+            case RANK -> -1L;
+        };
+    }
+
+    public boolean hasBoosterMultiplier(@NotNull Player player, @NotNull Job job, @NotNull BoosterType type, @NotNull MultiplierType multiplierType) {
+        return this.getBoosterMultiplier(player, job, type, multiplierType) != 1D;
+    }
+
+    public boolean activateBoosterById(@NotNull String id) {
+        BoosterSchedule schedule = this.getBoosterScheduleById(id);
+        if (schedule == null) return false;
+
+        this.activateBooster(schedule, false);
+        return true;
+    }
+
+    public void activateBooster(@NotNull BoosterSchedule schedule, boolean relative) {
+        Booster booster = schedule.createBooster(true);
+        if (!booster.isValid()) return;
+
+        this.setGlobalBooster(booster);
+    }
+
+    public boolean setGlobalBooster(@NotNull Booster booster) {
+        this.globalBooster = booster;
+        this.notifyGlobalBooster(booster);
+        return true;
+    }
+
+    public void removeGlobalBooster() {
+        this.globalBooster = null;
+    }
+
+    public void notifyGlobalBooster(@NotNull Booster booster) {
+        Lang.BOOSTER_ACTIVATED_GLOBAL.getMessage().broadcast(replacer -> replacer
+            .replace(Placeholders.GENERIC_TIME, TimeFormats.formatDuration(booster.getExpireDate(), TimeFormatType.LITERAL))
+            .replace(booster.replacePlaceholers())
+        );
+    }
+
+    public void notifyPersonalBooster(@NotNull Player player, @NotNull Job job, @NotNull Booster booster) {
+        Lang.BOOSTER_ACTIVATED_PERSONAL.getMessage().send(player, replacer -> replacer
+            .replace(Placeholders.GENERIC_TIME, TimeFormats.formatDuration(booster.getExpireDate(), TimeFormatType.LITERAL))
+            .replace(job.replacePlaceholders())
+            .replace(booster.replacePlaceholers())
+        );
+    }
+
+    public void displayBoosterInfo(@NotNull Player player, @NotNull Job job) {
+        double totalXPPercent = this.getTotalBoostPercent(player, job, MultiplierType.XP);
+        double totalPayPercent = this.getTotalBoostPercent(player, job, MultiplierType.INCOME);
+        if (totalXPPercent == 0D && totalPayPercent == 0D) {
+            Lang.BOOSTER_LIST_NOTHING.getMessage().send(player);
+            return;
+        }
+
+        Lang.BOOSTER_LIST_INFO.getMessage().send(player, replacer -> replacer
+            .replace(job.replacePlaceholders())
+            .replace(Placeholders.GENERIC_XP_BONUS, BoosterUtils.formatPercent(totalXPPercent))
+            .replace(Placeholders.GENERIC_INCOME_BONUS, BoosterUtils.formatPercent(totalPayPercent))
+            .replace(Placeholders.GENERIC_ENTRY, list -> {
+                for (BoosterType type : BoosterType.values()) {
+                    double xpMult = this.getBoosterMultiplier(player, job, type, MultiplierType.XP);
+                    double payMult = this.getBoosterMultiplier(player, job, type, MultiplierType.INCOME);
+                    if (xpMult == 1D && payMult == 1D) continue;
+
+                    list.add(Replacer.create()
+                        .replace(Placeholders.GENERIC_TYPE, () -> Lang.BOOSTER_TYPE.getLocalized(type))
+                        .replace(Placeholders.GENERIC_XP_BOOST, () -> BoosterUtils.formatMultiplier(xpMult))
+                        .replace(Placeholders.GENERIC_INCOME_BOOST, () -> BoosterUtils.formatMultiplier(payMult))
+                        .replace(Placeholders.GENERIC_TIME, () -> {
+                            long expireDate = this.getBoosterExpireDate(player, job, type);
+                            return expireDate < 0L ? Lang.OTHER_INFINITY.getString() : TimeFormats.formatDuration(expireDate, TimeFormatType.LITERAL);
+                        })
+                        .apply(Lang.BOOSTER_LIST_ENTRY.getString())
+                    );
+                }
+            })
+        );
     }
 }

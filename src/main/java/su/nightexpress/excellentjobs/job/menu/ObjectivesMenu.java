@@ -1,22 +1,26 @@
 package su.nightexpress.excellentjobs.job.menu;
 
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.economybridge.EconomyBridge;
 import su.nightexpress.economybridge.api.Currency;
+import su.nightexpress.excellentjobs.JobsAPI;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.Placeholders;
-import su.nightexpress.excellentjobs.action.ActionType;
-import su.nightexpress.excellentjobs.booster.impl.Booster;
+import su.nightexpress.excellentjobs.api.booster.MultiplierType;
+import su.nightexpress.excellentjobs.job.work.Work;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.data.impl.JobData;
-import su.nightexpress.excellentjobs.data.impl.JobUser;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.job.impl.JobObjective;
 import su.nightexpress.excellentjobs.job.impl.JobState;
+import su.nightexpress.excellentjobs.job.work.WorkRegistry;
+import su.nightexpress.excellentjobs.user.JobUser;
+import su.nightexpress.excellentjobs.util.JobUtils;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.menu.MenuOptions;
@@ -35,10 +39,8 @@ import su.nightexpress.nightcore.util.Lists;
 import su.nightexpress.nightcore.util.NumberUtil;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.IntStream;
 
 import static su.nightexpress.excellentjobs.Placeholders.*;
@@ -72,7 +74,7 @@ public class ObjectivesMenu extends ConfigMenu<JobsPlugin> implements AutoFilled
         this.addHandler(this.returnHandler = ItemHandler.forReturn(this, (viewer, event) -> {
             Player player = viewer.getPlayer();
             Job job = this.getLink().get(player);
-            JobUser user = plugin.getUserManager().getUserData(player);
+            JobUser user = plugin.getUserManager().getOrFetch(player);
             if (user.getData(job).getState() == JobState.INACTIVE) {
                 this.runNextTick(() -> plugin.getJobManager().openPreviewMenu(viewer.getPlayer(), job));
                 return;
@@ -182,31 +184,34 @@ public class ObjectivesMenu extends ConfigMenu<JobsPlugin> implements AutoFilled
     public void onAutoFill(@NotNull MenuViewer viewer, @NotNull AutoFill<JobObjective> autoFill) {
         Player player = viewer.getPlayer();
         Job job = this.getLink().get(player);
-        JobUser user = plugin.getUserManager().getUserData(player);
+        JobUser user = plugin.getUserManager().getOrFetch(player);
         JobData jobData = user.getData(job);
 
         int jobLevel = jobData.getLevel();
-        Collection<Booster> boosters = this.plugin.getBoosterManager().getBoosters(player, job);
-        double xpMultiplier = 1D + Booster.getPlainXPBoost(boosters) + job.getXPMultiplier(jobLevel);
-        Function<Currency, Double> payMultiplier = currency -> 1D + Booster.getCurrencyPlainBoost(currency, boosters) + job.getPaymentMultiplier(currency, jobLevel);
+        double xpGain = 1D + JobsAPI.getBoost(player, job, MultiplierType.XP) + job.getXPMultiplier(jobLevel);
+        double incomeGain = 1D + job.getPaymentMultiplier(jobLevel);
+        double incomeBoost = JobsAPI.getBoost(player, job, MultiplierType.INCOME);
 
         autoFill.setSlots(this.objSlots);
         autoFill.setItems(job.getObjectives().stream().sorted(Comparator.comparing(JobObjective::getDisplayName)).toList());
         autoFill.setItemCreator(jobObjective -> {
-            ActionType<?, ?> type = jobObjective.getType();
+            String typeId = jobObjective.getWorkId();
+            Work<?, ?> workType = WorkRegistry.getByName(typeId);
             boolean isUnlocked = jobObjective.isUnlocked(player, jobData);
+
+            if (workType == null) return new ItemStack(Material.AIR);
 
             String name = this.objName.replace(Placeholders.OBJECTIVE_NAME, jobObjective.getDisplayName());
             List<String> lore = new ArrayList<>(isUnlocked ? this.unlockedLore : this.lockedLore);
             lore.replaceAll(line -> line
                 .replace(Placeholders.OBJECTIVE_UNLOCK_LEVEL, NumberUtil.format(jobObjective.getUnlockLevel()))
-                .replace(OBJECTIVE_ACTION_TYPE, jobObjective.getType().getDisplayName())
+                .replace(OBJECTIVE_ACTION_TYPE, workType.getDisplayName())
             );
 
             List<String> objects = new ArrayList<>();
             for (String line : this.objectsLore) {
                 if (line.contains(GENERIC_NAME)) {
-                    jobObjective.getObjects().stream().map(type::getObjectLocalizedName).sorted(String::compareTo).forEach(object -> {
+                    jobObjective.getObjects().stream().map(workType::getObjectLocalizedName).sorted(String::compareTo).forEach(object -> {
                         objects.add(line.replace(GENERIC_NAME, object));
                     });
                 }
@@ -215,8 +220,8 @@ public class ObjectivesMenu extends ConfigMenu<JobsPlugin> implements AutoFilled
 
             List<String> rewardXP = new ArrayList<>(jobData.isXPLimitReached() ? this.rewardXPLimitLore : this.rewardXPAvailLore);
             rewardXP.replaceAll(line -> line
-                .replace(Placeholders.OBJECTIVE_XP_MIN, NumberUtil.format(jobObjective.getXPReward().getMin() * xpMultiplier))
-                .replace(Placeholders.OBJECTIVE_XP_MAX, NumberUtil.format(jobObjective.getXPReward().getMax() * xpMultiplier))
+                .replace(Placeholders.OBJECTIVE_XP_MIN, NumberUtil.format(jobObjective.getXPReward().getMin() * xpGain))
+                .replace(Placeholders.OBJECTIVE_XP_MAX, NumberUtil.format(jobObjective.getXPReward().getMax() * xpGain))
                 .replace(Placeholders.OBJECTIVE_XP_CHANCE, NumberUtil.format(jobObjective.getXPReward().getChance()))
             );
 
@@ -225,10 +230,15 @@ public class ObjectivesMenu extends ConfigMenu<JobsPlugin> implements AutoFilled
                 Currency currency = EconomyBridge.getCurrency(currencyId);
                 if (currency == null) return;
 
+                double currencyGain = incomeGain;
+                if (JobUtils.canBeBoosted(currency)) {
+                    currencyGain += incomeBoost;
+                }
+
                 for (String line : (jobData.isPaymentLimitReached(currency) ? this.rewardCurrencyLimitLore : this.rewardCurrencyAvailLore)) {
                     rewardCurrency.add(currency.replacePlaceholders().apply(line)
-                        .replace(Placeholders.OBJECTIVE_CURRENCY_MIN, NumberUtil.format(rewardInfo.getMin() * payMultiplier.apply(currency)))
-                        .replace(Placeholders.OBJECTIVE_CURRENCY_MAX, NumberUtil.format(rewardInfo.getMax() * payMultiplier.apply(currency)))
+                        .replace(Placeholders.OBJECTIVE_CURRENCY_MIN, NumberUtil.format(rewardInfo.getMin() * currencyGain))
+                        .replace(Placeholders.OBJECTIVE_CURRENCY_MAX, NumberUtil.format(rewardInfo.getMax() * currencyGain))
                         .replace(Placeholders.OBJECTIVE_CURRENCY_CHANCE, NumberUtil.format(rewardInfo.getChance()))
                     );
                 }

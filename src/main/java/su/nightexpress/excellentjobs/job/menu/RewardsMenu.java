@@ -9,7 +9,7 @@ import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.data.impl.JobData;
-import su.nightexpress.excellentjobs.data.impl.JobUser;
+import su.nightexpress.excellentjobs.user.JobUser;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.job.impl.JobState;
 import su.nightexpress.excellentjobs.job.reward.LevelReward;
@@ -25,7 +25,6 @@ import su.nightexpress.nightcore.menu.item.ItemHandler;
 import su.nightexpress.nightcore.menu.item.MenuItem;
 import su.nightexpress.nightcore.menu.link.Linked;
 import su.nightexpress.nightcore.menu.link.ViewLink;
-import su.nightexpress.nightcore.util.ItemReplacer;
 import su.nightexpress.nightcore.util.ItemUtil;
 import su.nightexpress.nightcore.util.Lists;
 import su.nightexpress.nightcore.util.NumberUtil;
@@ -67,7 +66,7 @@ public class RewardsMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<In
     }
 
     public void openAtLevel(@NotNull Player player, @NotNull Job job) {
-        JobUser user = plugin.getUserManager().getUserData(player);
+        JobUser user = plugin.getUserManager().getOrFetch(player);
         JobData data = user.getData(job);
         int level = data.getLevel();
 
@@ -98,7 +97,7 @@ public class RewardsMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<In
     @Override
     public void onAutoFill(@NotNull MenuViewer viewer, @NotNull AutoFill<Integer> autoFill) {
         Player player = viewer.getPlayer();
-        JobUser user = plugin.getUserManager().getUserData(player);
+        JobUser user = plugin.getUserManager().getOrFetch(player);
         Job job = this.getLink(player);
         JobData data = user.getData(job);
         JobState state = data.getState();

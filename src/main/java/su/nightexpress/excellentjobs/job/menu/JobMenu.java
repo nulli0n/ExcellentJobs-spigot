@@ -7,14 +7,15 @@ import org.jetbrains.annotations.NotNull;
 import su.nightexpress.economybridge.EconomyBridge;
 import su.nightexpress.economybridge.api.Currency;
 import su.nightexpress.excellentjobs.JobsPlugin;
+import su.nightexpress.excellentjobs.job.work.Work;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.data.impl.JobData;
 import su.nightexpress.excellentjobs.data.impl.JobOrderData;
-import su.nightexpress.excellentjobs.data.impl.JobUser;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.job.impl.JobObjective;
 import su.nightexpress.excellentjobs.stats.StatsManager;
+import su.nightexpress.excellentjobs.user.JobUser;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.menu.MenuOptions;
@@ -84,7 +85,7 @@ public class JobMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
 
         this.addHandler(this.orderHandler = new ItemHandler("special_order", (viewer, event) -> {
             Player player = viewer.getPlayer();
-            JobUser user = plugin.getUserManager().getUserData(player);
+            JobUser user = plugin.getUserManager().getOrFetch(player);
             Job job = this.getLink().get(player);
             JobData jobData = user.getData(job);
 
@@ -119,7 +120,7 @@ public class JobMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
 
                 menuItem.getOptions().addDisplayModifier((viewer, item) -> {
                     Player player = viewer.getPlayer();
-                    JobUser user = plugin.getUserManager().getUserData(player);
+                    JobUser user = plugin.getUserManager().getOrFetch(player);
                     Job job = this.getLink().get(player);
                     JobData jobData = user.getData(job);
                     JobOrderData orderData = jobData.getOrderData();
@@ -143,9 +144,12 @@ public class JobMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
                                         JobObjective jobObjective = job.getObjectiveById(orderObjective.getObjectiveId());
                                         if (jobObjective == null) return;
 
+                                        Work<?, ?> workType = jobObjective.getWork();
+                                        if (workType == null) return;
+
                                         //loreFinal.add(jobObjective.getDisplayName() + ":");
                                         orderObjective.getObjectCountMap().forEach((object, count) -> {
-                                            String oName = jobObjective.getType().getObjectLocalizedName(object);
+                                            String oName = workType.getObjectLocalizedName(object);
                                             lore.add(line
                                                 .replace(GENERIC_NAME, oName)
                                                 .replace(GENERIC_CURRENT, NumberUtil.format(count.getCurrent()))

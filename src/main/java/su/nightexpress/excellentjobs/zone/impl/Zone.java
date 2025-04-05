@@ -15,18 +15,18 @@ import su.nightexpress.economybridge.currency.CurrencyId;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.Placeholders;
 import su.nightexpress.excellentjobs.config.Perms;
-import su.nightexpress.excellentjobs.data.impl.JobUser;
+import su.nightexpress.excellentjobs.user.JobUser;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.job.impl.JobState;
-import su.nightexpress.excellentjobs.util.Cuboid;
 import su.nightexpress.excellentjobs.util.Hours;
 import su.nightexpress.excellentjobs.util.Modifier;
-import su.nightexpress.excellentjobs.util.pos.BlockPos;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.manager.AbstractFileData;
 import su.nightexpress.nightcore.util.*;
 import su.nightexpress.nightcore.util.bukkit.NightItem;
+import su.nightexpress.nightcore.util.geodata.Cuboid;
+import su.nightexpress.nightcore.util.geodata.pos.BlockPos;
 import su.nightexpress.nightcore.util.wrapper.UniParticle;
 
 import java.io.File;
@@ -241,7 +241,7 @@ public class Zone extends AbstractFileData<JobsPlugin> {
     }
 
     public boolean hasAnyGoodJob(@NotNull Player player) {
-        JobUser user = this.plugin.getUserManager().getUserData(player);
+        JobUser user = this.plugin.getUserManager().getOrFetch(player);
 
         return user.getDatas().stream().anyMatch(jobData -> jobData.getState() != JobState.INACTIVE && this.isGoodLevel(jobData.getLevel()));
     }

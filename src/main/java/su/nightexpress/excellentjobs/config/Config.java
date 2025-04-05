@@ -6,21 +6,13 @@ import org.bukkit.boss.BarStyle;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
-import su.nightexpress.economybridge.currency.CurrencyId;
 import su.nightexpress.excellentjobs.Placeholders;
-import su.nightexpress.excellentjobs.action.ActionTypes;
-import su.nightexpress.excellentjobs.booster.BoosterMultiplier;
-import su.nightexpress.excellentjobs.booster.config.BoosterInfo;
-import su.nightexpress.excellentjobs.booster.config.RankBoosterInfo;
-import su.nightexpress.excellentjobs.booster.config.TimedBoosterInfo;
 import su.nightexpress.excellentjobs.job.impl.OrderReward;
+import su.nightexpress.excellentjobs.job.work.WorkId;
 import su.nightexpress.excellentjobs.util.JobUtils;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.util.*;
 
-import java.time.DayOfWeek;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Set;
 
@@ -33,10 +25,9 @@ public class Config {
     public static final String DIR_JOBS       = "/jobs/";
     public static final String DIR_ZONES      = "/zones/";
 
-    public static final ConfigValue<DateTimeFormatter> GENERAL_TIME_FORMATTER = ConfigValue.create("General.Time_Format",
-        (cfg, path, def) -> DateTimeFormatter.ofPattern(cfg.getString(path, "HH:mm")),
-        (cfg, path, format) -> cfg.set(path, "HH:mm"),
-        () -> DateTimeFormatter.ISO_LOCAL_TIME
+    public static final ConfigValue<Boolean> FEATURES_BOOSTERS = ConfigValue.create("Features.Boosters",
+        true,
+        "Controls whether Boosters feature is enabled and available."
     );
 
     public static final ConfigValue<Set<String>> GENERAL_DISABLED_WORLDS = ConfigValue.create("General.Disabled_Worlds",
@@ -118,7 +109,7 @@ public class Config {
 
     public static final ConfigValue<Double> JOBS_ENCHANT_MULTIPLIER_BY_LEVEL_COST = ConfigValue.create("Jobs.Details.Enchant.Multiplier_By_Level_Cost",
         1D,
-        "Sets amount of percents (%) added to a job's objective XP and payment for each level in enchanting table cost for " + ActionTypes.ITEM_ENCHANT.getName() + " job objectives.",
+        "Sets amount of percents (%) added to a job's objective XP and payment for each level in enchanting table cost for " + WorkId.ENCHANTING + " job objectives.",
         "Examples:",
         "==> With 30 level cost, player will gain 30% more XP and payment.",
         "==> With 7 level cost, player will gain 7% more XP and payment."
@@ -126,7 +117,7 @@ public class Config {
 
     public static final ConfigValue<Boolean> LEVELLED_MOBS_KILL_ENTITY_ENABLED = ConfigValue.create("LevelledMobs.Integration.KillEntity.Enabled",
         true,
-        "When enabled, multiplies XP and payment amount produced by '" + ActionTypes.ENTITY_KILL.getName() + "' and " + ActionTypes.ENTITY_SHOOT.getName() + "' job objectives when killing mobs with levels from LevelledMobs."
+        "When enabled, multiplies XP and payment amount produced by '" + WorkId.KILL_ENTITY + "' job objective when killing mobs with levels from LevelledMobs."
     );
 
     public static final ConfigValue<Double> LEVELLED_MOBS_KILL_ENTITY_MULTIPLIER = ConfigValue.create("LevelledMobs.Integration.KillEntity.Multiplier",
@@ -281,53 +272,9 @@ public class Config {
     public static final ConfigValue<Integer> STATISTIC_ENTRIES_PER_PAGE = ConfigValue.create("Statistic.Entries_Per_Page", 10,
         "Sets how many entries per leaderboard page will be displated.");
 
-    public static final ConfigValue<Map<String, TimedBoosterInfo>> BOOSTERS_GLOBAL = ConfigValue.forMap("Boosters.Global",
-        (cfg, path, id) -> TimedBoosterInfo.read(cfg, path + "." + id),
-        (cfg, path, map) -> map.forEach((id, info) -> info.write(cfg, path + "." + id)),
-        Map.of(
-            "example", new TimedBoosterInfo(Set.of(Placeholders.WILDCARD),
-                new BoosterMultiplier(Map.of(CurrencyId.VAULT, 25D), 25D),
-                Map.of(DayOfWeek.SATURDAY, Set.of(LocalTime.of(16, 0))), 7200)
-        ),
-        "List of global, automated XP / currency boosters.",
-        "You can create as many boosters as you want.",
-        "But keep in mind that only one global booster can be active at the same time.",
-        "If you have multiple boosters applicable at the same day times, the latest one will override all previous."
-    );
-
-    public static final ConfigValue<Map<String, RankBoosterInfo>> BOOSTERS_RANK = ConfigValue.forMap("Boosters.Rank",
-        (cfg, path, id) -> RankBoosterInfo.read(cfg, path + "." + id, id),
-        (cfg, path, map) -> map.forEach((id, info) -> info.write(cfg, path + "." + id)),
-        Map.of(
-            "vip", new RankBoosterInfo("vip", 10, Set.of(Placeholders.WILDCARD),
-                new BoosterMultiplier(Map.of(CurrencyId.VAULT, 25D), 25D)
-            ),
-            "premium", new RankBoosterInfo("premium", 10, Set.of(Placeholders.WILDCARD),
-                new BoosterMultiplier(Map.of(CurrencyId.VAULT, 50D), 50D)
-            )
-        ),
-        "List of passive XP / currency boosters based on player permission group(s).",
-        "Use the 'Priority' option to define booster's priority to guarantee that players with multiple permission groups will get the best one."
-    );
-
-    public static final ConfigValue<Map<String, BoosterInfo>> BOOSTERS_CUSTOM = ConfigValue.forMap("Boosters.Custom",
-        (cfg, path, id) -> BoosterInfo.read(cfg, path + "." + id),
-        (cfg, path, map) -> map.forEach((id, info) -> info.write(cfg, path + "." + id)),
-        Map.of(
-            "xp_money_25", new BoosterInfo(Set.of(Placeholders.WILDCARD),
-                new BoosterMultiplier(Map.of(CurrencyId.VAULT, 25D), 25D)),
-            "xp_money_50", new BoosterInfo(Set.of(Placeholders.WILDCARD),
-                new BoosterMultiplier(Map.of(CurrencyId.VAULT, 50D), 50D)),
-            "money_100", new BoosterInfo(Set.of(Placeholders.WILDCARD),
-                new BoosterMultiplier(Map.of(CurrencyId.VAULT, 100D), 0D)),
-            "xp_100", new BoosterInfo(Set.of(Placeholders.WILDCARD),
-                new BoosterMultiplier(Map.of(CurrencyId.VAULT, 0D), 100D))
-        ),
-        "List of custom XP / currency boosters to be given via booster commands.",
-        "You can create as many boosters as you want.",
-        "But keep in mind that only one personal booster per job can be active at the same time.",
-        "If player already has a booster for as job, it will be replaced with a new one."
-    );
+    public static boolean isBoostersEnabled() {
+        return FEATURES_BOOSTERS.get();
+    }
 
     public static boolean isStatisticEnabled() {
         return STATISTIC_ENABLED.get();

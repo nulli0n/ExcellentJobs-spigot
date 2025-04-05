@@ -1,8 +1,8 @@
 package su.nightexpress.excellentjobs.zone.impl;
 
 import org.jetbrains.annotations.Nullable;
-import su.nightexpress.excellentjobs.util.Cuboid;
-import su.nightexpress.excellentjobs.util.pos.BlockPos;
+import su.nightexpress.nightcore.util.geodata.Cuboid;
+import su.nightexpress.nightcore.util.geodata.pos.BlockPos;
 
 public class Selection {
 

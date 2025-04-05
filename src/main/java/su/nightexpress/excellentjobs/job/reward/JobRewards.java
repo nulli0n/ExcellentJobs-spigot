@@ -8,11 +8,10 @@ import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.util.Lists;
 import su.nightexpress.nightcore.util.NumberUtil;
 import su.nightexpress.nightcore.util.Players;
-import su.nightexpress.nightcore.util.placeholder.PlaceholderMap;
+import su.nightexpress.nightcore.util.placeholder.Replacer;
 import su.nightexpress.nightcore.util.text.tag.Tags;
 
 import java.util.*;
-import java.util.function.UnaryOperator;
 
 public class JobRewards {
 
@@ -47,10 +46,9 @@ public class JobRewards {
             "  Use '" + Players.PLAYER_COMMAND_PREFIX + "' prefix to run command by a player."
         ).read(config));
 
-        this.modifierMap.putAll(ConfigValue.forMap(path + ".Modifiers",
-            (cfg, path1, id) -> Modifier.read(cfg, path1 + "." + id),
-            (cfg, path1, map) -> map.forEach((id, reward) -> reward.write(cfg, path1 + "." + id)),
-            JobRewards::getDefaultModifiers,
+        this.modifierMap.putAll(ConfigValue.forMapById(path + ".Modifiers",
+            Modifier::read,
+            map -> map.putAll(JobRewards.getDefaultModifiers()),
             "Here you can create unlimited amount of custom modifiers for rewards."
         ).read(config));
     }
@@ -81,7 +79,7 @@ public class JobRewards {
             Lists.newList("crates key give " + Placeholders.PLAYER_NAME + " jobs 1"),
             "null",
             Lists.newList("vip", "gold", "premium"),
-            Lists.newList(Tags.LIGHT_RED.enclose("You must have VIP, Gold or Premium."))
+            Lists.newList(Tags.LIGHT_RED.wrap("You must have VIP, Gold or Premium."))
         );
 
         map.put(moneyReward.getId(), moneyReward);
@@ -101,21 +99,30 @@ public class JobRewards {
 
     @NotNull
     public List<LevelReward> getRewards(int jobLevel) {
-        UnaryOperator<String> replacer = this.getModifierReplacer(jobLevel);
+        Replacer replacer = this.getModifierReplacer(jobLevel);
 
         return new ArrayList<>(this.getRewards().stream().filter(reward -> reward.isGoodLevel(jobLevel)).map(reward -> reward.parse(replacer)).toList());
     }
 
     @NotNull
-    public UnaryOperator<String> getModifierReplacer(int jobLevel) {
-        PlaceholderMap map = new PlaceholderMap();
+    public Replacer getModifierReplacer(int jobLevel) {
+//        PlaceholderMap map = new PlaceholderMap();
+//
+//        this.modifierMap.forEach((id, modifier) -> {
+//            map.add(Placeholders.REWARD_MODIFIER.apply(id), NumberUtil.format(modifier.getValue(jobLevel)));
+//            map.add(Placeholders.REWARD_MODIFIER_RAW.apply(id), String.valueOf(modifier.getValue(jobLevel)));
+//        });
+
+        Replacer replacer = Replacer.create();
 
         this.modifierMap.forEach((id, modifier) -> {
-            map.add(Placeholders.REWARD_MODIFIER.apply(id), NumberUtil.format(modifier.getValue(jobLevel)));
-            map.add(Placeholders.REWARD_MODIFIER_RAW.apply(id), String.valueOf(modifier.getValue(jobLevel)));
+            replacer.replace(Placeholders.REWARD_MODIFIER.apply(id), NumberUtil.format(modifier.getValue(jobLevel)));
+            replacer.replace(Placeholders.REWARD_MODIFIER_RAW.apply(id), String.valueOf(modifier.getValue(jobLevel)));
         });
 
-        return map.replacer();
+        return replacer;
+
+        //return map.replacer();
     }
 
     @NotNull

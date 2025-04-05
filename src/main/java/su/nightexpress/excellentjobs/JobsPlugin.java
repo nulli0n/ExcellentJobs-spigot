@@ -1,36 +1,41 @@
 package su.nightexpress.excellentjobs;
 
+import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import su.nightexpress.economybridge.EconomyBridge;
-import su.nightexpress.excellentjobs.action.ActionRegistry;
+import su.nightexpress.excellentjobs.hook.work.EvenMoreFishWork;
+import su.nightexpress.excellentjobs.hook.work.MythicMobsWork;
+import su.nightexpress.excellentjobs.job.work.Work;
 import su.nightexpress.excellentjobs.booster.BoosterManager;
-import su.nightexpress.excellentjobs.command.base.*;
-import su.nightexpress.excellentjobs.command.booster.BoosterCommand;
+import su.nightexpress.excellentjobs.command.impl.BaseCommands;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Keys;
 import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.config.Perms;
 import su.nightexpress.excellentjobs.data.DataHandler;
-import su.nightexpress.excellentjobs.data.UserManager;
-import su.nightexpress.excellentjobs.data.impl.JobUser;
+import su.nightexpress.excellentjobs.hook.HookPlugin;
+import su.nightexpress.excellentjobs.hook.work.CustomFishingWork;
 import su.nightexpress.excellentjobs.hook.impl.PlaceholderHook;
 import su.nightexpress.excellentjobs.job.JobManager;
+import su.nightexpress.excellentjobs.job.work.WorkRegistry;
 import su.nightexpress.excellentjobs.stats.StatsManager;
+import su.nightexpress.excellentjobs.user.UserManager;
 import su.nightexpress.excellentjobs.zone.ZoneManager;
-import su.nightexpress.nightcore.NightDataPlugin;
-import su.nightexpress.nightcore.command.api.NightPluginCommand;
-import su.nightexpress.nightcore.command.base.ReloadSubCommand;
+import su.nightexpress.nightcore.NightPlugin;
+import su.nightexpress.nightcore.command.experimental.ImprovedCommands;
+import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.PluginDetails;
 import su.nightexpress.nightcore.util.Plugins;
 import su.nightexpress.nightcore.util.blocktracker.PlayerBlockTracker;
 
-public class JobsPlugin extends NightDataPlugin<JobUser> {
+import java.util.function.Supplier;
+
+public class JobsPlugin extends NightPlugin implements ImprovedCommands {
 
     private DataHandler dataHandler;
     private UserManager userManager;
 
-    private ActionRegistry  actionRegistry;
     private BoosterManager  boosterManager;
     private JobManager      jobManager;
     private ZoneManager     zoneManager;
@@ -39,7 +44,7 @@ public class JobsPlugin extends NightDataPlugin<JobUser> {
     @Override
     @NotNull
     protected PluginDetails getDefaultDetails() {
-        return PluginDetails.create("Jobs", new String[]{"excellentjobs", "jobs", "job"})
+        return PluginDetails.create("Jobs", new String[]{"jobs", "job", "excellentjobs"})
             .setConfigClass(Config.class)
             .setLangClass(Lang.class)
             .setPermissionsClass(Perms.class);
@@ -47,24 +52,24 @@ public class JobsPlugin extends NightDataPlugin<JobUser> {
 
     @Override
     public void enable() {
-        Keys.load(this);
-
-        this.registerCommands();
-
         if (!EconomyBridge.hasCurrency()) {
             this.error("No currencies are available! Please setup EconomyBridge correctly. Plugin will be disabled.");
             this.getPluginManager().disablePlugin(this);
             return;
         }
 
+        JobsAPI.load(this);
+        Keys.load(this);
+        WorkRegistry.load(this);
+        BaseCommands.load(this);
+
+        this.loadIntegrations();
+
         this.dataHandler = new DataHandler(this);
         this.dataHandler.setup();
 
-        this.userManager = new UserManager(this);
+        this.userManager = new UserManager(this, this.dataHandler);
         this.userManager.setup();
-
-        this.actionRegistry = new ActionRegistry(this);
-        this.actionRegistry.setup();
 
         this.jobManager = new JobManager(this);
         this.jobManager.setup();
@@ -79,8 +84,10 @@ public class JobsPlugin extends NightDataPlugin<JobUser> {
             this.statsManager.setup();
         }
 
-        this.boosterManager = new BoosterManager(this);
-        this.boosterManager.setup();
+        if (Config.isBoostersEnabled()) {
+            this.boosterManager = new BoosterManager(this);
+            this.boosterManager.setup();
+        }
 
         if (Config.ABUSE_TRACK_PLAYER_BLOCKS.get()) {
             PlayerBlockTracker.initialize();
@@ -102,67 +109,58 @@ public class JobsPlugin extends NightDataPlugin<JobUser> {
         if (this.statsManager != null) this.statsManager.shutdown();
         if (this.jobManager != null) this.jobManager.shutdown();
 
-        this.actionRegistry.shutdown();
         this.userManager.shutdown();
         this.dataHandler.shutdown();
+
+        WorkRegistry.clear();
+        JobsAPI.clear();
     }
 
-    private void registerCommands() {
-        NightPluginCommand baseCommand = this.getBaseCommand();
+    private void loadIntegrations() {
+        this.loadIntegration(HookPlugin.MYTHIC_MOBS, () -> new MythicMobsWork(this, "kill_mythic_mob"));
+        this.loadIntegration(HookPlugin.EVEN_MORE_FISH, () -> new EvenMoreFishWork(this, "emf_fish_item"));
+        this.loadIntegration(HookPlugin.CUSTOM_FISHING, () -> new CustomFishingWork(this, "custom_fishing"));
+    }
 
-        baseCommand.addChildren(new StatsCommand(this));
-        baseCommand.addChildren(new XPCommand(this));
-        baseCommand.addChildren(new LevelCommand(this));
-        baseCommand.addChildren(new ResetCommand(this));
-        baseCommand.addChildren(new JoinCommand(this));
-        baseCommand.addChildren(new LeaveCommand(this));
-        baseCommand.addChildren(new SetStateCommand(this));
+    private <E extends Event, O> void loadIntegration(@NotNull String plugin, @NotNull Supplier<Work<E, O>> supplier) {
+        if (Plugins.isLoaded(plugin)) {
+            this.info("Found " + plugin + "! Adding new work types...");
 
-        if (Config.GENERAL_DEFAULT_MENU_COMMAND_ENABLED.get()) {
-            baseCommand.addDefaultCommand(new MenuCommand(this));
+            var work = supplier.get();
+            String displayName = ConfigValue.create("WorkType." + work.getId(), work.getDisplayName()).read(this.getLang());
+            work.setDisplayName(displayName);
+
+            WorkRegistry.register(work);
         }
-        else {
-            baseCommand.addChildren(new MenuCommand(this));
-        }
-        baseCommand.addChildren(new ReloadSubCommand(this, Perms.COMMAND_RELOAD));
-        baseCommand.addChildren(new BoosterCommand(this));
-        baseCommand.addChildren(new ObjectivesCommand(this));
     }
 
     @NotNull
-    @Override
-    public DataHandler getData() {
-        return dataHandler;
+    public DataHandler getDataHandler() {
+        return this.dataHandler;
     }
 
     @NotNull
-    @Override
     public UserManager getUserManager() {
-        return userManager;
+        return this.userManager;
     }
 
-    @NotNull
-    public ActionRegistry getActionRegistry() {
-        return actionRegistry;
-    }
-
-    @NotNull
+    @Nullable
     public BoosterManager getBoosterManager() {
-        return boosterManager;
+        return this.boosterManager;
     }
 
     @NotNull
     public JobManager getJobManager() {
-        return jobManager;
+        return this.jobManager;
     }
 
     @Nullable
     public ZoneManager getZoneManager() {
-        return zoneManager;
+        return this.zoneManager;
     }
 
     @Nullable
     public StatsManager getStatsManager() {
-        return statsManager;
+        return this.statsManager;
     }
 }

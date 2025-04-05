@@ -1,8 +1,15 @@
 package su.nightexpress.excellentjobs.command;
 
-import su.nightexpress.nightcore.command.CommandFlag;
+import org.jetbrains.annotations.NotNull;
+import su.nightexpress.nightcore.command.experimental.builder.SimpleFlagBuilder;
+import su.nightexpress.nightcore.command.experimental.flag.FlagTypes;
 
 public class CommandFlags {
 
-    public static final CommandFlag<Boolean> SILENT = CommandFlag.booleanFlag("s");
+    public static final String SILENT = "s";
+
+    @NotNull
+    public static SimpleFlagBuilder silent() {
+        return FlagTypes.simple(SILENT);
+    }
 }

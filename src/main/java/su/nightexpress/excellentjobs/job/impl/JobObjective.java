@@ -8,10 +8,12 @@ import su.nightexpress.economybridge.api.Currency;
 import su.nightexpress.economybridge.currency.CurrencyId;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.Placeholders;
-import su.nightexpress.excellentjobs.action.ActionType;
+import su.nightexpress.excellentjobs.job.work.Work;
+import su.nightexpress.excellentjobs.job.work.WorkObjective;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Perms;
 import su.nightexpress.excellentjobs.data.impl.JobData;
+import su.nightexpress.excellentjobs.job.work.WorkRegistry;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.util.wrapper.UniInt;
@@ -24,21 +26,21 @@ import java.util.stream.Collectors;
 
 public class JobObjective {
 
-    private final String                         id;
-    private final ActionType<?, ?>               type;
-    private final String                         displayName;
-    private final ItemStack                      icon;
-    private final Set<String>                    objects;
+    private final String id;
+    private final String workId;
+    private final String displayName;
+    private final ItemStack                    icon;
+    private final Set<String>                  objects;
     private final Map<String, ObjectiveReward> paymentMap;
-    private final ObjectiveReward                xpReward;
-    private final int                            unlockLevel;
+    private final ObjectiveReward              xpReward;
+    private final int                          unlockLevel;
 
     private final boolean specialOrderAllowed;
     private final UniInt specialOrderObjectsAmount;
     private final UniInt specialOrderObjectCount;
 
     public JobObjective(@NotNull String id,
-                        @NotNull ActionType<?, ?> type,
+                        @NotNull String workId,
                         @NotNull String displayName,
                         @NotNull ItemStack icon,
                         @NotNull Set<String> objects,
@@ -49,7 +51,7 @@ public class JobObjective {
                         UniInt specialOrderObjectsAmount,
                         UniInt specialOrderObjectCount) {
         this.id = id.toLowerCase();
-        this.type = type;
+        this.workId = workId;
         this.displayName = displayName;
         this.icon = icon;
         this.objects = new HashSet<>(objects);
@@ -61,16 +63,9 @@ public class JobObjective {
         this.specialOrderObjectCount = specialOrderObjectCount;
     }
 
-    @Nullable
+    @NotNull
     public static JobObjective read(@NotNull JobsPlugin plugin, @NotNull FileConfig cfg, @NotNull String path, @NotNull String id) {
-        //if (!cfg.getBoolean(path + ".Enabled")) return null;
-
-        String typeRaw = ConfigValue.create(path + ".Type", "null").read(cfg);
-        ActionType<?, ?> type = plugin.getActionRegistry().getActionType(typeRaw);
-        if (type == null) {
-            plugin.warn("Invalid objective type: '" + typeRaw + "'.");
-            return null;
-        }
+        String workType = ConfigValue.create(path + ".Type", "null").read(cfg);
 
         // Add missing currencies for users to know they can use them.
         /*plugin.getCurrencyManager().getCurrencies().forEach(currency -> {
@@ -102,23 +97,21 @@ public class JobObjective {
             specialOrderAllowed = ConfigValue.create(path + ".SpecialOrder.Allowed", true).read(cfg);
 
             specialOrderObjectsAmount = ConfigValue.create(path + ".SpecialOrder.Objects_Amount",
-                (cfg2, path2, def) -> UniInt.read(cfg2, path2),
-                (cfg2, path2, obj) -> obj.write(cfg2, path2),
-                () -> UniInt.of(1, 5)).read(cfg);
+                UniInt::read,
+                UniInt.of(1, 5)).read(cfg);
 
             specialOrderObjectCount = ConfigValue.create(path + ".SpecialOrder.Objects_Count",
-                (cfg2, path2, def) -> UniInt.read(cfg2, path2),
-                (cfg2, path2, obj) -> obj.write(cfg2, path2),
-                () -> UniInt.of(100, 500)).read(cfg);
+                UniInt::read,
+                UniInt.of(100, 500)).read(cfg);
         }
 
-        return new JobObjective(id, type, displayName, icon, objects, currencyDrop, xpDrop, unlockLevel,
+        return new JobObjective(id, workType, displayName, icon, objects, currencyDrop, xpDrop, unlockLevel,
             specialOrderAllowed, specialOrderObjectsAmount, specialOrderObjectCount
         );
     }
 
     public void write(@NotNull FileConfig cfg, @NotNull String path) {
-        cfg.set(path + ".Type", this.getType().getName());
+        cfg.set(path + ".Type", this.workId);
         cfg.set(path + ".Display.Name", this.getDisplayName());
         cfg.setItem(path + ".Display.Icon", this.getIcon());
 
@@ -138,6 +131,19 @@ public class JobObjective {
         }
     }
 
+    public boolean isObjective(@NotNull WorkObjective workObjective) {
+        return this.workId.equalsIgnoreCase(workObjective.getWorkId()) && this.hasObject(workObjective.getObjectName());
+    }
+
+    public boolean isWork(@NotNull Work<?, ?> work) {
+        return this.workId.equalsIgnoreCase(work.getId());
+    }
+
+    @Nullable
+    public Work<?, ?> getWork() {
+        return WorkRegistry.getByName(this.workId);
+    }
+
     public boolean hasObject(@NotNull String name) {
         return this.getObjects().contains(name.toLowerCase()) || this.getObjects().contains(Placeholders.WILDCARD);
     }
@@ -153,13 +159,8 @@ public class JobObjective {
     }
 
     public boolean canPay() {
-        return !this.getPaymentMap().values().stream().allMatch(ObjectiveReward::isEmpty);// && !this.getXPReward().isEmpty();
+        return !this.getPaymentMap().values().stream().allMatch(ObjectiveReward::isEmpty);
     }
-
-    /*@NotNull
-    public DropInfo getPaymentInfo(@NotNull Currency currency) {
-        return this.getPaymentInfo(currency.getId());
-    }*/
 
     @NotNull
     public ObjectiveReward getPaymentInfo(@NotNull Currency currency) {
@@ -172,8 +173,8 @@ public class JobObjective {
     }
 
     @NotNull
-    public ActionType<?, ?> getType() {
-        return type;
+    public String getWorkId() {
+        return this.workId;
     }
 
     @NotNull

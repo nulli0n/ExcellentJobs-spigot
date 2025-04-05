@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Lang;
-import su.nightexpress.excellentjobs.data.impl.JobUser;
+import su.nightexpress.excellentjobs.user.JobUser;
 import su.nightexpress.excellentjobs.job.JobManager;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.job.impl.JobState;
@@ -76,7 +76,7 @@ public class PreviewMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
             menuItem.getOptions().addDisplayModifier((viewer, itemStack) -> {
                 Player player = viewer.getPlayer();
                 //Job job = this.getLink().get(player);
-                JobUser user = plugin.getUserManager().getUserData(player);
+                JobUser user = plugin.getUserManager().getOrFetch(player);
                 int limit = JobManager.getJobsLimit(player, state);
 
                 ItemReplacer.create(itemStack).readMeta()
@@ -91,7 +91,7 @@ public class PreviewMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
         Player player = viewer.getPlayer();
         Job job = this.getLink().get(player);
 
-        JobUser user = this.plugin.getUserManager().getUserData(player);
+        JobUser user = this.plugin.getUserManager().getOrFetch(player);
         if (user.getData(job).getState() != JobState.INACTIVE) {
             this.runNextTick(player::closeInventory);
             return;

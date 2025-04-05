@@ -39,7 +39,6 @@ public class BlockProtocolHighlighter extends BlockHighlighter {
         PacketContainer dataPacket = this.createMetadataPacket(entityID, metadata -> {
             metadata.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(0, WrappedDataWatcher.Registry.get(Byte.class)), (byte) (0x20 | 0x40)); //invis
             metadata.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(12, WrappedDataWatcher.Registry.get(Vector3f.class)), new Vector3f(size, size, size)); // scale
-            // TODO Check
             metadata.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(23, WrappedDataWatcher.Registry.getBlockDataSerializer(false)), WrappedBlockData.createData(blockData)); // slot
         });
 

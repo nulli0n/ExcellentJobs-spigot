@@ -29,13 +29,11 @@ public class JobStats {
 
     @NotNull
     public DayStats getTodayStats() {
-        return this.getStatsOrCreate(LocalDate.now());
+        return this.getStatsOrCreate(TimeUtil.getCurrentDate());
     }
 
     @NotNull
     public DayStats getWeeklyStats() {
-        LocalDate dateNow = LocalDate.now();
-
         return this.getStatsForDays(7);
     }
 
@@ -61,7 +59,7 @@ public class JobStats {
 
     @Nullable
     private LocalDate adjusted(int days) {
-        return days < 0 ? null : LocalDate.now().minusDays(days);
+        return days < 0 ? null : TimeUtil.getCurrentDate().minusDays(days);
     }
 
     @NotNull
