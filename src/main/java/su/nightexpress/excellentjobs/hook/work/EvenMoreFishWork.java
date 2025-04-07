@@ -58,7 +58,7 @@ public class EvenMoreFishWork extends Work<PlayerFishEvent, Fish> implements Wor
     @NotNull
     @Override
     public String getLocalized(@NotNull Fish object) {
-        return object.getRarity().getDisplayName() + " " + object.getDisplayName();
+        return object.getRarity().getDisplayName().getPlainTextMessage() + " " + object.getDisplayName().getPlainTextMessage();
     }
 
     @Nullable
