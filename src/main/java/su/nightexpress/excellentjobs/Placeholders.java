@@ -1,8 +1,8 @@
 package su.nightexpress.excellentjobs;
 
 import su.nightexpress.economybridge.api.Currency;
-import su.nightexpress.excellentjobs.booster.impl.Booster;
 import su.nightexpress.excellentjobs.api.booster.MultiplierType;
+import su.nightexpress.excellentjobs.booster.impl.Booster;
 import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.data.impl.JobData;
 import su.nightexpress.excellentjobs.job.impl.Job;
@@ -24,32 +24,40 @@ import java.util.stream.Collectors;
 
 public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
 
-    public static final String URL_WIKI                = "https://nightexpress.gitbook.io/excellentjobs/";
-    public static final String URL_WIKI_PLACEHOLDERS   = URL_WIKI + "utility/placeholders";
-    public static final String URL_WIKI_ACTION_TYPES   = URL_WIKI + "features/job-action-types";
-    public static final String URL_WIKI_CURRENCY       = URL_WIKI + "features/multi-currency";
-    public static final String URL_WIKI_SPECIAL_ORDERS = URL_WIKI + "features/special-orders";
-    public static final String URL_WIKI_ZONES          = URL_WIKI + "features/zones";
+    public static final String URL_WIKI                 = "https://nightexpressdev.com/excellentjobs/";
+    public static final String URL_WIKI_PLACEHOLDERS    = URL_WIKI + "placeholders";
+    public static final String URL_WIKI_ECONOMY         = URL_WIKI + "hooks/eco-currencies";
+    public static final String URL_WIKI_WORK_TYPES      = URL_WIKI + "jobs/work-types";
+    public static final String URL_WIKI_SPECIAL_ORDERS  = URL_WIKI + "jobs/special-orders";
+    public static final String URL_WIKI_LEVELING        = URL_WIKI + "jobs/leveling";
+    public static final String URL_WIKI_LEVEL_REWARDS   = URL_WIKI + "jobs/level-rewards";
+    public static final String URL_WIKI_DAILY_LIMITS    = URL_WIKI + "jobs/daily-limits";
+    public static final String URL_WIKI_XP_INCOME_BONUS = URL_WIKI + "jobs/xp-income-bonus";
+    public static final String URL_WIKI_DISABLED_WORLDS = URL_WIKI + "jobs/disabled-worlds";
+    public static final String URL_WIKI_JOB_STATES      = URL_WIKI + "jobs/states";
+    public static final String URL_WIKI_ZONES           = URL_WIKI + "zones/overview";
+    public static final String URL_WIKI_MODIFIERS       = URL_WIKI + "modifiers";
 
     public static final String URL_ECO_BRIDGE = "https://nightexpressdev.com/economy-bridge/currencies/";
 
-    public static final String GENERIC_AMOUNT        = "%amount%";
-    public static final String GENERIC_NAME          = "%name%";
-    public static final String GENERIC_BALANCE       = "%balance%";
-    public static final String GENERIC_XP            = "%exp%";
-    public static final String GENERIC_TIME          = "%time%";
-    public static final String GENERIC_CURRENCY      = "%currency%";
-    public static final String GENERIC_POS           = "%pos%";
-    public static final String GENERIC_CURRENT       = "%current%";
-    public static final String GENERIC_MIN           = "%min%";
-    public static final String GENERIC_MAX           = "%max%";
-    public static final String GENERIC_STATE         = "%state%";
-    public static final String GENERIC_ENTRY         = "%entry%";
-    public static final String GENERIC_TYPE          = "%type%";
-    public static final String GENERIC_TOTAL         = "%total%";
-    public static final String GENERIC_REWARD        = "%reward%";
-    public static final String GENERIC_INCOME        = "%income%";
-    public static final String GENERIC_LEVEL         = "%level%";
+    public static final String GENERIC_AMOUNT      = "%amount%";
+    public static final String GENERIC_NAME        = "%name%";
+    public static final String GENERIC_DESCRIPTION = "%description%";
+    public static final String GENERIC_BALANCE     = "%balance%";
+    public static final String GENERIC_XP          = "%exp%";
+    public static final String GENERIC_TIME        = "%time%";
+    public static final String GENERIC_CURRENCY    = "%currency%";
+    public static final String GENERIC_POS         = "%pos%";
+    public static final String GENERIC_CURRENT     = "%current%";
+    public static final String GENERIC_MIN         = "%min%";
+    public static final String GENERIC_MAX         = "%max%";
+    public static final String GENERIC_STATE       = "%state%";
+    public static final String GENERIC_ENTRY       = "%entry%";
+    public static final String GENERIC_TYPE        = "%type%";
+    public static final String GENERIC_TOTAL       = "%total%";
+    public static final String GENERIC_REWARD      = "%reward%";
+    public static final String GENERIC_INCOME      = "%income%";
+    public static final String GENERIC_LEVEL       = "%level%";
 
     public static final String GENERIC_XP_BONUS          = "%xp_bonus%";
     public static final String GENERIC_XP_BOOST          = "%xp_boost%";
@@ -94,13 +102,13 @@ public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
     public static final String ZONE_ID                          = "%zone_id%";
     public static final String ZONE_NAME                        = "%zone_name%";
     public static final String ZONE_DESCRIPTION                 = "%zone_description%";
-    public static final String ZONE_JOB_IDS                      = "%zone_job_ids%";
-    public static final String ZONE_JOB_NAMES                    = "%zone_job_names%";
+    public static final String ZONE_JOB_IDS                     = "%zone_job_ids%";
+    public static final String ZONE_JOB_NAMES                   = "%zone_job_names%";
     public static final String ZONE_JOB_MIN_LEVEL               = "%zone_job_min_level%";
     public static final String ZONE_JOB_MAX_LEVEL               = "%zone_job_max_level%";
     //public static final String ZONE_CLOSE_TIME                  = "%zone_close_time%";
     //public static final String ZONE_OPEN_TIME                   = "%zone_open_time%";
-    public static final String ZONE_HOURS_ENABLED = "%zone_hours_enabled%";
+    public static final String ZONE_HOURS_ENABLED               = "%zone_hours_enabled%";
     public static final String ZONE_DISABLED_BLOCK_INTERACTIONS = "%zone_disabled_block_interactions%";
     public static final String ZONE_PERMISSION                  = "%zone_permission%";
     public static final String ZONE_PERMISSION_REQUIRED         = "%zone_permission_required%";
@@ -114,7 +122,7 @@ public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
     public static final String BLOCK_LIST_RESET_TIME        = "%blocklist_reset_time%";
     public static final String BLOCK_LIST_DROP_ITEMS        = "%blocklist_drop_items%";
 
-    public static final String BOOSTER_TIME_LEFT         = "%booster_timeleft%";
+    public static final String BOOSTER_TIME_LEFT = "%booster_timeleft%";
 
     public static final String OBJECTIVE_ACTION_TYPE     = "%objective_action_type%";
     public static final String OBJECTIVE_NAME            = "%objective_name%";
@@ -184,18 +192,18 @@ public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
     );
 
     public static final PlaceholderList<Zone> ZONE = PlaceholderList.create(list -> list
-        .add(ZONE_ID, Zone::getId)
-        .add(ZONE_NAME, Zone::getName)
-        .add(ZONE_DESCRIPTION, zone -> String.join("\n", zone.getDescription()))
-        .add(ZONE_PVP_ALLOWED, zone -> Lang.getYesOrNo(zone.isPvPAllowed()))
-        .add(ZONE_JOB_IDS, zone -> String.join("\n", zone.getLinkedJobs()))
-        .add(ZONE_JOB_NAMES, zone -> zone.getLinkedJobs().stream().map(id -> {
-            Job job = JobsAPI.getJobById(id);
-            return job == null ? Lang.badEntry(id) : Lang.goodEntry(job.getName());
-        }).collect(Collectors.joining("\n")))
-        .add(ZONE_JOB_MIN_LEVEL, zone -> NumberUtil.format(zone.getMinJobLevel()))
-        .add(ZONE_JOB_MAX_LEVEL, zone -> NumberUtil.format(zone.getMaxJobLevel()))
-        .add(ZONE_HOURS_ENABLED, zone -> Lang.getEnabledOrDisabled(zone.isHoursEnabled()))
+            .add(ZONE_ID, Zone::getId)
+            .add(ZONE_NAME, Zone::getName)
+            .add(ZONE_DESCRIPTION, zone -> String.join("\n", zone.getDescription()))
+            .add(ZONE_PVP_ALLOWED, zone -> Lang.getYesOrNo(zone.isPvPAllowed()))
+            .add(ZONE_JOB_IDS, zone -> String.join("\n", zone.getLinkedJobs()))
+            .add(ZONE_JOB_NAMES, zone -> zone.getLinkedJobs().stream().map(id -> {
+                Job job = JobsAPI.getJobById(id);
+                return job == null ? Lang.badEntry(id) : Lang.goodEntry(job.getName());
+            }).collect(Collectors.joining("\n")))
+            .add(ZONE_JOB_MIN_LEVEL, zone -> NumberUtil.format(zone.getMinJobLevel()))
+            .add(ZONE_JOB_MAX_LEVEL, zone -> NumberUtil.format(zone.getMaxJobLevel()))
+            .add(ZONE_HOURS_ENABLED, zone -> Lang.getEnabledOrDisabled(zone.isHoursEnabled()))
 //        .add(ZONE_CLOSE_TIME, zone -> {
 //            LocalTime time = zone.getNearestCloseTime();
 //            return time == null ? "-" : JobUtils.formatTime(time);
@@ -204,9 +212,9 @@ public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
 //            LocalTime time = zone.getNearestOpenTime();
 //            return time == null ? "-" : JobUtils.formatTime(time);
 //        })
-        .add(ZONE_DISABLED_BLOCK_INTERACTIONS, zone -> {
-            return String.join("\n", Lists.modify(zone.getDisabledInteractions(), type -> Lang.goodEntry(LangAssets.get(type))));
-        })
+            .add(ZONE_DISABLED_BLOCK_INTERACTIONS, zone -> {
+                return String.join("\n", Lists.modify(zone.getDisabledInteractions(), type -> Lang.goodEntry(LangAssets.get(type))));
+            })
     );
 
     public static final PlaceholderList<Zone> ZONE_EDITOR = PlaceholderList.create(list -> list

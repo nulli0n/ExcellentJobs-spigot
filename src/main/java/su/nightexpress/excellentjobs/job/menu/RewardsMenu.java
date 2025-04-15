@@ -3,29 +3,25 @@ package su.nightexpress.excellentjobs.job.menu;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.InventoryView;
+import org.bukkit.inventory.MenuType;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.config.Config;
-import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.data.impl.JobData;
-import su.nightexpress.excellentjobs.user.JobUser;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.job.impl.JobState;
 import su.nightexpress.excellentjobs.job.reward.LevelReward;
+import su.nightexpress.excellentjobs.user.JobUser;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
-import su.nightexpress.nightcore.menu.MenuOptions;
-import su.nightexpress.nightcore.menu.MenuSize;
-import su.nightexpress.nightcore.menu.MenuViewer;
-import su.nightexpress.nightcore.menu.api.AutoFill;
-import su.nightexpress.nightcore.menu.api.AutoFilled;
-import su.nightexpress.nightcore.menu.impl.ConfigMenu;
-import su.nightexpress.nightcore.menu.item.ItemHandler;
-import su.nightexpress.nightcore.menu.item.MenuItem;
-import su.nightexpress.nightcore.menu.link.Linked;
-import su.nightexpress.nightcore.menu.link.ViewLink;
-import su.nightexpress.nightcore.util.ItemUtil;
+import su.nightexpress.nightcore.ui.menu.MenuViewer;
+import su.nightexpress.nightcore.ui.menu.data.ConfigBased;
+import su.nightexpress.nightcore.ui.menu.data.Filled;
+import su.nightexpress.nightcore.ui.menu.data.MenuFiller;
+import su.nightexpress.nightcore.ui.menu.data.MenuLoader;
+import su.nightexpress.nightcore.ui.menu.item.MenuItem;
+import su.nightexpress.nightcore.ui.menu.type.LinkedMenu;
 import su.nightexpress.nightcore.util.Lists;
 import su.nightexpress.nightcore.util.NumberUtil;
 import su.nightexpress.nightcore.util.bukkit.NightItem;
@@ -38,31 +34,25 @@ import java.util.stream.IntStream;
 import static su.nightexpress.excellentjobs.Placeholders.*;
 import static su.nightexpress.nightcore.util.text.tag.Tags.*;
 
-public class RewardsMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<Integer>, Linked<Job> {
+@SuppressWarnings("UnstableApiUsage")
+public class RewardsMenu extends LinkedMenu<JobsPlugin, Job> implements Filled<Integer>, ConfigBased {
 
     public static final String FILE_NAME = "job_level_rewards.yml";
     private static final String REWARDS = "%rewards%";
 
-    private final ViewLink<Job> link;
-    private final ItemHandler   returnHandler;
-
     private NightItem lockedReward;
     private NightItem emptyReward;
     private NightItem claimedReward;
+    private NightItem upcomingReward;
 
     private List<String> rewardFormat;
 
     private int[] rewardSlots;
 
     public RewardsMenu(@NotNull JobsPlugin plugin) {
-        super(plugin, FileConfig.loadOrExtract(plugin, Config.DIR_MENU, FILE_NAME));
-        this.link = new ViewLink<>();
+        super(plugin, MenuType.GENERIC_9X6, BLACK.wrap("Level Rewards"));
 
-        this.addHandler(this.returnHandler = ItemHandler.forReturn(this, (viewer, event) -> {
-            this.runNextTick(() -> plugin.getJobManager().openJobMenu(viewer.getPlayer(), this.getLink().get(viewer)));
-        }));
-
-        this.load();
+        this.load(FileConfig.loadOrExtract(plugin, Config.DIR_MENU, FILE_NAME));
     }
 
     public void openAtLevel(@NotNull Player player, @NotNull Job job) {
@@ -73,19 +63,24 @@ public class RewardsMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<In
         int limit = this.rewardSlots.length;
         int page = (int) Math.ceil((double) level / (double) limit);
 
-        MenuViewer viewer = this.getViewerOrCreate(player);
-        viewer.setPage(page);
-        this.open(player, job);
+        this.open(player, job, viewer -> {
+            viewer.setPage(page);
+        });
     }
 
     @Override
-    @NotNull
-    public ViewLink<Job> getLink() {
-        return this.link;
+    protected void onItemPrepare(@NotNull MenuViewer viewer, @NotNull MenuItem menuItem, @NotNull NightItem item) {
+        super.onItemPrepare(viewer, menuItem, item);
+
+        Job job = this.getLink(viewer);
+        JobUser user = plugin.getUserManager().getOrFetch(viewer.getPlayer());
+        JobData jobData = user.getData(job);
+
+        item.replacement(replacer -> replacer.replace(jobData.replaceAllPlaceholders()));
     }
 
     @Override
-    protected void onPrepare(@NotNull MenuViewer viewer, @NotNull MenuOptions options) {
+    protected void onPrepare(@NotNull MenuViewer viewer, @NotNull InventoryView view) {
         this.autoFill(viewer);
     }
 
@@ -95,105 +90,100 @@ public class RewardsMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<In
     }
 
     @Override
-    public void onAutoFill(@NotNull MenuViewer viewer, @NotNull AutoFill<Integer> autoFill) {
+    @NotNull
+    public MenuFiller<Integer> createFiller(@NotNull MenuViewer viewer) {
         Player player = viewer.getPlayer();
         JobUser user = plugin.getUserManager().getOrFetch(player);
         Job job = this.getLink(player);
         JobData data = user.getData(job);
         JobState state = data.getState();
         int jobLevel = data.getLevel();
+        
+        return MenuFiller.builder(this)
+            .setSlots(this.rewardSlots)
+            .setItems(IntStream.range(1, job.getMaxLevel(state) + 1).boxed().toList())
+            .setItemCreator(level -> {
+                List<LevelReward> rewards = job.getRewards().getRewards(level);
 
-        autoFill.setSlots(this.rewardSlots);
-        autoFill.setItems(IntStream.range(1, job.getMaxLevel(state) + 1).boxed().toList());
-        autoFill.setItemCreator(level -> {
-            List<LevelReward> rewards = job.getRewards().getRewards(level);
-
-            NightItem item;
-            if (rewards.isEmpty()) {
-                item = this.emptyReward.copy();
-            }
-            else {
-                if (jobLevel >= level) {
-                    item = this.claimedReward.copy();
+                NightItem item;
+                if (rewards.isEmpty()) {
+                    item = this.emptyReward.copy();
                 }
-                else item = this.lockedReward.copy();
-            }
+                else {
+                    if (jobLevel >= level) {
+                        item = this.claimedReward.copy();
+                    }
+                    else if (level - jobLevel == 1) {
+                        item = this.upcomingReward.copy();
+                    }
+                    else item = this.lockedReward.copy();
+                }
 
-            List<String> rewardFormats = new ArrayList<>();
-            rewards.forEach(reward -> {
-                rewardFormats.addAll(Replacer.create().replace(reward.replacePlaceholders()).apply(this.rewardFormat));
-            });
+                List<String> rewardFormats = new ArrayList<>();
+                rewards.forEach(reward -> {
+                    rewardFormats.addAll(Replacer.create().replace(reward.replacePlaceholders()).apply(this.rewardFormat));
+                });
 
-           return item
-                .setHideComponents(true)
-                .replacement(replacer -> replacer
-                    .replace(job.replacePlaceholders())
-                    .replace(GENERIC_LEVEL, NumberUtil.format(level))
-                    .replace(REWARDS, rewardFormats)
-                )
-               .getItemStack();
-        });
+                return item
+                    .setHideComponents(true)
+                    .replacement(replacer -> replacer
+                        .replace(job.replacePlaceholders())
+                        .replace(GENERIC_LEVEL, NumberUtil.format(level))
+                        .replace(REWARDS, rewardFormats)
+                    );
+            })
+            .build();
     }
 
     @Override
-    @NotNull
-    protected MenuOptions createDefaultOptions() {
-        return new MenuOptions(BLACK.enclose("Level Rewards"), MenuSize.CHEST_45);
-    }
-
-    @Override
-    @NotNull
-    protected List<MenuItem> createDefaultItems() {
-        List<MenuItem> list = new ArrayList<>();
-
-        ItemStack prevPage = ItemUtil.getSkinHead(SKIN_ARROW_LEFT);
-        ItemUtil.editMeta(prevPage, meta -> {
-            meta.setDisplayName(Lang.EDITOR_ITEM_PREVIOUS_PAGE.getLocalizedName());
-        });
-        list.add(new MenuItem(prevPage).setSlots(36).setPriority(10).setHandler(ItemHandler.forPreviousPage(this)));
-
-        ItemStack nextPage = ItemUtil.getSkinHead(SKIN_ARROW_RIGHT);
-        ItemUtil.editMeta(nextPage, meta -> {
-            meta.setDisplayName(Lang.EDITOR_ITEM_NEXT_PAGE.getLocalizedName());
-        });
-        list.add(new MenuItem(nextPage).setSlots(44).setPriority(10).setHandler(ItemHandler.forNextPage(this)));
-
-        ItemStack back = ItemUtil.getSkinHead(SKIN_ARROW_DOWN);
-        ItemUtil.editMeta(back, meta -> {
-            meta.setDisplayName(Lang.EDITOR_ITEM_RETURN.getLocalizedName());
-        });
-        list.add(new MenuItem(back).setSlots(40).setPriority(10).setHandler(this.returnHandler));
-
-        return list;
-    }
-
-    @Override
-    protected void loadAdditional() {
+    public void loadConfiguration(@NotNull FileConfig config, @NotNull MenuLoader loader) {
         NightItem lockedItem = new NightItem(Material.RED_STAINED_GLASS_PANE)
-            .setDisplayName(GRAY.enclose("Level " + GENERIC_LEVEL) + " " + RED.enclose("[Locked]"))
-            .setLore(Lists.newList(REWARDS));
+            .setDisplayName(RED.wrap(BOLD.wrap("Level " + GENERIC_LEVEL)) + GRAY.wrap(" • ") + WHITE.wrap("Locked"))
+            .setLore(Lists.newList(
+                "",
+                RED.wrap(BOLD.wrap("Reward:")),
+                REWARDS
+            ));
 
         NightItem claimedItem = new NightItem(Material.LIME_STAINED_GLASS_PANE)
-            .setDisplayName(GRAY.enclose("Level " + GENERIC_LEVEL) + " " + GREEN.enclose("[Completed]"))
-            .setLore(Lists.newList(REWARDS));
+            .setDisplayName(GREEN.wrap(BOLD.wrap("Level " + GENERIC_LEVEL)) + GRAY.wrap(" • ") + WHITE.wrap("Unlocked"))
+            .setLore(Lists.newList(
+                "",
+                GREEN.wrap(BOLD.wrap("Reward:")),
+                REWARDS
+            ));
 
         NightItem emptyItem = new NightItem(Material.BLACK_STAINED_GLASS_PANE)
-            .setDisplayName(GRAY.enclose("Level " + GENERIC_LEVEL) + " " + LIGHT_YELLOW.enclose("[No Rewards]"))
-            .setLore(Lists.newList(REWARDS));
+            .setDisplayName(LIGHT_GRAY.wrap(BOLD.wrap("Level " + GENERIC_LEVEL)) + GRAY.wrap(" • ") + WHITE.wrap("No Rewards"));
 
-        this.lockedReward = ConfigValue.create("Reward.Locked", lockedItem).read(cfg);
-        this.claimedReward = ConfigValue.create("Reward.Claimed", claimedItem).read(cfg);
-        this.emptyReward = ConfigValue.create("Reward.Empty", emptyItem).read(cfg);
+        NightItem upcomingItem = new NightItem(Material.YELLOW_STAINED_GLASS_PANE)
+            .setDisplayName(YELLOW.wrap(BOLD.wrap("Level " + GENERIC_LEVEL)) + GRAY.wrap(" • ") + WHITE.wrap("In Progress"))
+            .setLore(Lists.newList(
+                "",
+                YELLOW.wrap(BOLD.wrap("Reward:")),
+                REWARDS
+            ));
+
+        this.lockedReward = ConfigValue.create("Reward.Locked", lockedItem).read(config);
+        this.claimedReward = ConfigValue.create("Reward.Claimed", claimedItem).read(config);
+        this.emptyReward = ConfigValue.create("Reward.Empty", emptyItem).read(config);
+        this.upcomingReward = ConfigValue.create("Reward.Upcoming", upcomingItem).read(config);
 
         this.rewardFormat = ConfigValue.create("Reward.Format", Lists.newList(
-            LIGHT_YELLOW.enclose(REWARD_NAME + ":"),
-            REWARD_REQUIREMENT,
-            LIGHT_GRAY.enclose(REWARD_DESCRIPTION),
-            EMPTY_IF_BELOW
-        )).read(cfg);
+            LIGHT_GRAY.wrap("• " + REWARD_NAME)
+            //REWARD_REQUIREMENT,
+            //LIGHT_GRAY.wrap(REWARD_DESCRIPTION),
+            //EMPTY_IF_BELOW
+        )).read(config);
 
         this.rewardSlots = ConfigValue.create("Reward.Slots", new int[]{
-            0,1,10,19,28,37,38,39,30,21,12,3,4,5,14,23,32,41,42,43,34,25,16,7,8
-        }).read(cfg);
+            0,9,18,27,28,29,20,11,2,3,4,13,22,31,32,33,24,15,6,7,8,17,26,35,44,53
+        }).read(config);
+
+        loader.addDefaultItem(MenuItem.buildNextPage(this, 50).setPriority(10));
+        loader.addDefaultItem(MenuItem.buildPreviousPage(this, 48).setPriority(10));
+        loader.addDefaultItem(MenuItem.buildReturn(this, 49, (viewer, event) -> {
+            this.runNextTick(() -> plugin.getJobManager().openJobMenu(viewer.getPlayer(), this.getLink(viewer)));
+        }).setPriority(10));
     }
 }

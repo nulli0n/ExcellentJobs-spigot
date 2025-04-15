@@ -38,7 +38,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
-import static su.nightexpress.excellentjobs.Placeholders.PLAYER_NAME;
+import static su.nightexpress.excellentjobs.Placeholders.*;
 
 public class Job extends AbstractFileData<JobsPlugin> {
 
@@ -69,7 +69,6 @@ public class Job extends AbstractFileData<JobsPlugin> {
     private final Set<JobState>              allowedStates;
     private final Set<String>                disabledWorlds;
     private final Map<JobState, Integer>     employeesAmount;
-    private final TreeMap<Integer, Integer>  xpTable;
     private final Map<Integer, List<String>> levelUpCommands;
     private final JobRewards rewards;
     //private final Map<String, Modifier>      paymentMultiplier;
@@ -81,7 +80,6 @@ public class Job extends AbstractFileData<JobsPlugin> {
         this.allowedStates = new HashSet<>();
         this.disabledWorlds = new HashSet<>();
         this.employeesAmount = new ConcurrentHashMap<>();
-        this.xpTable = new TreeMap<>();
         this.levelUpCommands = new HashMap<>();
         this.rewards = new JobRewards();
         //this.paymentMultiplier = new HashMap<>();
@@ -94,17 +92,17 @@ public class Job extends AbstractFileData<JobsPlugin> {
         if (!ConfigValue.create("Enabled", true).read(config)) return false;
 
         this.setName(ConfigValue.create("Name", StringUtil.capitalizeUnderscored(this.getId()),
-            "Job display name.",
+            "Sets display name for the job.",
             Placeholders.URL_WIKI_TEXT
         ).read(config));
 
         this.setDescription(ConfigValue.create("Description", new ArrayList<>(),
-            "Job description.",
+            "Set description for the job.",
             Placeholders.URL_WIKI_TEXT
         ).read(config));
 
         this.setIcon(ConfigValue.create("Icon", new NightItem(Material.GOLDEN_HOE),
-            "Job icon.",
+            "Set icon for the job.",
             Placeholders.URL_WIKI_ITEMS
         ).read(config));
 
@@ -120,11 +118,11 @@ public class Job extends AbstractFileData<JobsPlugin> {
 
         this.setInitialState(ConfigValue.create("Initial_State",
             JobState.class, JobState.INACTIVE,
-            "Sets initial (start) job state for new players and new jobs.",
-            "This means that, when a new player joins the server, OR when there is a new job created for existent users,",
-            "it will be assigned to a player with specified state.",
+            "Sets initial (start) job state for players that don't have a data for this job.",
+            "This includes players joined the server for the first time, and all existent players if the job wasn't present on the server before.",
             "This might be useful if you want to grant players all jobs on first join or to predefine some of them.",
-            "Also, keep in mind that this setting bypasses the max jobs values defined in the config.yml!",
+            URL_WIKI_JOB_STATES,
+            "[*] This setting bypasses the job limits defined in the config.",
             "[Allowed values: " + StringUtil.inlineEnum(JobState.class, ", ") + "]",
             "[Default is " + JobState.INACTIVE.name() + "]"
         ).read(config));
@@ -137,42 +135,41 @@ public class Job extends AbstractFileData<JobsPlugin> {
                 JobState.SECONDARY,
                 JobState.INACTIVE
             ),
-            "A list of Job States that are allowed for this job.",
+            "List of allowed Job States allowed for this job.",
             "Removing " + JobState.INACTIVE.name() + " state will prevent players from leaving this job.",
+            URL_WIKI_JOB_STATES,
             "[Allowed values: " + StringUtil.inlineEnum(JobState.class, ", ") + "]"
         ).read(config));
 
         this.setDisabledWorlds(ConfigValue.create("Disabled_Worlds",
-            Set.of("some_world"),
-            "A list of worlds where this job will have no effect (no XP, no payments)."
+            Lists.newSet("some_world", "another_world123"),
+            "The job will have no effect in listed worlds (no XP and Income).",
+            URL_WIKI_DISABLED_WORLDS
         ).read(config));
 
         this.setMaxLevel(ConfigValue.create("Leveling.Max_Level",
             100,
-            "Max. possible job level."
+            "Defines max. possible job level if picked as Primary job.",
+            URL_WIKI_LEVELING
         ).read(config));
 
         this.setMaxSecondaryLevel(ConfigValue.create("Leveling.Max_Secondary_Level",
             30,
-            "Max. possible job level when job is set as 'Secondary' for a player."
+            "Defines max. possible job level if picked as Secondary job.",
+            URL_WIKI_LEVELING
         ).read(config));
 
         this.setInitialXP(ConfigValue.create("Leveling.XP_Initial",
-            1000,
-            "Sets start amount of XP required for the next level."
+            904,
+            "Defines initial value for the geometric XP progression.",
+            URL_WIKI_LEVELING
         ).read(config));
 
         this.setXPFactor(ConfigValue.create("Leveling.XP_Factor",
-            1.093,
-            "Sets XP multiplier to calculate XP amount required for next level.",
-            "The formula is: <xp_required> = <previous_xp_required> * <xp_factor>"
+            1.09095309,
+            "Defines step value for the geometric XP progression.",
+            URL_WIKI_LEVELING
         ).read(config));
-
-        for (int level = 1; level < (this.getMaxLevel() + 1); level++) {
-            int xpPrevious = this.xpTable.getOrDefault(level - 1, this.getInitialXP());
-            int xpToLevel = level == 1 ? this.getInitialXP() : (int) (xpPrevious * this.getXPFactor());
-            this.xpTable.put(level, xpToLevel);
-        }
 
         this.rewards.load(config, "Leveling.Rewards");
 
@@ -180,53 +177,44 @@ public class Job extends AbstractFileData<JobsPlugin> {
             (key) -> NumberUtil.getInteger(key, 0),
             (cfg, path, key) -> cfg.getStringList(path + "." + key),
             (cfg, path, map) -> map.forEach((lvl, cmds) -> cfg.set(path + "." + lvl, cmds)),
-            Map.of(
-                0, Lists.newList("eco give " + PLAYER_NAME + " 250", "feed " + PLAYER_NAME)
-            ),
-            "A list of commands to execute when player reaches certain level(s).",
-            "Key = Level reached.",
-            "Use '0' as a level key to run command(s) on every level up."
+            Map.of(),
+            "[ OUTDATED , PLEASE USE LEVEL REWARDS INSTEAD ]"
         ).read(config));
 
-//        this.paymentMultiplier.putAll(ConfigValue.forMap("Payment_Modifier.Currency",
-//            CurrencyId::reroute,
-//            (cfg, path, key) -> Modifier.read(cfg, path + "." + key),
-//            (cfg, path, map) -> map.forEach((id, mod) -> mod.write(cfg, path + "." + id)),
-//            () -> Map.of(
-//                CurrencyId.VAULT, Modifier.add(1.00, 0.01, 1)
-//            ),
-//            "Sets payment multipliers for each currency adjustable by player's job level.",
-//            "You can use '" + Placeholders.DEFAULT + "' keyword for all currencies not included here."
-//        ).read(config));
-
-        this.paymentDailyLimits.putAll(ConfigValue.forMap("Daily_Limits.Currency",
-            CurrencyId::reroute,
-            (cfg, path, key) -> Modifier.read(cfg, path + "." + key),
-            (cfg, path, map) -> map.forEach((id, mod) -> mod.write(cfg, path + "." + id)),
-            () -> Map.of(
-                CurrencyId.VAULT, Modifier.add(-1, 0, 0)
-            ),
-            "Sets payment daily limits for each currency adjustable by player's job level.",
-            "You can use '" + Placeholders.DEFAULT + "' keyword for all currencies not included here."
+        this.paymentDailyLimits.putAll(ConfigValue.forMapById("Daily_Limits.Currency",
+            Modifier::read,
+            map -> {
+                map.put(CurrencyId.VAULT, Modifier.add(-1, 0, 0));
+            },
+            "Defines daily Income limits on per currency basis.",
+            "You can use the '" + DEFAULT + "' keyword for all currencies that are not listed here.",
+            URL_WIKI_DAILY_LIMITS,
+            URL_WIKI_MODIFIERS
         ).read(config));
 
         // TODO Config option to excempt currencies from payment modifiers
         this.paymentMultiplier = ConfigValue.create("Payment_Modifier.Income",
             Modifier::read,
             JobUtils.getDefaultPaymentModifier(),
-            "Sets job's objective income multiplier adjustable by player's job level."
+            "Defines Income bonus for job levels.",
+            URL_WIKI_XP_INCOME_BONUS,
+            URL_WIKI_MODIFIERS
         ).read(config);
 
         this.xpMultiplier = ConfigValue.create("Payment_Modifier.XP",
             Modifier::read,
             JobUtils.getDefaultXPModifier(),
-            "Sets job's objective XP multiplier adjustable by player's job level."
+            "Defines XP bonus for job levels.",
+            URL_WIKI_XP_INCOME_BONUS,
+            URL_WIKI_MODIFIERS
         ).read(config);
 
         this.xpDailyLimits = ConfigValue.create("Daily_Limits.XP",
             Modifier::read,
             Modifier.add(-1, 0, 0),
-            "Sets job's objective XP daily limit adjustable by player's job level."
+            "Defines daily XP limit.",
+            URL_WIKI_DAILY_LIMITS,
+            URL_WIKI_MODIFIERS
         ).read(config);
 
         if (Config.SPECIAL_ORDERS_ENABLED.get()) {
@@ -273,7 +261,7 @@ public class Job extends AbstractFileData<JobsPlugin> {
                     CurrencyId.VAULT, 5000D
                 ),
                 "Sets amount of currency player have to pay to take a Special Order.",
-                "Available currencies: " + Placeholders.URL_WIKI_CURRENCY
+                "Available currencies: " + Placeholders.URL_WIKI_ECONOMY
             ).read(config));
         }
 
@@ -286,8 +274,8 @@ public class Job extends AbstractFileData<JobsPlugin> {
         FileConfig config = FileConfig.loadOrExtract(this.plugin, Config.DIR_JOBS + this.getId(), OBJECTIVES_CONFIG_NAME);
         config.options().setHeader(Lists.newList(
             "=".repeat(50),
-            "For a list of available Types and acceptable Objects, please refer to " + Placeholders.URL_WIKI_ACTION_TYPES,
-            "For a list of available currencies, please refer to " + Placeholders.URL_WIKI_CURRENCY,
+            "For a list of available Types and acceptable Objects, please refer to " + Placeholders.URL_WIKI_WORK_TYPES,
+            "For a list of available currencies, please refer to " + Placeholders.URL_WIKI_ECONOMY,
             "For a list of available Icon options, please refer to " + Placeholders.URL_WIKI_ITEMS,
             "=".repeat(50)
         ));
@@ -311,7 +299,7 @@ public class Job extends AbstractFileData<JobsPlugin> {
             return false;
         }
 
-        objective.getObjects().forEach(objectId -> {
+        objective.getItems().forEach(objectId -> {
             if (objectId.equalsIgnoreCase(Placeholders.WILDCARD)) return;
             if (workType.parse(objectId) == null) {
                 plugin.warn("Unknown object '" + objectId + "'. Found in " + fileName + ".");
@@ -323,18 +311,19 @@ public class Job extends AbstractFileData<JobsPlugin> {
 
     @Override
     protected void onSave(@NotNull FileConfig config) {
-        config.set("Name", this.getName());
-        config.set("Description", this.getDescription());
+        config.set("Name", this.name);
+        config.set("Description", this.description);
         config.set("Icon", this.getIcon());
-        config.set("Permission_Required", this.isPermissionRequired());
-        config.set("ProgressBar.Color", this.getProgressBarColor().name());
-        config.set("Initial_State", this.getInitialState().name());
-        config.set("Disabled_Worlds", this.getDisabledWorlds());
-        config.set("Leveling.Max_Level", this.getMaxLevel());
-        config.set("Leveling.Max_Secondary_Level", this.getMaxSecondaryLevel());
-        config.set("Leveling.XP_Initial", this.getInitialXP());
-        config.set("Leveling.XP_Factor", this.getXPFactor());
-        this.rewards.write(config, "Leveling.Rewards");
+        config.set("Permission_Required", this.permissionRequired);
+        config.set("ProgressBar.Color", this.progressBarColor.name());
+        config.set("Initial_State", this.initialState.name());
+        config.set("Disabled_Worlds", this.disabledWorlds);
+        config.set("Leveling.Max_Level", this.maxLevel);
+        config.set("Leveling.Max_Secondary_Level", this.maxSecondaryLevel);
+        config.set("Leveling.XP_Initial", this.initialXP);
+        config.set("Leveling.XP_Factor", this.xpFactor);
+        config.set("Leveling.Rewards", this.rewards);
+
         config.remove("Leveling.LevelUp_Commands");
         this.getLevelUpCommands().forEach((level, list) -> {
             config.set("Leveling.LevelUp_Commands." + level, list);
@@ -350,9 +339,9 @@ public class Job extends AbstractFileData<JobsPlugin> {
             mod.write(config, "Daily_Limits.Currency." + id);
         });
 
-        this.paymentMultiplier.write(config, "Payment_Modifier.Money");
-        this.getXPMultiplier().write(config, "Payment_Modifier.XP");
-        this.getDailyXPLimits().write(config, "Daily_Limits.XP");
+        config.set("Payment_Modifier.Money", this.paymentMultiplier);
+        config.set("Payment_Modifier.XP", this.xpMultiplier);
+        config.set("Daily_Limits.XP", this.xpDailyLimits);
 
         if (Config.SPECIAL_ORDERS_ENABLED.get() && this.getSpecialOrdersObjectivesAmount() != null) {
             config.remove("SpecialOrder.Rewards_List");
@@ -409,8 +398,7 @@ public class Job extends AbstractFileData<JobsPlugin> {
     }
 
     public int getXPToLevel(int level) {
-        Map.Entry<Integer, Integer> entry = this.getXPTable().floorEntry(level);
-        return entry != null ? entry.getValue() : this.getInitialXP();
+        return (int) (this.initialXP * (Math.pow(this.xpFactor, level)));
     }
 
     @NotNull
@@ -468,7 +456,7 @@ public class Job extends AbstractFileData<JobsPlugin> {
 
             // Create counters for objects.
             Map<String, JobOrderCount> countMap = new HashMap<>();
-            List<String> objects = new ArrayList<>(jobObjective.getObjects());
+            List<String> objects = new ArrayList<>(jobObjective.getItems());
             while (objectAmount > 0 && !objects.isEmpty()) {
                 // Get random object from objective.
                 String object = objects.remove(Rnd.get(objects.size()));
@@ -558,6 +546,11 @@ public class Job extends AbstractFileData<JobsPlugin> {
         return this.getDailyXPLimits().getValue(level);
     }
 
+
+    @NotNull
+    public List<? extends Work<?, ?>> getObjectiveWorkTypes() {
+        return this.getObjectives().stream().map(JobObjective::getWork).filter(Objects::nonNull).distinct().sorted(Comparator.comparing(Work::getId)).toList();
+    }
 
     @NotNull
     public Set<JobObjective> getObjectives() {
@@ -731,11 +724,6 @@ public class Job extends AbstractFileData<JobsPlugin> {
 
     public void setXPFactor(double xpFactor) {
         this.xpFactor = Math.max(1, xpFactor);
-    }
-
-    @NotNull
-    public TreeMap<Integer, Integer> getXPTable() {
-        return xpTable;
     }
 
     @NotNull

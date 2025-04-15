@@ -160,6 +160,9 @@ public class BaseCommands {
 
             JobData jobData = user.getData(job);
             jobData.reset();
+            if (!playerName.equalsIgnoreCase(user.getName())) {
+                jobData.resetAdditional();
+            }
             plugin.getUserManager().save(user);
 
             if (!context.getSender().getName().equalsIgnoreCase(user.getName())) {

@@ -3,8 +3,10 @@ package su.nightexpress.excellentjobs.job.menu;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.InventoryView;
+import org.bukkit.inventory.MenuType;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import su.nightexpress.economybridge.EconomyBridge;
 import su.nightexpress.economybridge.api.Currency;
 import su.nightexpress.excellentjobs.JobsAPI;
@@ -13,166 +15,83 @@ import su.nightexpress.excellentjobs.Placeholders;
 import su.nightexpress.excellentjobs.api.booster.MultiplierType;
 import su.nightexpress.excellentjobs.job.work.Work;
 import su.nightexpress.excellentjobs.config.Config;
-import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.data.impl.JobData;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.job.impl.JobObjective;
 import su.nightexpress.excellentjobs.job.impl.JobState;
-import su.nightexpress.excellentjobs.job.work.WorkRegistry;
 import su.nightexpress.excellentjobs.user.JobUser;
 import su.nightexpress.excellentjobs.util.JobUtils;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
-import su.nightexpress.nightcore.menu.MenuOptions;
-import su.nightexpress.nightcore.menu.MenuSize;
-import su.nightexpress.nightcore.menu.MenuViewer;
-import su.nightexpress.nightcore.menu.api.AutoFill;
-import su.nightexpress.nightcore.menu.api.AutoFilled;
-import su.nightexpress.nightcore.menu.impl.ConfigMenu;
-import su.nightexpress.nightcore.menu.item.ItemHandler;
-import su.nightexpress.nightcore.menu.item.MenuItem;
-import su.nightexpress.nightcore.menu.link.Linked;
-import su.nightexpress.nightcore.menu.link.ViewLink;
-import su.nightexpress.nightcore.util.ItemReplacer;
-import su.nightexpress.nightcore.util.ItemUtil;
+import su.nightexpress.nightcore.ui.menu.MenuViewer;
+import su.nightexpress.nightcore.ui.menu.data.MenuFiller;
+import su.nightexpress.nightcore.ui.menu.data.MenuLoader;
+import su.nightexpress.nightcore.ui.menu.item.MenuItem;
+import su.nightexpress.nightcore.ui.menu.data.ConfigBased;
+import su.nightexpress.nightcore.ui.menu.data.Filled;
+import su.nightexpress.nightcore.ui.menu.type.LinkedMenu;
 import su.nightexpress.nightcore.util.Lists;
 import su.nightexpress.nightcore.util.NumberUtil;
+import su.nightexpress.nightcore.util.bukkit.NightItem;
+import su.nightexpress.nightcore.util.placeholder.Replacer;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.IntStream;
 
 import static su.nightexpress.excellentjobs.Placeholders.*;
 import static su.nightexpress.nightcore.util.text.tag.Tags.*;
 
-public class ObjectivesMenu extends ConfigMenu<JobsPlugin> implements AutoFilled<JobObjective>, Linked<Job> {
+@SuppressWarnings("UnstableApiUsage")
+public class ObjectivesMenu extends LinkedMenu<JobsPlugin, ObjectivesMenu.Data> implements Filled<JobObjective>, ConfigBased {
 
     private static final String FILE_NAME = "job_obectives.yml";
 
-    private static final String PLACEHOLDER_OBJECTS         = "%objects%";
-    private static final String PLACEHOLDER_REWARD_CURRENCY = "%reward_currency%";
-    private static final String PLACEHOLDER_REWARD_XP       = "%reward_xp%";
+    private static final String ITEMS  = "%objects%";
+    private static final String INCOME = "%reward_currency%";
+    private static final String XP     = "%reward_xp%";
 
-    private final ViewLink<Job> link;
-    private final ItemHandler returnHandler;
+    private String       objectiveName;
+    private List<String> objectiveLockedLore;
+    private List<String> objectiveUnlockedLore;
+    private List<String> itemsInfo;
+    private String       itemEntry;
+    private List<String> incomeRewardInfo;
+    private List<String> incomeLimitInfo;
+    private List<String> xpRewardInfo;
+    private List<String> xpLimitInfo;
+    private int[]        objectiveSlots;
 
-    private String       objName;
-    private List<String> lockedLore;
-    private List<String> unlockedLore;
-    private List<String> objectsLore;
-    private List<String> rewardCurrencyAvailLore;
-    private List<String> rewardCurrencyLimitLore;
-    private List<String> rewardXPAvailLore;
-    private List<String> rewardXPLimitLore;
-    private int[]        objSlots;
+    private String workTypeName;
+    private List<String> workTypeLore;
+    private int[] workTypeSlots;
+
+    public record Data(@NotNull Job job, @NotNull Work<?, ?> work){}
 
     public ObjectivesMenu(@NotNull JobsPlugin plugin) {
-        super(plugin, FileConfig.loadOrExtract(plugin, Config.DIR_MENU, FILE_NAME));
-        this.link = new ViewLink<>();
+        super(plugin, MenuType.GENERIC_9X6, BLACK.wrap(JOB_NAME + " Objectives"));
 
-        this.addHandler(this.returnHandler = ItemHandler.forReturn(this, (viewer, event) -> {
-            Player player = viewer.getPlayer();
-            Job job = this.getLink().get(player);
-            JobUser user = plugin.getUserManager().getOrFetch(player);
-            if (user.getData(job).getState() == JobState.INACTIVE) {
-                this.runNextTick(() -> plugin.getJobManager().openPreviewMenu(viewer.getPlayer(), job));
-                return;
-            }
+        this.load(FileConfig.loadOrExtract(plugin, Config.DIR_MENU, FILE_NAME));
+    }
 
-            this.runNextTick(() -> plugin.getJobManager().openJobMenu(viewer.getPlayer(), this.getLink().get(viewer)));
-        }));
+    public void open(@NotNull Player player, @NotNull Job job, @Nullable Work<?, ?> work) {
+        if (work == null) {
+            work = job.getObjectiveWorkTypes().getFirst();
+        }
 
-        this.load();
+        this.open(player, new Data(job, work));
     }
 
     @Override
     @NotNull
-    protected MenuOptions createDefaultOptions() {
-        return new MenuOptions(BLACK.enclose(JOB_NAME + " Job Objectives"), MenuSize.CHEST_45);
+    protected String getTitle(@NotNull MenuViewer viewer) {
+        return this.getLink(viewer).job.replacePlaceholders().apply(this.title);
     }
 
     @Override
-    @NotNull
-    protected List<MenuItem> createDefaultItems() {
-        List<MenuItem> list = new ArrayList<>();
-
-        ItemStack prevPage = ItemUtil.getSkinHead(SKIN_ARROW_LEFT);
-        ItemUtil.editMeta(prevPage, meta -> {
-            meta.setDisplayName(Lang.EDITOR_ITEM_PREVIOUS_PAGE.getLocalizedName());
-        });
-        list.add(new MenuItem(prevPage).setSlots(36).setPriority(10).setHandler(ItemHandler.forPreviousPage(this)));
-
-        ItemStack nextPage = ItemUtil.getSkinHead(SKIN_ARROW_RIGHT);
-        ItemUtil.editMeta(nextPage, meta -> {
-            meta.setDisplayName(Lang.EDITOR_ITEM_NEXT_PAGE.getLocalizedName());
-        });
-        list.add(new MenuItem(nextPage).setSlots(44).setPriority(10).setHandler(ItemHandler.forNextPage(this)));
-
-        ItemStack back = ItemUtil.getSkinHead(SKIN_ARROW_DOWN);
-        ItemUtil.editMeta(back, meta -> {
-            meta.setDisplayName(Lang.EDITOR_ITEM_RETURN.getLocalizedName());
-        });
-        list.add(new MenuItem(back).setSlots(40).setPriority(10).setHandler(this.returnHandler));
-
-        return list;
-    }
-
-    @Override
-    protected void loadAdditional() {
-        this.objName = ConfigValue.create("Objective.Name",
-            LIGHT_YELLOW.enclose(BOLD.enclose(OBJECTIVE_NAME))
-        ).read(cfg);
-
-        this.lockedLore = ConfigValue.create("Objective.Locked", Lists.newList(
-            LIGHT_GRAY.enclose(LIGHT_RED.enclose("[❗]") + " This objective is locked until " + LIGHT_RED.enclose(OBJECTIVE_UNLOCK_LEVEL) + " job level.")
-        )).read(cfg);
-
-        this.unlockedLore = ConfigValue.create("Objective.Unlocked", Lists.newList(
-            DARK_GRAY.enclose(OBJECTIVE_ACTION_TYPE),
-            " ",
-            PLACEHOLDER_OBJECTS,
-            " ",
-            PLACEHOLDER_REWARD_XP,
-            PLACEHOLDER_REWARD_CURRENCY
-        )).read(cfg);
-
-        this.objectsLore = ConfigValue.create("Objective.Objects", Lists.newList(
-            LIGHT_YELLOW.enclose(BOLD.enclose("Objects:")),
-            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose(GENERIC_NAME))
-        )).read(cfg);
-
-        this.rewardCurrencyAvailLore = ConfigValue.create("Objective.Reward.Currency.Available", Lists.newList(
-            LIGHT_GRAY.enclose(LIGHT_GREEN.enclose("✔ ") + CURRENCY_NAME + ": " + LIGHT_GREEN.enclose(OBJECTIVE_CURRENCY_MIN) + " ⬌ " + LIGHT_GREEN.enclose(OBJECTIVE_CURRENCY_MAX) + " (" + WHITE.enclose(OBJECTIVE_CURRENCY_CHANCE + "%") + ")")
-        )).read(cfg);
-
-        this.rewardCurrencyLimitLore = ConfigValue.create("Objective.Reward.Currency.Limit", Lists.newList(
-            LIGHT_GRAY.enclose(LIGHT_RED.enclose("✘ ") + CURRENCY_NAME + ": " + LIGHT_RED.enclose(OBJECTIVE_CURRENCY_MIN) + " ⬌ " + LIGHT_RED.enclose(OBJECTIVE_CURRENCY_MAX) + " (" + WHITE.enclose("Daily Limit Reached") + ")")
-        )).read(cfg);
-
-        this.rewardXPAvailLore = ConfigValue.create("Objective.Reward.XP.Available", Lists.newList(
-            LIGHT_GRAY.enclose(LIGHT_GREEN.enclose("✔ ") + "Job XP: " + LIGHT_GREEN.enclose(OBJECTIVE_XP_MIN) + " ⬌ " + LIGHT_GREEN.enclose(OBJECTIVE_XP_MAX) + " (" + WHITE.enclose(OBJECTIVE_XP_CHANCE + "%") + ")")
-        )).read(cfg);
-
-        this.rewardXPLimitLore = ConfigValue.create("Objective.Reward.XP.Limit", Lists.newList(
-            LIGHT_GRAY.enclose(LIGHT_RED.enclose("✘ ") + "Job XP: " + LIGHT_RED.enclose(OBJECTIVE_XP_MIN) + " ⬌ " + LIGHT_RED.enclose(OBJECTIVE_XP_MAX) + " (" + WHITE.enclose("Daily Limit Reached") + ")")
-        )).read(cfg);
-
-        this.objSlots = ConfigValue.create("Objective.Slots", IntStream.range(0, 36).toArray()).read(cfg);
-    }
-
-    @NotNull
-    @Override
-    public ViewLink<Job> getLink() {
-        return link;
-    }
-
-    @Override
-    public void onPrepare(@NotNull MenuViewer viewer, @NotNull MenuOptions options) {
-        Job job = this.getLink().get(viewer);
-        options.setTitle(job.replacePlaceholders().apply(options.getTitle()));
-
+    public void onPrepare(@NotNull MenuViewer viewer, @NotNull InventoryView view) {
         this.autoFill(viewer);
+
+
     }
 
     @Override
@@ -181,79 +100,168 @@ public class ObjectivesMenu extends ConfigMenu<JobsPlugin> implements AutoFilled
     }
 
     @Override
-    public void onAutoFill(@NotNull MenuViewer viewer, @NotNull AutoFill<JobObjective> autoFill) {
+    @NotNull
+    public  MenuFiller<JobObjective> createFiller(@NotNull MenuViewer viewer) {
         Player player = viewer.getPlayer();
-        Job job = this.getLink().get(player);
+        Job job = this.getLink(player).job;
+        Work<?, ?> workType = this.getLink(player).work;
         JobUser user = plugin.getUserManager().getOrFetch(player);
         JobData jobData = user.getData(job);
+        List<? extends Work<?, ?>> workTypes = job.getObjectiveWorkTypes();
+
+        for (int index = 0; index < workTypes.size(); index++) {
+            if (index >= this.workTypeSlots.length) break;
+
+            Work<?, ?> work = workTypes.get(index);
+            this.addItem(viewer, work.getIcon()
+                .setDisplayName(this.workTypeName)
+                .setLore(this.workTypeLore)
+                .replacement(replacer -> replacer
+                    .replace(GENERIC_NAME, work::getDisplayName)
+                    .replace(GENERIC_DESCRIPTION, work.getDescription())
+                )
+                .toMenuItem()
+                .setPriority(10)
+                .setSlots(this.workTypeSlots[index])
+                .setHandler((viewer1, event) -> {
+                    this.runNextTick(() -> this.open(player, job, work));
+                })
+            );
+        }
 
         int jobLevel = jobData.getLevel();
-        double xpGain = 1D + JobsAPI.getBoost(player, job, MultiplierType.XP) + job.getXPMultiplier(jobLevel);
-        double incomeGain = 1D + job.getPaymentMultiplier(jobLevel);
+        double xpMultiplier = 1D + JobsAPI.getBoost(player, job, MultiplierType.XP) + job.getXPMultiplier(jobLevel);
+        double incomeMultiplier = 1D + job.getPaymentMultiplier(jobLevel);
         double incomeBoost = JobsAPI.getBoost(player, job, MultiplierType.INCOME);
 
-        autoFill.setSlots(this.objSlots);
-        autoFill.setItems(job.getObjectives().stream().sorted(Comparator.comparing(JobObjective::getDisplayName)).toList());
-        autoFill.setItemCreator(jobObjective -> {
-            String typeId = jobObjective.getWorkId();
-            Work<?, ?> workType = WorkRegistry.getByName(typeId);
-            boolean isUnlocked = jobObjective.isUnlocked(player, jobData);
+        return MenuFiller.builder(this)
+            .setSlots(this.objectiveSlots)
+            .setItems(job.getObjectives().stream().filter(objective -> objective.isWork(workType)).sorted(Comparator.comparing(JobObjective::getDisplayName)).toList())
+            .setItemCreator(objective -> {
+                Work<?, ?> workType2 = objective.getWork();
+                boolean isUnlocked = objective.isUnlocked(player, jobData);
 
-            if (workType == null) return new ItemStack(Material.AIR);
+                if (workType2 == null) return NightItem.fromType(Material.AIR);
 
-            String name = this.objName.replace(Placeholders.OBJECTIVE_NAME, jobObjective.getDisplayName());
-            List<String> lore = new ArrayList<>(isUnlocked ? this.unlockedLore : this.lockedLore);
-            lore.replaceAll(line -> line
-                .replace(Placeholders.OBJECTIVE_UNLOCK_LEVEL, NumberUtil.format(jobObjective.getUnlockLevel()))
-                .replace(OBJECTIVE_ACTION_TYPE, workType.getDisplayName())
-            );
+                String name = this.objectiveName.replace(Placeholders.OBJECTIVE_NAME, objective.getDisplayName());
 
-            List<String> objects = new ArrayList<>();
-            for (String line : this.objectsLore) {
-                if (line.contains(GENERIC_NAME)) {
-                    jobObjective.getObjects().stream().map(workType::getObjectLocalizedName).sorted(String::compareTo).forEach(object -> {
-                        objects.add(line.replace(GENERIC_NAME, object));
-                    });
+                List<String> itemsInfo;
+                if (objective.getItems().size() > 1) {
+                    itemsInfo = Replacer.create().replace(GENERIC_ENTRY, list -> {
+                        objective.getItems().stream().map(workType2::getObjectLocalizedName).sorted(String::compareTo).forEach(object -> {
+                            list.add(this.itemEntry.replace(GENERIC_NAME, object));
+                        });
+                    }).apply(this.itemsInfo);
                 }
-                else objects.add(line);
+                else itemsInfo = Collections.emptyList();
+
+                List<String> xpInfo = Replacer.create()
+                    .replace(OBJECTIVE_XP_MIN, NumberUtil.format(objective.getXPReward().getMin() * xpMultiplier))
+                    .replace(OBJECTIVE_XP_MAX, NumberUtil.format(objective.getXPReward().getMax() * xpMultiplier))
+                    .replace(OBJECTIVE_XP_CHANCE, NumberUtil.format(objective.getXPReward().getChance()))
+                    .apply(jobData.isXPLimitReached() ? this.xpLimitInfo : this.xpRewardInfo);
+
+                List<String> incomeInfo = new ArrayList<>();
+                objective.getPaymentMap().forEach((currencyId, rewardInfo) -> {
+                    Currency currency = EconomyBridge.getCurrency(currencyId);
+                    if (currency == null) return;
+
+                    double moneyMultiplier = incomeMultiplier;
+                    if (JobUtils.canBeBoosted(currency)) {
+                        moneyMultiplier += incomeBoost;
+                    }
+
+                    for (String line : (jobData.isPaymentLimitReached(currency) ? this.incomeLimitInfo : this.incomeRewardInfo)) {
+                        incomeInfo.add(currency.replacePlaceholders().apply(line)
+                            .replace(OBJECTIVE_CURRENCY_MIN, currency.format(rewardInfo.getMin() * moneyMultiplier))
+                            .replace(OBJECTIVE_CURRENCY_MAX, currency.format(rewardInfo.getMax() * moneyMultiplier))
+                            .replace(OBJECTIVE_CURRENCY_CHANCE, NumberUtil.format(rewardInfo.getChance()))
+                        );
+                    }
+                });
+
+                List<String> lore = Replacer.create()
+                    .replace(OBJECTIVE_UNLOCK_LEVEL, NumberUtil.format(objective.getUnlockLevel()))
+                    .replace(OBJECTIVE_ACTION_TYPE, workType2.getDisplayName())
+                    .replace(ITEMS, itemsInfo)
+                    .replace(XP, xpInfo)
+                    .replace(INCOME, incomeInfo)
+                    .apply(isUnlocked ? this.objectiveUnlockedLore : this.objectiveLockedLore);
+
+                return objective.getIcon().setHideComponents(true).setDisplayName(name).setLore(lore);
+            }).build();
+    }
+
+    @Override
+    public void loadConfiguration(@NotNull FileConfig config, @NotNull MenuLoader loader) {
+        this.workTypeName = ConfigValue.create("WorkType.Name", GREEN.wrap(BOLD.wrap(GENERIC_NAME))).read(config);
+
+        this.workTypeLore = ConfigValue.create("WorkType.Description", Lists.newList(
+            GENERIC_DESCRIPTION,
+            EMPTY_IF_ABOVE,
+            GREEN.wrap("[▶]") + LIGHT_GRAY.wrap(" Click to " + GREEN.wrap("toggle") + ".")
+        )).read(config);
+
+        this.workTypeSlots = ConfigValue.create("WorkType.Slots", new int[]{3,5,4,2,6}).read(config);
+
+
+        this.objectiveName = ConfigValue.create("Objective.Name",
+            LIGHT_GRAY.wrap(BOLD.wrap(OBJECTIVE_NAME))
+        ).read(config);
+
+        this.objectiveLockedLore = ConfigValue.create("Objective.Locked", Lists.newList(
+            RED.wrap(BOLD.wrap("UNLOCKED AT LEVEL " + OBJECTIVE_UNLOCK_LEVEL))
+        )).read(config);
+
+        this.objectiveUnlockedLore = ConfigValue.create("Objective.Unlocked", Lists.newList(
+            DARK_GRAY.wrap(OBJECTIVE_ACTION_TYPE),
+            EMPTY_IF_BELOW,
+            ITEMS,
+            EMPTY_IF_BELOW,
+            XP,
+            INCOME
+        )).read(config);
+
+        this.itemsInfo = ConfigValue.create("Objective.Info.Items", Lists.newList(
+            LIGHT_YELLOW.wrap(BOLD.wrap("Including:")),
+            GENERIC_ENTRY
+        )).read(config);
+
+        this.itemEntry = ConfigValue.create("Objective.Info.ItemEntry",
+            LIGHT_YELLOW.wrap("→ " + LIGHT_GRAY.wrap(GENERIC_NAME))
+        ).read(config);
+
+        this.incomeRewardInfo = ConfigValue.create("Objective.Reward.Currency.Available", Lists.newList(
+            LIGHT_GRAY.wrap("• " + WHITE.wrap(CURRENCY_NAME + ": ") + YELLOW.wrap(OBJECTIVE_CURRENCY_MIN) + " ⬌ " + YELLOW.wrap(OBJECTIVE_CURRENCY_MAX) + " (" + WHITE.wrap(OBJECTIVE_CURRENCY_CHANCE + "%") + ")")
+        )).read(config);
+
+        this.xpRewardInfo = ConfigValue.create("Objective.Reward.XP.Available", Lists.newList(
+            LIGHT_GRAY.wrap("• " + WHITE.wrap("XP: ") + LIGHT_GREEN.wrap(OBJECTIVE_XP_MIN) + " ⬌ " + LIGHT_GREEN.wrap(OBJECTIVE_XP_MAX) + " (" + WHITE.wrap(OBJECTIVE_XP_CHANCE + "%") + ")")
+        )).read(config);
+
+        this.incomeLimitInfo = ConfigValue.create("Objective.Reward.Currency.Limit", Lists.newList(
+            LIGHT_GRAY.wrap(STRIKETHROUGH.wrap("• " + WHITE.wrap(CURRENCY_NAME + ": ") + LIGHT_RED.wrap(OBJECTIVE_CURRENCY_MIN) + " ⬌ " + LIGHT_RED.wrap(OBJECTIVE_CURRENCY_MAX)) + " (" + RED.wrap("Daily Limit") + ")")
+        )).read(config);
+
+        this.xpLimitInfo = ConfigValue.create("Objective.Reward.XP.Limit", Lists.newList(
+            LIGHT_GRAY.wrap(STRIKETHROUGH.wrap("• " + WHITE.wrap("XP: ") + LIGHT_RED.wrap(OBJECTIVE_XP_MIN) + " ⬌ " + LIGHT_RED.wrap(OBJECTIVE_XP_MAX)) + " (" + RED.wrap("Daily Limit") + ")")
+        )).read(config);
+
+        this.objectiveSlots = ConfigValue.create("Objective.Slots", IntStream.range(18, 45).toArray()).read(config);
+
+
+        loader.addDefaultItem(MenuItem.buildNextPage(this, 53).setPriority(10));
+        loader.addDefaultItem(MenuItem.buildPreviousPage(this, 45).setPriority(10));
+        loader.addDefaultItem(MenuItem.buildReturn(this, 49, (viewer, event) -> {
+            Player player = viewer.getPlayer();
+            Job job = this.getLink(player).job;
+            JobUser user = plugin.getUserManager().getOrFetch(player);
+            if (user.getData(job).getState() == JobState.INACTIVE) {
+                this.runNextTick(() -> plugin.getJobManager().openPreviewMenu(viewer.getPlayer(), job));
+                return;
             }
 
-            List<String> rewardXP = new ArrayList<>(jobData.isXPLimitReached() ? this.rewardXPLimitLore : this.rewardXPAvailLore);
-            rewardXP.replaceAll(line -> line
-                .replace(Placeholders.OBJECTIVE_XP_MIN, NumberUtil.format(jobObjective.getXPReward().getMin() * xpGain))
-                .replace(Placeholders.OBJECTIVE_XP_MAX, NumberUtil.format(jobObjective.getXPReward().getMax() * xpGain))
-                .replace(Placeholders.OBJECTIVE_XP_CHANCE, NumberUtil.format(jobObjective.getXPReward().getChance()))
-            );
-
-            List<String> rewardCurrency = new ArrayList<>();
-            jobObjective.getPaymentMap().forEach((currencyId, rewardInfo) -> {
-                Currency currency = EconomyBridge.getCurrency(currencyId);
-                if (currency == null) return;
-
-                double currencyGain = incomeGain;
-                if (JobUtils.canBeBoosted(currency)) {
-                    currencyGain += incomeBoost;
-                }
-
-                for (String line : (jobData.isPaymentLimitReached(currency) ? this.rewardCurrencyLimitLore : this.rewardCurrencyAvailLore)) {
-                    rewardCurrency.add(currency.replacePlaceholders().apply(line)
-                        .replace(Placeholders.OBJECTIVE_CURRENCY_MIN, NumberUtil.format(rewardInfo.getMin() * currencyGain))
-                        .replace(Placeholders.OBJECTIVE_CURRENCY_MAX, NumberUtil.format(rewardInfo.getMax() * currencyGain))
-                        .replace(Placeholders.OBJECTIVE_CURRENCY_CHANCE, NumberUtil.format(rewardInfo.getChance()))
-                    );
-                }
-            });
-
-            ItemStack item = jobObjective.getIcon();
-            ItemReplacer.create(item).trimmed().hideFlags()
-                .setDisplayName(name)
-                .setLore(lore)
-                .replace(PLACEHOLDER_OBJECTS, objects)
-                .replace(PLACEHOLDER_REWARD_XP, rewardXP)
-                .replace(PLACEHOLDER_REWARD_CURRENCY, rewardCurrency)
-                .writeMeta();
-
-            return item;
-        });
+            this.runNextTick(() -> plugin.getJobManager().openJobMenu(viewer.getPlayer(), job));
+        }).setPriority(10));
     }
 }

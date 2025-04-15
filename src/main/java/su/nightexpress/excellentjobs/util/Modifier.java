@@ -5,7 +5,6 @@ import su.nightexpress.excellentjobs.Placeholders;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.config.Writeable;
-import su.nightexpress.nightcore.util.StringUtil;
 
 import java.util.function.UnaryOperator;
 
@@ -40,22 +39,10 @@ public class Modifier implements Writeable {
 
     @NotNull
     public static Modifier read(@NotNull FileConfig config, @NotNull String path) {
-        double base = ConfigValue.create(path + ".Base", 0D,
-            "Start modifier value."
-        ).read(config);
-
-        double perLevel = ConfigValue.create(path + ".Per_Level", 0D,
-            "Additional value calculated by job level step (see below). Formula: <per_level> * <step>"
-        ).read(config);
-
-        double step = ConfigValue.create(path + ".Step" , 1D,
-            "Defines level step for 'Per_Level' value calculation. Formula: <job_level> / <step>"
-        ).read(config);
-
-        ModifierAction action = ConfigValue.create(path + ".Action", ModifierAction.class, ModifierAction.ADD,
-            "Sets action performed between 'Base' and final 'Per_Level' values.",
-            "Available types: " + StringUtil.inlineEnum(ModifierAction.class, ", ")
-        ).read(config);
+        double base = ConfigValue.create(path + ".Base", 0D).read(config);
+        double perLevel = ConfigValue.create(path + ".Per_Level", 0D).read(config);
+        double step = ConfigValue.create(path + ".Step" , 1D).read(config);
+        ModifierAction action = ConfigValue.create(path + ".Action", ModifierAction.class, ModifierAction.ADD).read(config);
 
         return new Modifier(base, perLevel, step, action);
     }
@@ -74,9 +61,12 @@ public class Modifier implements Writeable {
     }
 
     public double getValue(int level) {
-        double step = this.step == 0D ? 1D : Math.floor((double) level / this.step);
+        int whole = this.step <= 0 ? 1 : (int) ((double) level / this.step);
+        double wholeLevels = this.step  * whole;
 
-        return this.action.math(this.base, this.perLevel * step);
+        //double step = this.step == 0D ? 1D : Math.floor((double) level / this.step);
+
+        return this.action.math(this.base, this.perLevel * wholeLevels);
     }
 
     public double getBase() {

@@ -44,10 +44,10 @@ public class JobsMenu extends NormalMenu<JobsPlugin> implements Filled<Job>, Con
 
     private static final String FILE_NAME = "job_browse.yml";
 
-    private static final String PLACEHOLDER_ORDER = "%order%";
+    private static final String PLACEHOLDER_ORDER  = "%order%";
     private static final String PLACEHOLDER_STATUS = "%status%";
-    private static final String PLACEHOLDER_STATE = "%state%";
-    private static final String DAILY_LIMITS = "%daily_limits%";
+    private static final String PLACEHOLDER_STATE  = "%state%";
+    private static final String DAILY_LIMITS       = "%daily_limits%";
 
     private String       jobNameAvailable;
     private List<String> jobLoreAvailable;
@@ -70,7 +70,7 @@ public class JobsMenu extends NormalMenu<JobsPlugin> implements Filled<Job>, Con
     private Map<String, JobSlot> gridCustomSlots;
 
     public JobsMenu(@NotNull JobsPlugin plugin) {
-        super(plugin, MenuType.GENERIC_9X4, BLACK.wrap(BOLD.wrap("Jobs")));
+        super(plugin, MenuType.GENERIC_9X5, BLACK.wrap(BOLD.wrap("Jobs")));
 
         this.load(FileConfig.loadOrExtract(plugin, Config.DIR_MENU, FILE_NAME));
     }
@@ -266,9 +266,10 @@ public class JobsMenu extends NormalMenu<JobsPlugin> implements Filled<Job>, Con
 
     @Override
     public void loadConfiguration(@NotNull FileConfig config, @NotNull MenuLoader loader) {
-        int[] defSlots = new int[]{11,12,13,14,15,21,22,23};
+        //int[] defSlots = new int[]{11,12,13,14,15,21,22,23};
+        int[] defSlots = new int[]{10,12,14,16,29,31,33};
 
-        this.gridAuto = ConfigValue.create("Job.Grid.Auto", true).read(config);
+        this.gridAuto = ConfigValue.create("Job.Grid.Auto", false).read(config);
 
         this.gridAutoSlots = ConfigValue.create("Job.Grid.AutoSlots", defSlots).read(config);
 
@@ -327,11 +328,11 @@ public class JobsMenu extends NormalMenu<JobsPlugin> implements Filled<Job>, Con
         )).read(config);
 
         this.jobDailyCurrencyLimit = ConfigValue.create("Job.DailyLimits.Currency", Lists.newList(
-            LIGHT_YELLOW.wrap("▪ " + LIGHT_GRAY.wrap(CURRENCY_NAME + ": ") + GENERIC_CURRENT + LIGHT_GRAY.wrap("/") + GENERIC_TOTAL)
+            LIGHT_YELLOW.wrap("• " + LIGHT_GRAY.wrap(CURRENCY_NAME + ": ") + GENERIC_CURRENT + LIGHT_GRAY.wrap("/") + GENERIC_TOTAL)
         )).read(config);
 
         this.jobDailyXPLimit = ConfigValue.create("Job.DailyLimits.XP", Lists.newList(
-            LIGHT_YELLOW.wrap("▪ " + LIGHT_GRAY.wrap("XP: ") + GENERIC_CURRENT + LIGHT_GRAY.wrap("/") + GENERIC_TOTAL)
+            LIGHT_YELLOW.wrap("• " + LIGHT_GRAY.wrap("XP: ") + GENERIC_CURRENT + LIGHT_GRAY.wrap("/") + GENERIC_TOTAL)
         )).read(config);
 
         this.jobClickPreviewInfo = ConfigValue.create("Job.ClickInfo.Preview", Lists.newList(

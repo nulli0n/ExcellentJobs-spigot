@@ -6,7 +6,7 @@
 
     <groupId>su.nightexpress.excellentjobs</groupId>
     <artifactId>ExcellentJobs</artifactId>
-    <version>1.9.1</version>
+    <version>1.10.0</version>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
@@ -14,10 +14,22 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <repositories>
+    <distributionManagement>
         <repository>
-            <id>spigot-repo</id>
-            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+            <id>nightexpress</id>
+            <url>https://repo.nightexpressdev.com/releases</url>
+        </repository>
+    </distributionManagement>
+
+    <repositories>
+<!--        <repository>-->
+<!--            <id>spigot-repo</id>-->
+<!--            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>-->
+<!--        </repository>-->
+
+        <repository>
+            <id>papermc</id>
+            <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
 
         <repository>
@@ -68,9 +80,16 @@
     </repositories>
 
     <dependencies>
+<!--        <dependency>-->
+<!--            <groupId>org.spigotmc</groupId>-->
+<!--            <artifactId>spigot-api</artifactId>-->
+<!--            <version>1.21.4-R0.1-SNAPSHOT</version>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
+
         <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot-api</artifactId>
+            <groupId>io.papermc.paper</groupId>
+            <artifactId>paper-api</artifactId>
             <version>1.21.4-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>

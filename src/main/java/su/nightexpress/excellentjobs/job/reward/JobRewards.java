@@ -5,6 +5,7 @@ import su.nightexpress.excellentjobs.Placeholders;
 import su.nightexpress.excellentjobs.util.Modifier;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
+import su.nightexpress.nightcore.config.Writeable;
 import su.nightexpress.nightcore.util.Lists;
 import su.nightexpress.nightcore.util.NumberUtil;
 import su.nightexpress.nightcore.util.Players;
@@ -13,7 +14,7 @@ import su.nightexpress.nightcore.util.text.tag.Tags;
 
 import java.util.*;
 
-public class JobRewards {
+public class JobRewards implements Writeable {
 
     private static final String DEF_MOD_MONEY = "money";
 
@@ -31,6 +32,7 @@ public class JobRewards {
             (cfg, path1, map) -> map.forEach((id, reward) -> reward.write(cfg, path1 + "." + id)),
             JobRewards::getDefaultRewards,
             "Here you can create unlimited amount of custom job rewards.",
+            Placeholders.URL_WIKI_LEVEL_REWARDS,
             "Settings:",
             "  [Level] = Required player's job level.",
             "  [Repeatable] true = Reward given every N job levels; false = Reward given once at exact level.",
@@ -49,10 +51,12 @@ public class JobRewards {
         this.modifierMap.putAll(ConfigValue.forMapById(path + ".Modifiers",
             Modifier::read,
             map -> map.putAll(JobRewards.getDefaultModifiers()),
-            "Here you can create unlimited amount of custom modifiers for rewards."
+            "Here you can create unlimited amount of custom modifiers for rewards.",
+            Placeholders.URL_WIKI_LEVEL_REWARDS
         ).read(config));
     }
 
+    @Override
     public void write(@NotNull FileConfig config, @NotNull String path) {
         config.remove(path + ".List");
         config.remove(path + ".Modifiers");
@@ -62,24 +66,24 @@ public class JobRewards {
 
     @NotNull
     public static Map<String, LevelReward> getDefaultRewards() {
-        Map<String, LevelReward> map = new HashMap<>();
+        Map<String, LevelReward> map = new LinkedHashMap<>();
 
         LevelReward moneyReward = new LevelReward(
-            "every_5_levels", 5, true, "Money",
-            Lists.newList("Small $" + Placeholders.REWARD_MODIFIER.apply(DEF_MOD_MONEY) + " reward."),
-            Lists.newList("money give " + Placeholders.PLAYER_NAME + " " + Placeholders.REWARD_MODIFIER.apply(DEF_MOD_MONEY)),
+            "every_1_level", 1, true, "$" + Placeholders.REWARD_MODIFIER.apply(DEF_MOD_MONEY),
+            Lists.newList(/*"$" + Placeholders.REWARD_MODIFIER.apply(DEF_MOD_MONEY)*/),
+            Lists.newList("money give " + Placeholders.PLAYER_NAME + " " + Placeholders.REWARD_MODIFIER_RAW.apply(DEF_MOD_MONEY)),
             "null",
             Lists.newList(),
             Lists.newList("")
         );
 
         LevelReward donatorReward = new LevelReward(
-            "donator_10_levels", 10, true, "Jobs Crate Key",
-            Lists.newList("x1 Jobs Crate Key."),
+            "donator_10_levels", 10, true, "x1 Jobs Crate Key " + Tags.RED.wrap("(Premium only)"),
+            Lists.newList(/*"x1 Jobs Crate Key."*/),
             Lists.newList("crates key give " + Placeholders.PLAYER_NAME + " jobs 1"),
             "null",
-            Lists.newList("vip", "gold", "premium"),
-            Lists.newList(Tags.LIGHT_RED.wrap("You must have VIP, Gold or Premium."))
+            Lists.newList("vip", "premium"),
+            Lists.newList(/*Tags.LIGHT_RED.wrap("You must have VIP or Premium rank.")*/)
         );
 
         map.put(moneyReward.getId(), moneyReward);
@@ -92,7 +96,7 @@ public class JobRewards {
     public static Map<String, Modifier> getDefaultModifiers() {
         Map<String, Modifier> map = new HashMap<>();
 
-        map.put(DEF_MOD_MONEY, Modifier.add(100, 10, 1));
+        map.put(DEF_MOD_MONEY, Modifier.add(0, 1000, 1));
 
         return map;
     }

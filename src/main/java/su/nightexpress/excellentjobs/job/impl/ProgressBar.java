@@ -57,7 +57,7 @@ public class ProgressBar {
         if (this.xp == 0 && this.moneyMap.isEmpty()) return;
 
         String xp = NumberUtil.format(this.getXP());
-        String money = moneyMap.entrySet().stream().map(e -> e.getKey().format(e.getValue())).collect(Collectors.joining(", "));
+        String money = moneyMap.isEmpty() ? "0" : moneyMap.entrySet().stream().map(e -> e.getKey().format(e.getValue())).collect(Collectors.joining(", "));
 
         JobData data = this.plugin.getUserManager().getOrFetch(player).getData(job);
         int dataXP = Math.max(0, data.getXP());

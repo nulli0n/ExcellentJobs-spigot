@@ -1,21 +1,21 @@
 package su.nightexpress.excellentjobs.job.impl;
 
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import su.nightexpress.economybridge.api.Currency;
 import su.nightexpress.economybridge.currency.CurrencyId;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.Placeholders;
-import su.nightexpress.excellentjobs.job.work.Work;
-import su.nightexpress.excellentjobs.job.work.WorkObjective;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Perms;
 import su.nightexpress.excellentjobs.data.impl.JobData;
+import su.nightexpress.excellentjobs.job.work.Work;
+import su.nightexpress.excellentjobs.job.work.WorkObjective;
 import su.nightexpress.excellentjobs.job.work.WorkRegistry;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
+import su.nightexpress.nightcore.util.bukkit.NightItem;
 import su.nightexpress.nightcore.util.wrapper.UniInt;
 
 import java.util.HashMap;
@@ -28,9 +28,9 @@ public class JobObjective {
 
     private final String id;
     private final String workId;
-    private final String displayName;
-    private final ItemStack                    icon;
-    private final Set<String>                  objects;
+    private final String      displayName;
+    private final NightItem   icon;
+    private final Set<String> items;
     private final Map<String, ObjectiveReward> paymentMap;
     private final ObjectiveReward              xpReward;
     private final int                          unlockLevel;
@@ -42,8 +42,8 @@ public class JobObjective {
     public JobObjective(@NotNull String id,
                         @NotNull String workId,
                         @NotNull String displayName,
-                        @NotNull ItemStack icon,
-                        @NotNull Set<String> objects,
+                        @NotNull NightItem icon,
+                        @NotNull Set<String> items,
                         @NotNull Map<String, ObjectiveReward> paymentMap,
                         @NotNull ObjectiveReward xpReward,
                         int unlockLevel,
@@ -54,7 +54,7 @@ public class JobObjective {
         this.workId = workId;
         this.displayName = displayName;
         this.icon = icon;
-        this.objects = new HashSet<>(objects);
+        this.items = new HashSet<>(items);
         this.paymentMap = paymentMap;
         this.xpReward = xpReward;
         this.unlockLevel = unlockLevel;
@@ -75,7 +75,7 @@ public class JobObjective {
         });*/
 
         String displayName = cfg.getString(path + ".Display.Name", id);
-        ItemStack icon = cfg.getItem(path + ".Display.Icon");
+        NightItem icon = cfg.getCosmeticItem(path + ".Display.Icon");
 
         Set<String> objects = cfg.getStringSet(path + ".Objects")
             .stream().map(String::toLowerCase).collect(Collectors.toSet());
@@ -113,9 +113,9 @@ public class JobObjective {
     public void write(@NotNull FileConfig cfg, @NotNull String path) {
         cfg.set(path + ".Type", this.workId);
         cfg.set(path + ".Display.Name", this.getDisplayName());
-        cfg.setItem(path + ".Display.Icon", this.getIcon());
+        cfg.set(path + ".Display.Icon", this.getIcon());
 
-        cfg.set(path + ".Objects", this.getObjects());
+        cfg.set(path + ".Objects", this.getItems());
 
         this.getPaymentMap().forEach((currencyId, objectiveReward) -> {
             objectiveReward.write(cfg, path + ".Payment." + currencyId);
@@ -145,7 +145,7 @@ public class JobObjective {
     }
 
     public boolean hasObject(@NotNull String name) {
-        return this.getObjects().contains(name.toLowerCase()) || this.getObjects().contains(Placeholders.WILDCARD);
+        return this.getItems().contains(name.toLowerCase()) || this.getItems().contains(Placeholders.WILDCARD);
     }
 
     public boolean isUnlocked(@NotNull Player player, @NotNull JobData jobData) {
@@ -183,13 +183,13 @@ public class JobObjective {
     }
 
     @NotNull
-    public ItemStack getIcon() {
-        return new ItemStack(icon);
+    public NightItem getIcon() {
+        return this.icon.copy();
     }
 
     @NotNull
-    public Set<String> getObjects() {
-        return objects;
+    public Set<String> getItems() {
+        return this.items;
     }
 
     @NotNull

@@ -1,5 +1,6 @@
 package su.nightexpress.excellentjobs.job.work;
 
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventPriority;
@@ -11,6 +12,10 @@ import su.nightexpress.excellentjobs.Placeholders;
 import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.job.JobManager;
 import su.nightexpress.nightcore.util.StringUtil;
+import su.nightexpress.nightcore.util.bukkit.NightItem;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class Work<E extends Event, O> {
 
@@ -21,12 +26,16 @@ public abstract class Work<E extends Event, O> {
     private WorkListener<E, O> listener;
 
     private String displayName;
+    private List<String> description;
+    private NightItem icon;
 
     public Work(@NotNull JobsPlugin plugin, @NotNull Class<E> eventClass, @NotNull String id) {
         this.plugin = plugin;
         this.eventClass = eventClass;
         this.id = id.toLowerCase();
         this.setDisplayName(StringUtil.capitalizeUnderscored(id));
+        this.setDescription(new ArrayList<>());
+        this.setIcon(NightItem.fromType(Material.WOODEN_PICKAXE));
     }
 
     public void register() {
@@ -95,7 +104,31 @@ public abstract class Work<E extends Event, O> {
         return this.displayName;
     }
 
-    public void setDisplayName(@NotNull String displayName) {
+    @NotNull
+    public Work<E, O> setDisplayName(@NotNull String displayName) {
         this.displayName = displayName;
+        return this;
+    }
+
+    @NotNull
+    public List<String> getDescription() {
+        return this.description;
+    }
+
+    @NotNull
+    public Work<E, O> setDescription(@NotNull List<String> description) {
+        this.description = description;
+        return this;
+    }
+
+    @NotNull
+    public NightItem getIcon() {
+        return this.icon.copy();
+    }
+
+    @NotNull
+    public Work<E, O> setIcon(@NotNull NightItem icon) {
+        this.icon = icon.copy();
+        return this;
     }
 }

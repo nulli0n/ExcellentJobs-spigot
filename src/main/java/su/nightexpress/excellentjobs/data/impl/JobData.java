@@ -82,6 +82,11 @@ public class JobData  {
         this.update();
     }
 
+    public void resetAdditional() {
+        this.obtainedLevelRewards.clear();
+        this.setNextOrderDate(0L);
+        // TODO Clean limits
+    }
 
     public void update() {
         boolean isMaxLevel = this.getLevel() >= this.getMaxLevel();

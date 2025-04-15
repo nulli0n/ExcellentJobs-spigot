@@ -1,26 +1,23 @@
 package su.nightexpress.excellentjobs.util;
 
-import org.bukkit.Material;
-import org.bukkit.Tag;
+import org.bukkit.*;
 import org.bukkit.boss.BarColor;
-import org.bukkit.entity.EntityType;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.*;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.economybridge.currency.CurrencyId;
 import su.nightexpress.excellentjobs.JobsPlugin;
-import su.nightexpress.excellentjobs.job.work.WorkFormatter;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.job.impl.JobObjective;
 import su.nightexpress.excellentjobs.job.impl.JobState;
 import su.nightexpress.excellentjobs.job.impl.ObjectiveReward;
+import su.nightexpress.excellentjobs.job.work.WorkFormatter;
 import su.nightexpress.excellentjobs.job.work.WorkFormatters;
 import su.nightexpress.excellentjobs.job.work.WorkId;
+import su.nightexpress.excellentjobs.job.work.wrapper.WrappedEnchant;
 import su.nightexpress.nightcore.config.FileConfig;
-import su.nightexpress.nightcore.util.FileUtil;
-import su.nightexpress.nightcore.util.Lists;
-import su.nightexpress.nightcore.util.Placeholders;
-import su.nightexpress.nightcore.util.StringUtil;
+import su.nightexpress.nightcore.util.*;
 import su.nightexpress.nightcore.util.bukkit.NightItem;
 import su.nightexpress.nightcore.util.wrapper.UniInt;
 
@@ -33,16 +30,6 @@ import static su.nightexpress.nightcore.util.text.tag.Tags.LIGHT_GRAY;
 
 public class JobCreator {
 
-    private static final ObjectiveReward MONEY_LOW    = new ObjectiveReward(100D, 0.05, 0.1);
-    private static final ObjectiveReward MONEY_MEDIUM = new ObjectiveReward(100D, 0.5, 1.5);
-    private static final ObjectiveReward MONEY_HIGH   = new ObjectiveReward(100D, 2.0, 4.0);
-    private static final ObjectiveReward MONEY_BEST   = new ObjectiveReward(100D, 5.0, 10.0);
-
-    private static final ObjectiveReward XP_LOW    = new ObjectiveReward(25D, 1, 2);
-    private static final ObjectiveReward XP_MEDIUM = new ObjectiveReward(75D, 3, 5);
-    private static final ObjectiveReward XP_HIGH   = new ObjectiveReward(100D, 10, 15);
-    private static final ObjectiveReward XP_BEST   = new ObjectiveReward(100D, 20, 30);
-
     private final JobsPlugin plugin;
 
     public JobCreator(@NotNull JobsPlugin plugin) {
@@ -51,13 +38,16 @@ public class JobCreator {
 
     public void createDefaultJobs() {
         this.createMinerJob();
-        this.createDiggerJob();
+        this.createBlacksmithJob();
         this.createLumberjackJob();
         this.createFarmerJob();
         this.createFisherJob();
         this.createHunterJob();
-        this.createEnchanterJob();
-        this.createBuilderJob();
+        //this.createBuilderJob();
+
+        if (Version.isPaper()) {
+            this.createSpellsmithJob();
+        }
     }
 
     private void createJob(@NotNull String id, @NotNull Consumer<Job> consumer) {
@@ -71,8 +61,8 @@ public class JobCreator {
         job.setName(StringUtil.capitalizeUnderscored(id));
         job.setPermissionRequired(false);
         job.setInitialState(JobState.INACTIVE);
-        job.setInitialXP(1000);
-        job.setXPFactor(1.093);
+        job.setInitialXP(904);
+        job.setXPFactor(1.09095309);
         job.setMaxLevel(100);
         job.setMaxSecondaryLevel(30);
         job.setProgressBarColor(BarColor.GREEN);
@@ -84,69 +74,291 @@ public class JobCreator {
         job.save();
     }
 
+    private void createObjectives(@NotNull Job job, @NotNull Consumer<List<JobObjective>> consumer) {
+        String jobId = job.getId();
+
+        File file = new File(this.plugin.getDataFolder() + Config.DIR_JOBS + jobId, Job.OBJECTIVES_CONFIG_NAME);
+        if (file.exists()) return;
+
+        FileConfig config = new FileConfig(file);
+
+        List<JobObjective> objectives = new ArrayList<>();
+        consumer.accept(objectives);
+
+        for (JobObjective objective : objectives) {
+            objective.write(config, objective.getId());
+        }
+
+        config.saveChanges();
+    }
+
     private void createMinerJob() {
-        createJob("miner", job -> {
+        this.createJob("miner", job -> {
             job.setIcon(NightItem.asCustomHead("1e1d4bc469d29d22a7ef6d21a61b451291f21bf51fd167e7fd07b719512e87a1"));
             job.setDescription(Lists.newList(
                 LIGHT_GRAY.wrap("Dig deep, gather precious resources,"),
                 LIGHT_GRAY.wrap("and conquer the underground"),
                 LIGHT_GRAY.wrap("for money!"))
             );
-        });
 
-        createMinerObjectives();
+            this.createObjectives(job, objectives -> {
+                objectives.add(forMaterial(WorkId.MINING, Material.STONE, reward(25, 0.5, 1D), reward(1, 2)));
+                objectives.add(forMaterial(WorkId.MINING, Material.COBBLESTONE, reward(25, 0.5, 1D), reward(1, 2)));
+                objectives.add(forMaterial(WorkId.MINING, Material.MOSSY_COBBLESTONE, reward(50, 0.75, 1D), reward(1, 2)));
+                objectives.add(forMaterial(WorkId.MINING, Material.ANDESITE, reward(50, 0.75, 1.5), reward(1, 2)));
+                objectives.add(forMaterial(WorkId.MINING, Material.DIORITE, reward(50, 0.75, 1.5), reward(1, 2)));
+                objectives.add(forMaterial(WorkId.MINING, Material.GRANITE, reward(50, 0.75, 1.5), reward(1, 2)));
+                objectives.add(forMaterial(WorkId.MINING, Material.TUFF, reward(50, 0.75, 1.5), reward(1, 2)));
+                objectives.add(forMaterial(WorkId.MINING, Material.AMETHYST_BLOCK, reward(50, 0.75, 1.5), reward(1, 2)));
+                objectives.add(forMaterial(WorkId.MINING, Material.CALCITE, reward(50, 0.75, 1.5), reward(1, 2)));
+                objectives.add(forMaterial(WorkId.MINING, Material.DEEPSLATE, reward(75, 1, 3), reward(1, 2)));
+                objectives.add(forMaterial(WorkId.MINING, Material.COBBLED_DEEPSLATE, reward(75, 1, 3), reward(3, 6)));
+                objectives.add(forMaterial(WorkId.MINING, Material.BASALT, reward(50, 0.75, 1.5), reward(1, 2)));
+                objectives.add(forMaterial(WorkId.MINING, Material.NETHERRACK, reward(25, 0.35, 0.75), reward(1, 1)));
+                objectives.add(forMaterial(WorkId.MINING, Material.END_STONE, reward(50, 8, 15), reward(20, 30)));
+
+                objectives.add(forMaterial(WorkId.MINING, Material.OBSIDIAN, reward(50, 100), reward(40, 60)));
+                objectives.add(forMaterial(WorkId.MINING, Material.ANCIENT_DEBRIS, reward(200, 400), reward(300, 500)));
+
+                objectives.add(forMaterial(WorkId.MINING, Material.CRIMSON_NYLIUM, reward(1, 3), reward(4, 8)));
+                objectives.add(forMaterial(WorkId.MINING, Material.WARPED_NYLIUM, reward(1, 3), reward(4, 8)));
+
+                objectives.add(forMaterial(WorkId.MINING, Material.COAL_ORE, reward(8, 12), reward(30, 60)));
+                objectives.add(forMaterial(WorkId.MINING, Material.DEEPSLATE_COAL_ORE, reward(16, 24), reward(60, 120)));
+                objectives.add(forMaterial(WorkId.MINING, Material.REDSTONE_ORE, reward(12, 16), reward(40, 70)));
+                objectives.add(forMaterial(WorkId.MINING, Material.DEEPSLATE_REDSTONE_ORE, reward(24, 32), reward(80, 140)));
+                objectives.add(forMaterial(WorkId.MINING, Material.COPPER_ORE, reward(6, 9), reward(20, 40)));
+                objectives.add(forMaterial(WorkId.MINING, Material.DEEPSLATE_COPPER_ORE, reward(12, 18), reward(40, 80)));
+                objectives.add(forMaterial(WorkId.MINING, Material.IRON_ORE, reward(6, 10), reward(25, 45)));
+                objectives.add(forMaterial(WorkId.MINING, Material.DEEPSLATE_IRON_ORE, reward(12, 20), reward(50, 90)));
+                objectives.add(forMaterial(WorkId.MINING, Material.GOLD_ORE, reward(15, 30), reward(50, 90)));
+                objectives.add(forMaterial(WorkId.MINING, Material.DEEPSLATE_GOLD_ORE, reward(30, 60), reward(100, 180)));
+                objectives.add(forMaterial(WorkId.MINING, Material.LAPIS_ORE, reward(24, 32), reward(80, 140)));
+                objectives.add(forMaterial(WorkId.MINING, Material.DEEPSLATE_LAPIS_ORE, reward(50, 65), reward(160, 280)));
+                objectives.add(forMaterial(WorkId.MINING, Material.DIAMOND_ORE, reward(100, 130), reward(380, 560)));
+                objectives.add(forMaterial(WorkId.MINING, Material.DEEPSLATE_DIAMOND_ORE, reward(200, 260), reward(600, 900)));
+                objectives.add(forMaterial(WorkId.MINING, Material.EMERALD_ORE, reward(150, 250), reward(500, 800)));
+                objectives.add(forMaterial(WorkId.MINING, Material.DEEPSLATE_EMERALD_ORE, reward(300, 500), reward(950, 1400)));
+                objectives.add(forMaterial(WorkId.MINING, Material.NETHER_QUARTZ_ORE, reward(9, 14), reward(15, 30)));
+                objectives.add(forMaterial(WorkId.MINING, Material.NETHER_GOLD_ORE, reward(10, 15), reward(20, 40)));
+
+                objectives.add(forMaterials("terracotta", WorkId.MINING, Tag.TERRACOTTA.getValues(), NightItem.fromType(Material.TERRACOTTA), reward(0.5, 1.5), reward(1, 3), 15));
+
+//        objectives.add(forMaterial(WorkId.SMELTING, Material.RAW_COPPER, reward(0.8, 1.2), reward(2, 5)));
+//        objectives.add(forMaterial(WorkId.SMELTING, Material.RAW_GOLD, reward(1.1, 2.2), reward(4, 7)));
+//        objectives.add(forMaterial(WorkId.SMELTING, Material.RAW_IRON, reward(0.9, 1.3), reward(3, 6)));
+            });
+        });
     }
 
-    private void createDiggerJob() {
-        createJob("digger", job -> {
-            job.setIcon(NightItem.asCustomHead("9503c00890326605067ff16fffbc2d0502251b3680c1acc1d68cd3d064d0577"));
+    private void createBlacksmithJob() {
+        createJob("blacksmith", job -> {
+            job.setIcon(NightItem.asCustomHead("651eb727bd896add55f6d6783cecd793d982500f4d9476143fe08e21ff7e3f5e"));
             job.setDescription(Lists.newList(
-                LIGHT_GRAY.wrap("Excavate vast landscapes"),
-                LIGHT_GRAY.wrap("and uncover hidden treasures"),
-                LIGHT_GRAY.wrap("for money!"))
+                LIGHT_GRAY.wrap("Get materials and craft"),
+                LIGHT_GRAY.wrap("your gear for money!"))
             );
-        });
 
-        createDiggerObjectives();
+            this.createObjectives(job, objectives -> {
+                double moneyMin = 3;
+                double moneyMax = 7;
+                double xpMin = 30;
+                double xpMax = 44;
+
+                Map<String, Double> materialMod = new HashMap<>();
+                materialMod.put("wooden", 0.5);
+                materialMod.put("leather", 1D);
+                materialMod.put("stone", 0.7D);
+                materialMod.put("iron", 2D);
+                materialMod.put("chainmail", 3.5D);
+                materialMod.put("golden", 4D);
+                materialMod.put("diamond", 6D);
+                materialMod.put("netherite", 8D);
+
+                Set<Material> items = new HashSet<>();
+                items.addAll(Tag.ITEMS_ENCHANTABLE_ARMOR.getValues());
+                items.addAll(Tag.ITEMS_ENCHANTABLE_MINING.getValues());
+                items.addAll(Tag.ITEMS_ENCHANTABLE_SWORD.getValues());
+                items.addAll(Tag.ITEMS_ENCHANTABLE_BOW.getValues());
+                items.addAll(Tag.ITEMS_ENCHANTABLE_CROSSBOW.getValues());
+                items.addAll(Tag.ITEMS_ENCHANTABLE_FISHING.getValues());
+
+                items.forEach(material -> {
+                    double armorMod = switch (material.getEquipmentSlot()) {
+                        case HEAD -> 1.3D;
+                        case CHEST -> 2D;
+                        case LEGS -> 1.7D;
+                        case FEET -> 1.1D;
+                        default -> 1D;
+                    };
+
+                    String prefix = material.name().split("_")[0].toLowerCase();
+                    double mod = materialMod.getOrDefault(prefix, 1D) * armorMod;
+
+                    ObjectiveReward money = reward(moneyMin * mod, moneyMax * mod);
+                    ObjectiveReward xp = reward(xpMin * mod, xpMax * mod);
+
+                    objectives.add(forMaterial(WorkId.CRAFTING, material, money, xp));
+                    objectives.add(forMaterial(WorkId.REPAIRING, material, money.multiply(0.25), xp.multiply(0.25)));
+                });
+            });
+        });
     }
 
     private void createLumberjackJob() {
         createJob("lumberjack", job -> {
-            job.setIcon(NightItem.asCustomHead("43d09000c308c91a0e7c741efd85e9fd32866b6eb851c95901500b3ece6727de"));
+            job.setIcon(NightItem.asCustomHead("80171f7facc6f7843103b821d9f8a69febe071404325313acbf0b9316a037e06"));
             job.setDescription(Lists.newList(
                 LIGHT_GRAY.wrap("Harvest towering forests and"),
                 LIGHT_GRAY.wrap("master the art of woodcutting"),
                 LIGHT_GRAY.wrap("for money!"))
             );
-        });
 
-        createLumberjackObjectives();
+            this.createObjectives(job, objectives -> {
+                Tag.LOGS.getValues().forEach(material -> {
+                    objectives.add(forMaterial(WorkId.MINING, material, reward(25, 50), reward(30, 50)));
+                });
+
+                Tag.WARPED_STEMS.getValues().forEach(material -> {
+                    objectives.add(forMaterial(WorkId.MINING, material, reward(30, 60), reward(40, 60)));
+                });
+
+                Tag.CRIMSON_STEMS.getValues().forEach(material -> {
+                    objectives.add(forMaterial(WorkId.MINING, material, reward(30, 60), reward(40, 60)));
+                });
+
+                Tag.LEAVES.getValues().forEach(material -> {
+                    objectives.add(forMaterial(WorkId.MINING, material, reward(25, 0.5, 1), reward(1, 2)));
+                });
+
+                objectives.add(forMaterial(WorkId.MINING, Material.MANGROVE_ROOTS, reward(75, 2, 5), reward(2, 4)));
+            });
+        });
     }
 
     private void createFarmerJob() {
         createJob("farmer", job -> {
-            job.setIcon(NightItem.asCustomHead("64352b979a489dfc8ba7b1e1259763843d772f39f1420f8672537aa7522dc1bf"));
+            job.setIcon(NightItem.asCustomHead("9af328c87b068509aca9834eface197705fe5d4f0871731b7b21cd99b9fddc"));
             job.setDescription(Lists.newList(
                 LIGHT_GRAY.wrap("Tend to fertile lands,"),
                 LIGHT_GRAY.wrap("cultivate crops, and flourish"),
                 LIGHT_GRAY.wrap("for money!"))
             );
-        });
 
-        createFarmerObjectives();
+            this.createObjectives(job, objectives -> {
+                objectives.add(forMaterial(WorkId.MINING, Material.WHEAT, reward(2, 4), reward(8, 12)));
+                objectives.add(forMaterial(WorkId.MINING, Material.POTATOES, Material.POTATO, reward(2, 4), reward(8, 12)));
+                objectives.add(forMaterial(WorkId.MINING, Material.CARROTS, Material.CARROT, reward(2, 4), reward(8, 12)));
+                objectives.add(forMaterial(WorkId.MINING, Material.BEETROOTS, Material.BEETROOT, reward(2, 4), reward(8, 12)));
+                objectives.add(forMaterial(WorkId.MINING, Material.CACTUS, reward(60, 80), reward(300, 350)));
+                objectives.add(forMaterial(WorkId.MINING, Material.SUGAR_CANE, reward(3, 6), reward(20, 30)));
+                objectives.add(forMaterial(WorkId.MINING, Material.COCOA_BEANS, reward(15, 20), reward(80, 100)));
+                objectives.add(forMaterial(WorkId.MINING, Material.MELON, reward(5, 7), reward(35, 45)));
+                objectives.add(forMaterial(WorkId.MINING, Material.PUMPKIN, reward(5, 7), reward(35, 45)));
+                objectives.add(forMaterial(WorkId.MINING, Material.BROWN_MUSHROOM, reward(50, 70), reward(150, 250)));
+                objectives.add(forMaterial(WorkId.MINING, Material.RED_MUSHROOM, reward(50, 70), reward(150, 250)));
+                objectives.add(forMaterial(WorkId.MINING, Material.NETHER_WART, reward(1, 3), reward(10, 15)));
+                objectives.add(forMaterial(WorkId.MINING, Material.VINE, reward(3, 6), reward(20, 30)));
+                objectives.add(forMaterial(WorkId.MINING, Material.BROWN_MUSHROOM_BLOCK, reward(15, 20), reward(45, 60)));
+                objectives.add(forMaterial(WorkId.MINING, Material.RED_MUSHROOM_BLOCK, reward(20, 25), reward(50, 65)));
+                objectives.add(forMaterial(WorkId.MINING, Material.CHORUS_PLANT, reward(1, 3), reward(1, 1)));
+                objectives.add(forMaterial(WorkId.MINING, Material.CHORUS_FLOWER, reward(80, 100), reward(80, 120)));
+                objectives.add(forMaterial(WorkId.MINING, Material.BAMBOO, reward(3, 5), reward(15, 20)));
+
+//                objectives.add(forMaterial(WorkId.BUILDING, Material.WHEAT, Material.WHEAT_SEEDS, reward(0.0, 0.0), reward(4, 6)));
+//                objectives.add(forMaterial(WorkId.BUILDING, Material.POTATOES, Material.POTATO, reward(0.0, 0.0), reward(4, 6)));
+//                objectives.add(forMaterial(WorkId.BUILDING, Material.CARROTS, Material.CARROT, reward(0.0, 0.0), reward(4, 6)));
+//                objectives.add(forMaterial(WorkId.BUILDING, Material.BEETROOTS, Material.BEETROOT_SEEDS, reward(0.0, 0.0), reward(4, 6)));
+//                objectives.add(forMaterial(WorkId.BUILDING, Material.CACTUS, reward(0.0, 0.0), reward(4, 6)));
+//                objectives.add(forMaterial(WorkId.BUILDING, Material.SUGAR_CANE, reward(0.0, 0.0), reward(4, 6)));
+//                objectives.add(forMaterial(WorkId.BUILDING, Material.COCOA, Material.COCOA_BEANS, reward(0.0, 0.0), reward(4, 6)));
+//                objectives.add(forMaterial(WorkId.BUILDING, Material.MELON_STEM, Material.MELON_SEEDS, reward(0.0, 0.0), reward(4, 6)));
+//                objectives.add(forMaterial(WorkId.BUILDING, Material.PUMPKIN_STEM, Material.PUMPKIN_SEEDS, reward(0.0, 0.0), reward(4, 6)));
+//                objectives.add(forMaterial(WorkId.BUILDING, Material.NETHER_WART, reward(0.0, 0.0), reward(4, 6)));
+//                objectives.add(forMaterial(WorkId.BUILDING, Material.VINE, reward(0.0, 0.0), reward(4, 6)));
+
+                objectives.add(forEntity(WorkId.BREEDING, EntityType.CAT, Material.CAT_SPAWN_EGG, reward(4, 8), reward(15, 25)));
+                objectives.add(forEntity(WorkId.BREEDING, EntityType.CHICKEN, Material.CHICKEN_SPAWN_EGG, reward(4, 8), reward(15, 25)));
+                objectives.add(forEntity(WorkId.BREEDING, EntityType.COW, Material.COW_SPAWN_EGG, reward(4, 8), reward(15, 25)));
+                objectives.add(forEntity(WorkId.BREEDING, EntityType.DONKEY, Material.DONKEY_SPAWN_EGG, reward(4, 8), reward(15, 25)));
+                objectives.add(forEntity(WorkId.BREEDING, EntityType.FOX, Material.FOX_SPAWN_EGG, reward(4, 8), reward(15, 25)));
+                objectives.add(forEntity(WorkId.BREEDING, EntityType.HORSE, Material.HORSE_SPAWN_EGG, reward(4, 8), reward(15, 25)));
+                objectives.add(forEntity(WorkId.BREEDING, EntityType.LLAMA, Material.LLAMA_SPAWN_EGG, reward(4, 8), reward(15, 25)));
+                objectives.add(forEntity(WorkId.BREEDING, EntityType.MOOSHROOM, Material.MOOSHROOM_SPAWN_EGG, reward(4, 8), reward(15, 25)));
+                objectives.add(forEntity(WorkId.BREEDING, EntityType.PIG, Material.PIG_SPAWN_EGG, reward(4, 8), reward(15, 25)));
+                objectives.add(forEntity(WorkId.BREEDING, EntityType.RABBIT, Material.RABBIT_SPAWN_EGG, reward(4, 8), reward(15, 25)));
+                objectives.add(forEntity(WorkId.BREEDING, EntityType.SHEEP, Material.SHEEP_SPAWN_EGG, reward(4, 8), reward(15, 25)));
+                objectives.add(forEntity(WorkId.BREEDING, EntityType.WOLF, Material.WOLF_SPAWN_EGG, reward(4, 8), reward(15, 25)));
+                objectives.add(forEntity(WorkId.BREEDING, EntityType.TURTLE, Material.TURTLE_SPAWN_EGG, reward(4, 8), reward(15, 25)));
+                objectives.add(forEntity(WorkId.BREEDING, EntityType.DOLPHIN, Material.DOLPHIN_SPAWN_EGG, reward(4, 8), reward(15, 25)));
+                objectives.add(forEntity(WorkId.BREEDING, EntityType.PANDA, Material.PANDA_SPAWN_EGG, reward(4, 8), reward(15, 25)));
+                objectives.add(forEntity(WorkId.BREEDING, EntityType.GOAT, Material.GOAT_SPAWN_EGG, reward(4, 8), reward(15, 25)));
+                objectives.add(forEntity(WorkId.BREEDING, EntityType.BEE, Material.BEE_SPAWN_EGG, reward(4, 8), reward(15, 25)));
+                objectives.add(forEntity(WorkId.BREEDING, EntityType.MULE, Material.MULE_SPAWN_EGG, reward(4, 8), reward(15, 25)));
+
+                objectives.add(forEntity(WorkId.SHEARING, EntityType.SHEEP, Material.SHEEP_SPAWN_EGG, reward(3, 5), reward(10, 15)));
+                objectives.add(forEntity(WorkId.SHEARING, EntityType.MOOSHROOM, Material.MOOSHROOM_SPAWN_EGG, reward(3, 5), reward(10, 15)));
+
+                objectives.add(forEntity(WorkId.MILKING, EntityType.COW, Material.MOOSHROOM_SPAWN_EGG, reward(3, 5), reward(10, 15)));
+                objectives.add(forEntity(WorkId.MILKING, EntityType.MOOSHROOM, Material.MOOSHROOM_SPAWN_EGG, reward(3, 5), reward(10, 15)));
+                objectives.add(forEntity(WorkId.MILKING, EntityType.GOAT, Material.MOOSHROOM_SPAWN_EGG, reward(3, 5), reward(10, 15)));
+
+                objectives.add(forEntity(WorkId.TAMING, EntityType.WOLF, Material.WOLF_SPAWN_EGG, reward(10, 15), reward(40, 60)));
+                objectives.add(forEntity(WorkId.TAMING, EntityType.HORSE, Material.HORSE_SPAWN_EGG, reward(10, 15), reward(40, 60)));
+                objectives.add(forEntity(WorkId.TAMING, EntityType.PARROT, Material.PARROT_SPAWN_EGG, reward(10, 15), reward(40, 60)));
+                objectives.add(forEntity(WorkId.TAMING, EntityType.OCELOT, Material.OCELOT_SPAWN_EGG, reward(10, 15), reward(40, 60)));
+                objectives.add(forEntity(WorkId.TAMING, EntityType.LLAMA, Material.LLAMA_SPAWN_EGG, reward(10, 15), reward(40, 60)));
+
+                objectives.add(forMaterial(WorkId.HARVESTING, Material.GLOW_BERRIES, reward(25, 35), reward(80, 120)));
+                objectives.add(forMaterial(WorkId.HARVESTING, Material.SWEET_BERRIES, reward(25, 35), reward(80, 120)));
+
+                objectives.add(forMaterials("honey", WorkId.COLLECT_HONEY, Lists.newSet(Material.BEEHIVE, Material.BEE_NEST), NightItem.fromType(Material.HONEY_BOTTLE), reward(30, 50), reward(60, 90), 1));
+                // TODO objectives.add(forMaterial(WorkId.HARVESTING, Material.HONEYCOMB, reward(0.0, 0.0), reward(0.05, 0.05)));
+            });
+        });
     }
 
     private void createFisherJob() {
         createJob("fisher", job -> {
-            job.setIcon(NightItem.asCustomHead("d804e42ec9b07fce1ce0058b78df5763f6e410d9ce82ef1ebb9597a152b6d4c8"));
+            job.setIcon(NightItem.asCustomHead("12510b301b088638ec5c8747e2d754418cb747a5ce7022c9c712ecbdc5f6f065"));
             job.setDescription(Lists.newList(
                 LIGHT_GRAY.wrap("Cast your line into shimmering"),
                 LIGHT_GRAY.wrap("waters, reel in bountiful catches,"),
                 LIGHT_GRAY.wrap("and excel for money!"))
             );
-        });
 
-        createFisherObjectives();
+            this.createObjectives(job, objectives -> {
+                objectives.add(forMaterial(WorkId.FISHING, Material.LILY_PAD, reward(30, 40), reward(100, 200)));
+                objectives.add(forMaterial(WorkId.FISHING, Material.BOWL, reward(30, 40), reward(100, 200)));
+                objectives.add(forMaterial(WorkId.FISHING, Material.LEATHER, reward(30, 40), reward(100, 200)));
+                objectives.add(forMaterial(WorkId.FISHING, Material.LEATHER_BOOTS, reward(30, 40), reward(100, 200)));
+                objectives.add(forMaterial(WorkId.FISHING, Material.ROTTEN_FLESH, reward(30, 40), reward(100, 200)));
+                objectives.add(forMaterial(WorkId.FISHING, Material.STICK, reward(30, 40), reward(100, 200)));
+                objectives.add(forMaterial(WorkId.FISHING, Material.STRING, reward(30, 40), reward(100, 200)));
+                objectives.add(forMaterial(WorkId.FISHING, Material.POTION, reward(30, 40), reward(100, 200)));
+                objectives.add(forMaterial(WorkId.FISHING, Material.BONE, reward(30, 40), reward(100, 200)));
+                objectives.add(forMaterial(WorkId.FISHING, Material.BAMBOO, reward(30, 40), reward(100, 200)));
+                objectives.add(forMaterial(WorkId.FISHING, Material.INK_SAC, reward(30, 40), reward(100, 200)));
+                objectives.add(forMaterial(WorkId.FISHING, Material.TRIPWIRE_HOOK, reward(30, 40), reward(100, 200)));
+
+                objectives.add(forMaterial(WorkId.FISHING, Material.BOW, reward(200, 400), reward(450, 700)));
+                objectives.add(forMaterial(WorkId.FISHING, Material.FISHING_ROD, reward(200, 400), reward(450, 700)));
+                objectives.add(forMaterial(WorkId.FISHING, Material.NAME_TAG, reward(200, 400), reward(450, 700)));
+                objectives.add(forMaterial(WorkId.FISHING, Material.NAUTILUS_SHELL, reward(200, 400), reward(450, 700)));
+                objectives.add(forMaterial(WorkId.FISHING, Material.SADDLE, reward(200, 400), reward(450, 700)));
+                objectives.add(forMaterial(WorkId.FISHING, Material.ENCHANTED_BOOK, reward(200, 400), reward(450, 700)));
+
+                objectives.add(forMaterial(WorkId.FISHING, Material.COD, reward(35, 80), reward(170, 240)));
+                objectives.add(forMaterial(WorkId.FISHING, Material.SALMON, reward(60, 130), reward(460, 730)));
+                objectives.add(forMaterial(WorkId.FISHING, Material.TROPICAL_FISH, reward(220, 450), reward(800, 1400)));
+                objectives.add(forMaterial(WorkId.FISHING, Material.PUFFERFISH, reward(150, 310), reward(600, 1100)));
+
+                objectives.add(forEntity(WorkId.KILL_ENTITY, EntityType.COD, Material.COD_SPAWN_EGG, reward(80, 120), reward(250, 350)));
+                objectives.add(forEntity(WorkId.KILL_ENTITY, EntityType.SALMON, Material.SALMON_SPAWN_EGG, reward(80, 120), reward(250, 350)));
+                objectives.add(forEntity(WorkId.KILL_ENTITY, EntityType.TROPICAL_FISH, Material.TROPICAL_FISH_SPAWN_EGG, reward(80, 120), reward(250, 350)));
+                objectives.add(forEntity(WorkId.KILL_ENTITY, EntityType.PUFFERFISH, Material.PUFFERFISH_SPAWN_EGG, reward(80, 120), reward(250, 350)));
+            });
+        });
     }
 
     private void createHunterJob() {
@@ -156,496 +368,94 @@ public class JobCreator {
                 LIGHT_GRAY.wrap("Brave the wilderness, track elusive"),
                 LIGHT_GRAY.wrap("prey, and thrive for money!"))
             );
-        });
 
-        createHunterObjectives();
+            this.createObjectives(job, objectives -> {
+                BukkitThing.allFromRegistry(Registry.ENTITY_TYPE).forEach(entityType -> {
+                    Class<? extends Entity> clazz = entityType.getEntityClass();
+                    if (clazz == null || !entityType.isSpawnable()) return;
+
+                    World world = Bukkit.getWorlds().getFirst();
+                    Entity entity = world.createEntity(world.getSpawnLocation(), clazz);
+                    if (!(entity instanceof LivingEntity)) return;
+                    if (entity instanceof Fish) return;
+
+                    double moneyMod = 1D;
+                    double xpMod = 1D;
+
+                    if (entityType == EntityType.ENDER_DRAGON) {
+                        moneyMod = 700D;
+                        xpMod = 700D;
+                    }
+                    else if (entity instanceof Animals) {
+                        moneyMod = 1.15D;
+                        xpMod = 1.15D;
+                    }
+                    else if (entity instanceof Raider) {
+                        moneyMod = 5D;
+                        xpMod = 5D;
+                    }
+                    else if (entity instanceof Monster) {
+                        moneyMod = 3D;
+                        xpMod = 3D;
+                    }
+
+                    double moneyMin = 6 * moneyMod;
+                    double moneyMax = 14 * moneyMod;
+
+                    double xpMin = 9 * xpMod;
+                    double xpMax = 26 * xpMod;
+
+                    Material material = plugin.getServer().getItemFactory().getSpawnEgg(entityType);
+                    if (material == null) return;
+
+                    objectives.add(forEntity(WorkId.KILL_ENTITY, entityType, material, reward(moneyMin, moneyMax), reward(xpMin, xpMax)));
+                });
+            });
+        });
     }
 
-    private void createEnchanterJob() {
-        createJob("enchanter", job -> {
-            job.setIcon(NightItem.asCustomHead("70fbb9178d9d468e3c9735ee571b7baa54338f7f831f7f4e60ca9c8d14870c7"));
+    private void createSpellsmithJob() {
+        createJob("spellsmith", job -> {
+            job.setIcon(NightItem.asCustomHead("28951399d0ebd0dfe87e50f0d6dee25274d93f1fbb38505ec971b601d1c2cb9"));
             job.setDescription(Lists.newList(
                 LIGHT_GRAY.wrap("Get levels and enhance your"),
                 LIGHT_GRAY.wrap("gear with enchantments for money!"))
             );
+
+            this.createObjectives(job, objectives -> {
+                double moneyMin = 17;
+                double moneyMax = 25;
+                double xpMin = 80;
+                double xpMax = 140;
+
+                Set<Enchantment> enchantments = BukkitThing.getEnchantments();
+                double maxWeight = enchantments.stream().map(Enchantment::getWeight).max(Comparator.comparingInt(i -> i)).orElse(0);
+
+                BukkitThing.getEnchantments().forEach(enchantment -> {
+                    if (enchantment.isCursed() || enchantment.isTreasure()) return;
+
+                    double weight = enchantment.getWeight();
+                    double weightMod = weight / maxWeight;
+
+                    for (int index = 0; index < enchantment.getMaxLevel(); index++) {
+                        int level = index + 1;
+                        double mod = 1D + (0.5 * level) + weightMod;
+
+                        ObjectiveReward money = reward(moneyMin * mod, moneyMax * mod);
+                        ObjectiveReward xp = reward(xpMin * mod, xpMax * mod);
+
+                        objectives.add(forEnchant(WorkId.GET_ENCHANT, enchantment, level, money, xp));
+                    }
+                });
+            });
         });
-
-        createEnchanterObjectives();
-    }
-
-    private void createBuilderJob() {
-        createJob("builder", job -> {
-            job.setIcon(NightItem.asCustomHead("abfaa6bb0194de1b576776a4eabcb46cb1f0a288c678b0ad2500deda118ce958"));
-            job.setDescription(Lists.newList(
-                LIGHT_GRAY.wrap("Build anything you like"),
-                LIGHT_GRAY.wrap("and get paid for it!"))
-            );
-        });
-
-        createBuilderObjectives();
-    }
-
-    private void createMinerObjectives() {
-        String jobId = "miner";
-        String type = WorkId.MINING;
-        List<JobObjective> objectives = new ArrayList<>();
-
-        Set<Material> stoneItems = new HashSet<>(Tag.BASE_STONE_OVERWORLD.getValues());
-        stoneItems.add(Material.COBBLESTONE);
-        stoneItems.add(Material.MOSSY_COBBLESTONE);
-
-        objectives.add(createMaterialObjective("stones", type, stoneItems,
-            new ItemStack(Material.STONE),
-            MONEY_LOW.multiply(1.35), XP_LOW, 1)
-        );
-
-        objectives.add(createMaterialObjective("stone_bricks", type, Tag.STONE_BRICKS.getValues(),
-            new ItemStack(Material.STONE_BRICKS),
-            MONEY_MEDIUM, XP_MEDIUM, 15)
-        );
-
-        Set<Material> commonOreItems = new HashSet<>();
-        commonOreItems.addAll(Tag.COAL_ORES.getValues());
-        commonOreItems.addAll(Tag.COPPER_ORES.getValues());
-        commonOreItems.addAll(Tag.IRON_ORES.getValues());
-
-        Set<Material> rareOreItems = new HashSet<>();
-        rareOreItems.addAll(Tag.GOLD_ORES.getValues());
-        rareOreItems.addAll(Tag.REDSTONE_ORES.getValues());
-        rareOreItems.addAll(Tag.LAPIS_ORES.getValues());
-        rareOreItems.remove(Material.NETHER_GOLD_ORE);
-
-        Set<Material> deepOreItems = new HashSet<>();
-        deepOreItems.addAll(Tag.DIAMOND_ORES.getValues());
-        deepOreItems.addAll(Tag.EMERALD_ORES.getValues());
-
-        Set<Material> netherOreItems = Lists.newSet(Material.NETHER_GOLD_ORE, Material.NETHER_QUARTZ_ORE);
-
-        objectives.add(createMaterialObjective("common_ores", type, commonOreItems,
-            new ItemStack(Material.COAL_ORE),
-            MONEY_MEDIUM, XP_MEDIUM, 1)
-        );
-
-        objectives.add(createMaterialObjective("rare_ores", type, rareOreItems,
-            new ItemStack(Material.GOLD_ORE),
-            MONEY_HIGH, XP_HIGH, 1)
-        );
-
-        objectives.add(createMaterialObjective("deepest_ores", type, deepOreItems,
-            new ItemStack(Material.DIAMOND_ORE),
-            MONEY_BEST, XP_BEST, 1)
-        );
-
-        objectives.add(createMaterialObjective("nether_ores", type, netherOreItems,
-            new ItemStack(Material.NETHER_QUARTZ_ORE),
-            MONEY_HIGH, XP_HIGH, 1)
-        );
-
-        objectives.add(createMaterialObjective("terracotta", type, Tag.TERRACOTTA.getValues(),
-            new ItemStack(Material.TERRACOTTA),
-            MONEY_MEDIUM, XP_MEDIUM, 15)
-        );
-
-        objectives.add(createMaterialObjective("nylium", type, Tag.NYLIUM.getValues(),
-            new ItemStack(Material.CRIMSON_NYLIUM),
-            MONEY_MEDIUM, XP_MEDIUM, 25)
-        );
-
-        generateObjectives(jobId, objectives);
-    }
-
-    private void createDiggerObjectives() {
-        String jobId = "digger";
-        String type = WorkId.MINING;
-        List<JobObjective> objectives = new ArrayList<>();
-
-        Set<Material> groundItems = new HashSet<>();
-        groundItems.addAll(Tag.DIRT.getValues());
-        groundItems.addAll(Tag.SAND.getValues());
-        groundItems.addAll(Tag.ANIMALS_SPAWNABLE_ON.getValues());
-        groundItems.addAll(Tag.AXOLOTLS_SPAWNABLE_ON.getValues());
-        groundItems.addAll(Tag.SNOW.getValues());
-
-        Set<Material> groundItems2 = Lists.newSet(
-            Material.MYCELIUM,
-            Material.GRAVEL, Material.CLAY, Material.SOUL_SAND
-        );
-
-        groundItems.removeAll(groundItems2);
-
-        objectives.add(createMaterialObjective("common_ground_blocks", type, groundItems,
-            new ItemStack(Material.GRASS_BLOCK),
-            MONEY_LOW.multiply(0.7), XP_LOW, 1)
-        );
-
-        objectives.add(createMaterialObjective("rare_ground_blocks", type, groundItems2,
-            new ItemStack(Material.CLAY),
-            MONEY_MEDIUM, XP_MEDIUM, 1)
-        );
-
-        generateObjectives(jobId, objectives);
-    }
-
-    private void createLumberjackObjectives() {
-        String jobId = "lumberjack";
-        String type = WorkId.MINING;
-        List<JobObjective> objectives = new ArrayList<>();
-
-        objectives.add(createMaterialObjective("acacia", type, Tag.ACACIA_LOGS.getValues(),
-            new ItemStack(Material.ACACIA_LOG),
-            MONEY_MEDIUM.multiply(2), XP_MEDIUM, 1)
-        );
-
-        objectives.add(createMaterialObjective("birch", type, Tag.BIRCH_LOGS.getValues(),
-            new ItemStack(Material.BIRCH_LOG),
-            MONEY_MEDIUM.multiply(2), XP_MEDIUM, 1)
-        );
-
-        objectives.add(createMaterialObjective("cherry", type, Tag.CHERRY_LOGS.getValues(),
-            new ItemStack(Material.CHERRY_LOG),
-            MONEY_MEDIUM.multiply(2), XP_MEDIUM, 1)
-        );
-
-        objectives.add(createMaterialObjective("crimson", type, Tag.CRIMSON_STEMS.getValues(),
-            new ItemStack(Material.CRIMSON_STEM),
-            MONEY_MEDIUM.multiply(3), XP_MEDIUM.multiply(1.5), 1)
-        );
-
-        objectives.add(createMaterialObjective("dark_oak", type, Tag.DARK_OAK_LOGS.getValues(),
-            new ItemStack(Material.DARK_OAK_LOG),
-            MONEY_MEDIUM.multiply(2), XP_MEDIUM, 1)
-        );
-
-        objectives.add(createMaterialObjective("jungle", type, Tag.JUNGLE_LOGS.getValues(),
-            new ItemStack(Material.JUNGLE_LOG),
-            MONEY_MEDIUM.multiply(3), XP_MEDIUM, 1)
-        );
-
-        objectives.add(createMaterialObjective("mangrove", type, Tag.MANGROVE_LOGS.getValues(),
-            new ItemStack(Material.MANGROVE_LOG),
-            MONEY_MEDIUM.multiply(2), XP_MEDIUM, 1)
-        );
-
-        objectives.add(createMaterialObjective("oak", type, Tag.OAK_LOGS.getValues(),
-            new ItemStack(Material.OAK_LOG),
-            MONEY_MEDIUM.multiply(2), XP_MEDIUM, 1)
-        );
-
-        objectives.add(createMaterialObjective("spruce", type, Tag.SPRUCE_LOGS.getValues(),
-            new ItemStack(Material.SPRUCE_LOG),
-            MONEY_MEDIUM.multiply(2), XP_MEDIUM, 1)
-        );
-
-        objectives.add(createMaterialObjective("warped", type, Tag.WARPED_STEMS.getValues(),
-            new ItemStack(Material.WARPED_STEM),
-            MONEY_MEDIUM.multiply(3), XP_MEDIUM.multiply(1.5), 1)
-        );
-
-        objectives.add(createMaterialObjective("leaves", type, Tag.LEAVES.getValues(),
-            new ItemStack(Material.OAK_LEAVES),
-            MONEY_LOW.multiply(1.5), XP_LOW, 1)
-        );
-
-        objectives.forEach(jobObjective -> jobObjective.getObjects().removeIf(o -> o.endsWith("_WOOD")));
-
-        generateObjectives(jobId, objectives);
-    }
-
-    private void createFarmerObjectives() {
-        String jobId = "farmer";
-        String blockBreak = WorkId.MINING;
-        String blockHarvest = WorkId.HARVESTING;
-        String breed = WorkId.BREEDING;
-        String milk = WorkId.MILKING;
-        List<JobObjective> objectives = new ArrayList<>();
-
-        Set<Material> crops = new HashSet<>(Tag.CROPS.getValues());
-        crops.remove(Material.MELON_STEM);
-        crops.remove(Material.PUMPKIN_STEM);
-        crops.add(Material.MELON);
-        crops.add(Material.PUMPKIN);
-
-        objectives.add(createMaterialObjective("honey", WorkId.COLLECT_HONEY, Lists.newSet(Material.BEEHIVE, Material.BEE_NEST),
-            new ItemStack(Material.HONEY_BOTTLE),
-            MONEY_HIGH.multiply(1.25), XP_HIGH.multiply(0.45), 1));
-
-        objectives.add(createEntityObjective("milks", milk, Lists.newSet(EntityType.COW, EntityType.MOOSHROOM, EntityType.GOAT),
-            new ItemStack(Material.MILK_BUCKET),
-            MONEY_MEDIUM.multiply(2), XP_HIGH.multiply(0.35), 1));
-
-        objectives.add(createMaterialObjective("crops", blockBreak, crops,
-            new ItemStack(Material.WHEAT),
-            MONEY_MEDIUM.multiply(2), XP_HIGH.multiply(0.35), 1)
-        );
-
-        objectives.add(createMaterialObjective("sugar_cane", blockBreak, Lists.newSet(Material.SUGAR_CANE),
-            new ItemStack(Material.SUGAR_CANE),
-            MONEY_MEDIUM.multiply(1.5), XP_HIGH.multiply(0.35), 1)
-        );
-
-        objectives.add(createMaterialObjective("bamboo", blockBreak, Lists.newSet(Material.BAMBOO),
-            new ItemStack(Material.BAMBOO),
-            MONEY_MEDIUM.multiply(1.5), XP_HIGH.multiply(0.35), 1)
-        );
-
-        objectives.add(createMaterialObjective("berries", blockHarvest, Lists.newSet(Material.GLOW_BERRIES, Material.SWEET_BERRIES),
-            new ItemStack(Material.SWEET_BERRIES),
-            MONEY_MEDIUM.multiply(2), XP_HIGH.multiply(0.35), 1)
-        );
-
-        objectives.add(createMaterialObjective("flowers", blockBreak, Tag.FLOWERS.getValues(),
-            new ItemStack(Material.POPPY),
-            MONEY_MEDIUM.multiply(0.75), XP_LOW, 1)
-        );
-
-        Set<EntityType> breedItems = Lists.newSet(
-            EntityType.PIG, EntityType.COW, EntityType.RABBIT, EntityType.HORSE, EntityType.DONKEY, EntityType.MULE,
-            EntityType.BEE, EntityType.CAT, EntityType.CHICKEN, EntityType.GOAT, EntityType.LLAMA, EntityType.MOOSHROOM,
-            EntityType.PANDA, EntityType.SHEEP, EntityType.WOLF, EntityType.TURTLE
-        );
-
-        objectives.add(createEntityObjective("breed_animals", breed, breedItems,
-            new ItemStack(Material.PIG_SPAWN_EGG),
-            MONEY_BEST.multiply(1.5), XP_MEDIUM.multiply(1.35), 1)
-        );
-
-        generateObjectives(jobId, objectives);
-    }
-
-    private void createFisherObjectives() {
-        String jobId = "fisher";
-        String blockBreak = WorkId.FISHING;
-        List<JobObjective> objectives = new ArrayList<>();
-
-        objectives.add(createMaterialObjective("craft_fishing_rod", WorkId.CRAFTING,
-            Lists.newSet(Material.FISHING_ROD),
-            new ItemStack(Material.FISHING_ROD),
-            MONEY_MEDIUM.multiply(0.5), XP_LOW, 1)
-        );
-
-        Set<Material> fishes = new HashSet<>(Tag.ITEMS_FISHES.getValues());
-        fishes.remove(Material.COOKED_COD);
-        fishes.remove(Material.COOKED_SALMON);
-
-        objectives.add(createMaterialObjective("fish", blockBreak, fishes,
-            new ItemStack(Material.COD),
-            MONEY_BEST, XP_MEDIUM.multiply(1.25), 1)
-        );
-
-        Set<Material> treasureItems = Lists.newSet(
-            Material.BOW, Material.ENCHANTED_BOOK, Material.FISHING_ROD,
-            Material.NAME_TAG, Material.NAUTILUS_SHELL, Material.SADDLE);
-
-        objectives.add(createMaterialObjective("treasures", blockBreak, treasureItems,
-            new ItemStack(Material.ENCHANTED_BOOK),
-            MONEY_BEST, XP_HIGH.multiply(0.7), 1)
-        );
-
-        Set<Material> junkItems = Lists.newSet(
-            Material.LILY_PAD, Material.BOWL, Material.LEATHER, Material.LEATHER_BOOTS,
-            Material.ROTTEN_FLESH, Material.STICK, Material.STRING, Material.POTION,
-            Material.BONE, Material.INK_SAC, Material.TRIPWIRE_HOOK
-        );
-
-        objectives.add(createMaterialObjective("junk", blockBreak, junkItems,
-            new ItemStack(Material.ROTTEN_FLESH),
-            MONEY_BEST.multiply(0.85), XP_HIGH.multiply(0.5), 1)
-        );
-
-        generateObjectives(jobId, objectives);
-    }
-
-    private void createHunterObjectives() {
-        String jobId = "hunter";
-        String entityKill = WorkId.KILL_ENTITY;
-        List<JobObjective> objectives = new ArrayList<>();
-
-        objectives.add(createEntityObjective("raiders", entityKill, Tag.ENTITY_TYPES_RAIDERS.getValues(),
-            new ItemStack(Material.CROSSBOW),
-            MONEY_BEST.multiply(0.85), XP_HIGH.multiply(0.65), 1)
-        );
-
-        objectives.add(createEntityObjective("skeletons", entityKill, Tag.ENTITY_TYPES_SKELETONS.getValues(),
-            new ItemStack(Material.BONE),
-            MONEY_BEST.multiply(0.75), XP_HIGH.multiply(0.45), 1)
-        );
-
-        Set<EntityType> zombieItems = Lists.newSet(
-            EntityType.ZOMBIE, EntityType.ZOMBIE_VILLAGER,
-            EntityType.ZOMBIE_HORSE, EntityType.ZOMBIFIED_PIGLIN,
-            EntityType.GIANT, EntityType.HUSK
-        );
-
-        objectives.add(createEntityObjective("zombies", entityKill, zombieItems,
-            new ItemStack(Material.ZOMBIE_HEAD),
-            MONEY_BEST.multiply(0.65), XP_HIGH.multiply(0.45), 1)
-        );
-
-        Set<EntityType> hostileItems = Lists.newSet(
-            EntityType.BLAZE, EntityType.GHAST, EntityType.MAGMA_CUBE, EntityType.SLIME,
-            EntityType.ENDERMITE, EntityType.ENDERMAN, EntityType.PIGLIN_BRUTE, EntityType.PIG,
-            EntityType.HOGLIN, EntityType.ZOGLIN, EntityType.CAVE_SPIDER, EntityType.SPIDER,
-            EntityType.CREEPER, EntityType.DROWNED, EntityType.PHANTOM, EntityType.VEX,
-            EntityType.SILVERFISH, EntityType.BREEZE
-        );
-
-        objectives.add(createEntityObjective("hostile", entityKill, hostileItems,
-            new ItemStack(Material.SKELETON_SKULL),
-            MONEY_BEST.multiply(0.75), XP_MEDIUM.multiply(1.5), 1)
-        );
-
-        Set<EntityType> animalItems = Lists.newSet(
-            EntityType.PIG, EntityType.COW, EntityType.SHEEP, EntityType.GOAT,
-            EntityType.CHICKEN, EntityType.HORSE, EntityType.MULE, EntityType.DONKEY,
-            EntityType.MOOSHROOM, EntityType.TURTLE, EntityType.CAT,
-            EntityType.FOX, EntityType.LLAMA, EntityType.OCELOT, EntityType.PANDA,
-            EntityType.PARROT, EntityType.POLAR_BEAR, EntityType.RABBIT, EntityType.TRADER_LLAMA,
-            EntityType.WOLF, EntityType.BEE, EntityType.BAT, EntityType.CAMEL, EntityType.FROG, EntityType.ARMADILLO, EntityType.SNIFFER
-        );
-
-        objectives.add(createEntityObjective("animals", entityKill, animalItems,
-            new ItemStack(Material.CARROT),
-            MONEY_HIGH.multiply(1.35), XP_MEDIUM.multiply(1.35), 1)
-        );
-
-        Set<EntityType> fishItems = Lists.newSet(
-            EntityType.COD, EntityType.SALMON, EntityType.PUFFERFISH, EntityType.SQUID,
-            EntityType.GLOW_SQUID, EntityType.AXOLOTL, EntityType.TADPOLE
-        );
-
-        objectives.add(createEntityObjective("fishes", entityKill, fishItems,
-            new ItemStack(Material.COD),
-            MONEY_MEDIUM.multiply(1.5), XP_MEDIUM, 1)
-        );
-
-        generateObjectives(jobId, objectives);
-    }
-
-    private void createEnchanterObjectives() {
-        String jobId = "enchanter";
-        String itemEnchantType = WorkId.ENCHANTING;
-        List<JobObjective> objectives = new ArrayList<>();
-
-        Set<Material> leatherItems = Lists.newSet(
-            Material.LEATHER_HELMET,
-            Material.LEATHER_CHESTPLATE,
-            Material.LEATHER_LEGGINGS,
-            Material.LEATHER_BOOTS
-        );
-        objectives.add(createMaterialObjective("leather_armor", itemEnchantType, leatherItems,
-            new ItemStack(Material.LEATHER_CHESTPLATE),
-            MONEY_BEST.multiply(2), XP_BEST.multiply(0.5), 1)
-        );
-
-
-        Set<Material> goldenItems = Lists.newSet(
-            Material.GOLDEN_AXE, Material.GOLDEN_PICKAXE,
-            Material.GOLDEN_HOE, Material.GOLDEN_SWORD, Material.GOLDEN_SHOVEL,
-            Material.GOLDEN_HELMET,
-            Material.GOLDEN_CHESTPLATE,
-            Material.GOLDEN_LEGGINGS,
-            Material.GOLDEN_BOOTS
-        );
-        objectives.add(createMaterialObjective("golden_items", itemEnchantType, goldenItems,
-            new ItemStack(Material.GOLDEN_CHESTPLATE),
-            MONEY_BEST.multiply(2.25), XP_BEST.multiply(0.55), 1)
-        );
-
-
-        Set<Material> chainmailItems = Lists.newSet(
-            Material.CHAINMAIL_HELMET,
-            Material.CHAINMAIL_CHESTPLATE,
-            Material.CHAINMAIL_LEGGINGS,
-            Material.CHAINMAIL_BOOTS
-        );
-        objectives.add(createMaterialObjective("chainmail_armor", itemEnchantType, chainmailItems,
-            new ItemStack(Material.CHAINMAIL_CHESTPLATE),
-            MONEY_BEST.multiply(2.5), XP_BEST.multiply(0.6), 1)
-        );
-
-
-        Set<Material> ironItems = Lists.newSet(
-            Material.IRON_AXE, Material.IRON_PICKAXE,
-            Material.IRON_HOE, Material.IRON_SWORD, Material.IRON_SHOVEL,
-            Material.IRON_HELMET,
-            Material.IRON_CHESTPLATE,
-            Material.IRON_LEGGINGS,
-            Material.IRON_BOOTS
-        );
-        objectives.add(createMaterialObjective("iron_items", itemEnchantType, ironItems,
-            new ItemStack(Material.IRON_CHESTPLATE),
-            MONEY_BEST.multiply(2.75), XP_BEST.multiply(0.65), 1)
-        );
-
-
-        Set<Material> diamondItems = Lists.newSet(
-            Material.DIAMOND_AXE, Material.DIAMOND_PICKAXE,
-            Material.DIAMOND_HOE, Material.DIAMOND_SWORD, Material.DIAMOND_SHOVEL,
-            Material.DIAMOND_HELMET,
-            Material.DIAMOND_CHESTPLATE,
-            Material.DIAMOND_LEGGINGS,
-            Material.DIAMOND_BOOTS
-        );
-        objectives.add(createMaterialObjective("diamond_items", itemEnchantType, diamondItems,
-            new ItemStack(Material.DIAMOND_CHESTPLATE),
-            MONEY_BEST.multiply(3), XP_BEST.multiply(0.7), 1)
-        );
-
-
-        Set<Material> netherItems = Lists.newSet(
-            Material.NETHERITE_AXE, Material.NETHERITE_PICKAXE,
-            Material.NETHERITE_HOE, Material.NETHERITE_SWORD, Material.NETHERITE_SHOVEL,
-            Material.NETHERITE_HELMET,
-            Material.NETHERITE_CHESTPLATE,
-            Material.NETHERITE_LEGGINGS,
-            Material.NETHERITE_BOOTS
-        );
-        objectives.add(createMaterialObjective("netherite_items", itemEnchantType, netherItems,
-            new ItemStack(Material.NETHERITE_CHESTPLATE),
-            MONEY_BEST.multiply(3.25), XP_BEST.multiply(0.75), 1)
-        );
-
-
-        Set<Material> otherItems = Lists.newSet(
-            Material.BOW, Material.CROSSBOW, Material.TURTLE_HELMET,
-            Material.BOOK, Material.TRIDENT
-        );
-        objectives.add(createMaterialObjective("other_items", itemEnchantType, otherItems,
-            new ItemStack(Material.ENCHANTED_BOOK),
-            MONEY_BEST.multiply(2), XP_BEST.multiply(0.5), 1)
-        );
-
-        generateObjectives(jobId, objectives);
-    }
-
-    private void createBuilderObjectives() {
-        String jobId = "builder";
-        List<JobObjective> objectives = new ArrayList<>();
-
-        objectives.add(buildObjective("placeable_blocks", WorkId.BUILDING, Lists.newSet(Placeholders.WILDCARD),
-            new ItemStack(Material.SCAFFOLDING),
-            MONEY_LOW, XP_LOW, 1)
-        );
-
-        generateObjectives(jobId, objectives);
-    }
-
-    private void generateObjectives(@NotNull String jobId, @NotNull Collection<JobObjective> objectives) {
-        File file = new File(this.plugin.getDataFolder() + Config.DIR_JOBS + jobId, Job.OBJECTIVES_CONFIG_NAME);
-        if (file.exists()) return;
-
-        FileConfig config = new FileConfig(file);
-        for (JobObjective objective : objectives) {
-            objective.write(config, objective.getId());
-        }
-        config.saveChanges();
     }
 
     @NotNull
     private static JobObjective createEntityObjective(@NotNull String id,
                                                         @NotNull String type,
                                                         @NotNull Set<EntityType> items,
-                                                        @NotNull ItemStack icon,
+                                                        @NotNull NightItem icon,
                                                         @NotNull ObjectiveReward money,
                                                         @NotNull ObjectiveReward xp,
                                                         int unlockLevel) {
@@ -653,45 +463,85 @@ public class JobCreator {
     }
 
     @NotNull
-    private static JobObjective createMaterialObjective(@NotNull String id,
-                                                    @NotNull String type,
-                                                    @NotNull Set<Material> items,
-                                                    @NotNull ItemStack icon,
-                                                    @NotNull ObjectiveReward money,
-                                                    @NotNull ObjectiveReward xp,
-                                                    int unlockLevel) {
+    private static JobObjective forEntity(@NotNull String type,
+                                          @NotNull EntityType object,
+                                          @NotNull Material icon,
+                                          @NotNull ObjectiveReward money,
+                                          @NotNull ObjectiveReward xp) {
+        return createEntityObjective(BukkitThing.toString(object), type, Lists.newSet(object), NightItem.fromType(icon), money, xp, 1);
+    }
+
+    @NotNull
+    private static JobObjective forMaterials(@NotNull String id,
+                                             @NotNull String type,
+                                             @NotNull Set<Material> items,
+                                             @NotNull NightItem icon,
+                                             @NotNull ObjectiveReward money,
+                                             @NotNull ObjectiveReward xp,
+                                             int unlockLevel) {
         return createObjective(id, type, WorkFormatters.MATERIAL, items, icon, money, xp, unlockLevel);
     }
 
     @NotNull
+    private static JobObjective forMaterial(@NotNull String type, @NotNull Material object, @NotNull Material icon, @NotNull ObjectiveReward money, @NotNull ObjectiveReward xp) {
+        return forMaterials(BukkitThing.toString(object), type, Lists.newSet(object), NightItem.fromType(icon), money, xp, 1);
+    }
+
+    @NotNull
+    private static JobObjective forMaterial(@NotNull String type, @NotNull Material object, @NotNull ObjectiveReward money, @NotNull ObjectiveReward xp) {
+        return forMaterials(BukkitThing.toString(object), type, Lists.newSet(object), NightItem.fromType(object), money, xp, 1);
+    }
+
+    @NotNull
+    private static JobObjective forEnchant(@NotNull String type, @NotNull Enchantment enchantment, int level, @NotNull ObjectiveReward money, @NotNull ObjectiveReward xp) {
+        String id = BukkitThing.toString(enchantment) + "_" + NumberUtil.toRoman(level);
+        WrappedEnchant wrapped = new WrappedEnchant(enchantment, level);
+
+        return createObjective(id, type, WorkFormatters.WRAPPED_ENCHANTMENT, Lists.newSet(wrapped), NightItem.fromType(Material.ENCHANTED_BOOK), money, xp, 1);
+    }
+
+    @NotNull
     private static <O> JobObjective createObjective(@NotNull String id,
-                                                   @NotNull String type,
-                                                   @NotNull WorkFormatter<O> formatter,
-                                                   @NotNull Set<O> items,
-                                                   @NotNull ItemStack icon,
-                                                   @NotNull ObjectiveReward money,
-                                                   @NotNull ObjectiveReward xp,
-                                                   int unlockLevel) {
+                                                    @NotNull String type,
+                                                    @NotNull WorkFormatter<O> formatter,
+                                                    @NotNull Set<O> items,
+                                                    @NotNull NightItem icon,
+                                                    @NotNull ObjectiveReward money,
+                                                    @NotNull ObjectiveReward xp,
+                                                    int unlockLevel) {
         Set<String> objects = items.stream().map(formatter::getName).sorted(String::compareTo).collect(Collectors.toCollection(LinkedHashSet::new));
 
         return buildObjective(id, type, objects, icon, money, xp, unlockLevel);
     }
 
     @NotNull
-    private static JobObjective buildObjective(@NotNull String id,
+    private static JobObjective buildObjective(@NotNull String idName,
                                                     @NotNull String type,
                                                     @NotNull Set<String> items,
-                                                    @NotNull ItemStack icon,
+                                                    @NotNull NightItem icon,
                                                     @NotNull ObjectiveReward money,
                                                     @NotNull ObjectiveReward xp,
                                                     int unlockLevel) {
         Map<String, ObjectiveReward> paymentMap = new HashMap<>();
         paymentMap.put(CurrencyId.VAULT, money);
 
-        return new JobObjective(
-            id, type, StringUtil.capitalizeUnderscored(id), icon,
-            items, paymentMap, xp, unlockLevel,
-            true, UniInt.of(1, 3), UniInt.of(1, 100)
-        );
+        String id = type + "_" + idName.toLowerCase();
+        String display = StringUtil.capitalize(idName.replace("_", " ")); // To prevent toLowerCase call for enchant levels display properly.
+
+        boolean allowForOrder = true;
+        UniInt orderObjects = UniInt.of(1, 3);
+        UniInt orderCount = UniInt.of(1, 100);
+
+        return new JobObjective(id, type, display, icon, items, paymentMap, xp, unlockLevel, allowForOrder, orderObjects, orderCount);
+    }
+
+    @NotNull
+    private static ObjectiveReward reward(double min, double max) {
+        return reward(100, min, max);
+    }
+
+    @NotNull
+    private static ObjectiveReward reward(double chance, double min, double max) {
+        return new ObjectiveReward(chance, min, max);
     }
 }

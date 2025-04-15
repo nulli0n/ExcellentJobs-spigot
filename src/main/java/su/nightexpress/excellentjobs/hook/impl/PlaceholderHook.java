@@ -116,14 +116,14 @@ public class PlaceholderHook {
                 if (rest.equalsIgnoreCase("xp_multiplier")) {
                     return NumberUtil.format(job.getXPMultiplier(data.getLevel()));
                 }
-                if (rest.equalsIgnoreCase("payment_multiplier")) {
-                    return NumberUtil.format(job.getPaymentMultiplier(data.getLevel()));
-                }
                 if (rest.equalsIgnoreCase("xp_boost_multiplier")) {
                     return NumberUtil.format(JobsAPI.getBoost(player, job, MultiplierType.XP));
                 }
                 if (rest.equalsIgnoreCase("xp_boost_percent")) {
                     return NumberUtil.format(JobsAPI.getBoostPercent(player, job, MultiplierType.XP));
+                }
+                if (rest.equalsIgnoreCase("income_multiplier") || rest.equalsIgnoreCase("payment_multiplier")) {
+                    return NumberUtil.format(job.getPaymentMultiplier(data.getLevel()));
                 }
                 if (rest.equalsIgnoreCase("income_boost_multiplier")) {
                     return NumberUtil.format(JobsAPI.getBoost(player, job, MultiplierType.INCOME));

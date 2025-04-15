@@ -278,7 +278,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
     }
 
     public void openObjectivesMenu(@NotNull Player player, @NotNull Job job) {
-        this.objectivesMenu.open(player, job);
+        this.objectivesMenu.open(player, job, null);
     }
 
     public void openRewardsMenu(@NotNull Player player, @NotNull Job job) {
@@ -689,54 +689,52 @@ public class JobManager extends AbstractManager<JobsPlugin> {
                 }
             }
 
-            if (!jobObjective.canPay()) return;
-
             int jobLevel = jobData.getLevel();
             double xpBoost = JobsAPI.getBoost(player, job, MultiplierType.XP);
             double incomeBoost = JobsAPI.getBoost(player, job, MultiplierType.INCOME);
-
             ProgressBar progressBar = this.getProgressBarOrCreate(player, job);
 
-            JobIncome income = this.getIncome(player, job);
-            jobObjective.getPaymentMap().forEach((currencyId, rewardInfo) -> {
-                // Do no process payment for limited currencies.
-                if (jobData.isPaymentLimitReached(currencyId)) return;
+            if (jobObjective.canPay()) {
+                JobIncome income = this.getIncome(player, job);
+                jobObjective.getPaymentMap().forEach((currencyId, rewardInfo) -> {
+                    // Do no process payment for limited currencies.
+                    if (jobData.isPaymentLimitReached(currencyId)) return;
 
-                Currency currency = EconomyBridge.getCurrency(currencyId);
-                if (currency == null) return;
+                    Currency currency = EconomyBridge.getCurrency(currencyId);
+                    if (currency == null) return;
 
-                double payment = rewardInfo.rollAmountNaturally() * amount;
-                double paymentMultiplier = 1D;
+                    double payment = rewardInfo.rollAmountNaturally() * amount;
+                    double paymentMultiplier = 1D;
 
-                if (JobUtils.canBeBoosted(currency)) {
-                    paymentMultiplier += incomeBoost;
-                }
-                paymentMultiplier += job.getPaymentMultiplier(jobLevel);
-                paymentMultiplier += multiplier;
-
-                JobObjectiveIncomeEvent event = new JobObjectiveIncomeEvent(
-                    player, user, jobData, jobObjective, workObjective, objectId, currency, payment, paymentMultiplier
-                );
-                this.plugin.getPluginManager().callEvent(event);
-                if (event.isCancelled()) return;
-
-                payment = event.getPayment() * event.getPaymentMultiplier();
-                if (payment == 0D || Double.isNaN(payment) || Double.isInfinite(payment)) return;
-
-                income.add(jobObjective, currency, payment);
-                if (progressBar != null) progressBar.addPayment(currency, payment);
-
-                if (!player.hasPermission(Perms.PREFIX_BYPASS_LIMIT_CURRENCY + job.getId()) && job.hasDailyPaymentLimit(currencyId, jobLevel)) {
-                    jobData.getLimitData().addCurrency(currencyId, payment);
-
-                    if (jobData.isPaymentLimitReached(currencyId)) {
-                        Lang.JOB_LIMIT_CURRENCY_NOTIFY.getMessage().send(player, replacer -> replacer
-                            .replace(job.replacePlaceholders())
-                            .replace(currency.replacePlaceholders()));
+                    if (JobUtils.canBeBoosted(currency)) {
+                        paymentMultiplier += incomeBoost;
                     }
-                }
-            });
+                    paymentMultiplier += job.getPaymentMultiplier(jobLevel);
+                    paymentMultiplier += multiplier;
 
+                    JobObjectiveIncomeEvent event = new JobObjectiveIncomeEvent(
+                        player, user, jobData, jobObjective, workObjective, objectId, currency, payment, paymentMultiplier
+                    );
+                    this.plugin.getPluginManager().callEvent(event);
+                    if (event.isCancelled()) return;
+
+                    payment = event.getPayment() * event.getPaymentMultiplier();
+                    if (payment == 0D || Double.isNaN(payment) || Double.isInfinite(payment)) return;
+
+                    income.add(jobObjective, currency, payment);
+                    if (progressBar != null) progressBar.addPayment(currency, payment);
+
+                    if (!player.hasPermission(Perms.PREFIX_BYPASS_LIMIT_CURRENCY + job.getId()) && job.hasDailyPaymentLimit(currencyId, jobLevel)) {
+                        jobData.getLimitData().addCurrency(currencyId, payment);
+
+                        if (jobData.isPaymentLimitReached(currencyId)) {
+                            Lang.JOB_LIMIT_CURRENCY_NOTIFY.getMessage().send(player, replacer -> replacer
+                                .replace(job.replacePlaceholders())
+                                .replace(currency.replacePlaceholders()));
+                        }
+                    }
+                });
+            }
 
 
             XP:

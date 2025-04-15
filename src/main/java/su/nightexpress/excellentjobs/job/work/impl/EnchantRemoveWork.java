@@ -1,6 +1,5 @@
 package su.nightexpress.excellentjobs.job.work.impl;
 
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -12,10 +11,11 @@ import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.job.work.Work;
 import su.nightexpress.excellentjobs.job.work.WorkFormatter;
 import su.nightexpress.excellentjobs.job.work.WorkFormatters;
+import su.nightexpress.excellentjobs.job.work.wrapper.WrappedEnchant;
 
-import java.util.HashSet;
+import java.util.HashMap;
 
-public class EnchantRemoveWork extends Work<InventoryClickEvent, Enchantment> {
+public class EnchantRemoveWork extends Work<InventoryClickEvent, WrappedEnchant> {
 
     public EnchantRemoveWork(@NotNull JobsPlugin plugin, @NotNull String id) {
         super(plugin, InventoryClickEvent.class, id);
@@ -23,8 +23,8 @@ public class EnchantRemoveWork extends Work<InventoryClickEvent, Enchantment> {
 
     @Override
     @NotNull
-    public WorkFormatter<Enchantment> getFormatter() {
-        return WorkFormatters.ENCHANTMENT;
+    public WorkFormatter<WrappedEnchant> getFormatter() {
+        return WorkFormatters.WRAPPED_ENCHANTMENT;
     }
 
     @Override
@@ -39,15 +39,15 @@ public class EnchantRemoveWork extends Work<InventoryClickEvent, Enchantment> {
         ItemStack source = inventory.getItem(0);
         if (source == null || result.getType().isAir()) return false;
 
-        var sourceEnchants = new HashSet<>(source.getEnchantments().keySet());
-        var resultEnchants = new HashSet<>(result.getEnchantments().keySet());
+        var sourceEnchants = new HashMap<>(source.getEnchantments());
+        var resultEnchants = new HashMap<>(result.getEnchantments());
         if (sourceEnchants.size() == resultEnchants.size()) return false;
 
-        sourceEnchants.removeAll(resultEnchants);
+        sourceEnchants.keySet().removeAll(resultEnchants.keySet());
 
         Player player = (Player) event.getWhoClicked();
-        sourceEnchants.forEach(enchantment -> {
-            this.doObjective(player, enchantment, 1);
+        sourceEnchants.forEach((enchantment, level) -> {
+            this.doObjective(player, new WrappedEnchant(enchantment, level), 1);
         });
         return true;
     }
