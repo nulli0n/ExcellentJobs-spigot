@@ -339,7 +339,7 @@ public class Job extends AbstractFileData<JobsPlugin> {
             mod.write(config, "Daily_Limits.Currency." + id);
         });
 
-        config.set("Payment_Modifier.Money", this.paymentMultiplier);
+        config.set("Payment_Modifier.Income", this.paymentMultiplier);
         config.set("Payment_Modifier.XP", this.xpMultiplier);
         config.set("Daily_Limits.XP", this.xpDailyLimits);
 

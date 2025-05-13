@@ -25,6 +25,7 @@ public class JobDataSerializer implements JsonDeserializer<JobData>, JsonSeriali
         //String rankId = object.get("rank").getAsString();
         int level = object.get("level").getAsInt();
         int xp = object.get("xp").getAsInt();
+        long cooldown = object.get("cooldown") == null ? 0L : object.get("cooldown").getAsLong();
 
         Job job = JobsAPI.getJobById(jobId);
         if (job == null) return null;
@@ -37,7 +38,7 @@ public class JobDataSerializer implements JsonDeserializer<JobData>, JsonSeriali
 
         Set<Integer> obtainedLevelRewards = contex.deserialize(object.get("obtainedLevelRewards"), new TypeToken<Set<Integer>>(){}.getType());
 
-        return new JobData(job, state, level, xp, limitData, orderData, nextOrderDate, obtainedLevelRewards);
+        return new JobData(job, state, level, xp, cooldown, limitData, orderData, nextOrderDate, obtainedLevelRewards);
     }
 
     @Override
@@ -49,10 +50,11 @@ public class JobDataSerializer implements JsonDeserializer<JobData>, JsonSeriali
         //object.addProperty("rank", data.getRank().getId());
         object.addProperty("level", data.getLevel());
         object.addProperty("xp", data.getXP());
+        object.addProperty("cooldown", data.getCooldown());
         object.add("dailyLimits", contex.serialize(data.getLimitData()));
         object.add("orderData", contex.serialize(data.getOrderData()));
         object.addProperty("nextOrderDate", data.getNextOrderDate());
-        object.add("obtainedLevelRewards", contex.serialize(data.getObtainedLevelRewards()));
+        object.add("obtainedLevelRewards", contex.serialize(data.getClaimedLevelRewards()));
 
         return object;
     }

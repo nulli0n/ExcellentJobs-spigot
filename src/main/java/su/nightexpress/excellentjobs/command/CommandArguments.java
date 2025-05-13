@@ -56,6 +56,6 @@ public class CommandArguments {
         return CommandArgument.builder(ACTION, (string, context) -> StringUtil.getEnum(string, ModifyAction.class).orElse(null))
             .localized(Lang.COMMAND_ARGUMENT_NAME_ACTION)
             .customFailure(Lang.ERROR_COMMAND_INVALID_ACTION_ARGUMENT)
-            .withSamples(context -> Lists.getEnums(ModifyAction.class));
+            .withSamples(context -> Lists.modify(Lists.getEnums(ModifyAction.class), String::toLowerCase));
     }
 }

@@ -38,6 +38,7 @@ public class Lang extends CoreLang {
     public static final LangString COMMAND_XP_DESC         = LangString.of("Command.XP.Desc", "XP management.");
     public static final LangString COMMAND_RESET_DESC      = LangString.of("Command.Reset.Desc", "Reset job progress.");
     public static final LangString COMMAND_MENU_DESC       = LangString.of("Command.Menu.Desc", "Open Jobs GUI.");
+    public static final LangString COMMAND_LEVELS_DESC     = LangString.of("Command.Levels.Desc", "Browse job levels.");
     public static final LangString COMMAND_OBJECTIVES_DESC = LangString.of("Command.Objectives.Desc", "Browse job objectives.");
     public static final LangString COMMAND_JOIN_DESC       = LangString.of("Command.Join.Desc", "Join a job.");
     public static final LangString COMMAND_LEAVE_DESC      = LangString.of("Command.Leave.Desc", "Leave a job.");
@@ -70,50 +71,28 @@ public class Lang extends CoreLang {
         LIGHT_GRAY.wrap("Added " + LIGHT_GREEN.wrap(GENERIC_AMOUNT) + " XP to " + LIGHT_GREEN.wrap(PLAYER_NAME) + "'s " + LIGHT_GREEN.wrap(JOB_NAME) + " job.")
     );
 
-    public static final LangText COMMAND_XP_ADD_NOTIFY = LangText.of("Command.XP.Add.Notify",
-        LIGHT_GRAY.wrap(LIGHT_GREEN.wrap(GENERIC_AMOUNT) + " XP has been added to your " + LIGHT_GREEN.wrap(JOB_NAME) + " job!")
-    );
-
     public static final LangText COMMAND_XP_REMOVE_DONE = LangText.of("Command.XP.Remove.Done",
         LIGHT_GRAY.wrap("Removed " + LIGHT_RED.wrap(GENERIC_AMOUNT) + " XP from " + LIGHT_RED.wrap(PLAYER_NAME) + "'s " + LIGHT_RED.wrap(JOB_NAME) + " job.")
-    );
-
-    public static final LangText COMMAND_XP_REMOVE_NOTIFY = LangText.of("Command.XP.Remove.Notify",
-        LIGHT_GRAY.wrap(LIGHT_RED.wrap(GENERIC_AMOUNT) + " XP has been removed from your " + LIGHT_RED.wrap(JOB_NAME) + " job.")
     );
 
     public static final LangText COMMAND_XP_SET_DONE = LangText.of("Command.XP.Set.Done",
         LIGHT_GRAY.wrap("Set " + LIGHT_YELLOW.wrap(GENERIC_AMOUNT) + " XP for " + LIGHT_YELLOW.wrap(PLAYER_NAME) + "'s " + LIGHT_YELLOW.wrap(JOB_NAME) + " job.")
     );
 
-    public static final LangText COMMAND_XP_SET_NOTIFY = LangText.of("Command.XP.Set.Notify",
-        LIGHT_GRAY.wrap("Your " + LIGHT_YELLOW.wrap(JOB_NAME) + " job XP has been set to " + LIGHT_YELLOW.wrap(GENERIC_AMOUNT) + ".")
-    );
 
 
     public static final LangText COMMAND_LEVEL_ADD_DONE = LangText.of("Command.Level.Add.Done",
         LIGHT_GRAY.wrap("Added " + LIGHT_GREEN.wrap(GENERIC_AMOUNT) + " level(s) to " + LIGHT_GREEN.wrap(PLAYER_NAME) + "'s " + LIGHT_GREEN.wrap(JOB_NAME) + " job.")
     );
 
-    public static final LangText COMMAND_LEVEL_ADD_NOTIFY = LangText.of("Command.Level.Add.Notify",
-        LIGHT_GRAY.wrap(LIGHT_GREEN.wrap(GENERIC_AMOUNT) + " level(s) has been added to your " + LIGHT_GREEN.wrap(JOB_NAME) + " job!")
-    );
-
     public static final LangText COMMAND_LEVEL_REMOVE_DONE = LangText.of("Command.Level.Remove.Done",
         LIGHT_GRAY.wrap("Removed " + LIGHT_RED.wrap(GENERIC_AMOUNT) + " level(s) from " + LIGHT_RED.wrap(PLAYER_NAME) + "'s " + LIGHT_RED.wrap(JOB_NAME) + " job.")
-    );
-
-    public static final LangText COMMAND_LEVEL_REMOVE_NOTIFY = LangText.of("Command.Level.Remove.Notify",
-        LIGHT_GRAY.wrap(LIGHT_RED.wrap(GENERIC_AMOUNT) + " level(s) has been removed from your " + LIGHT_RED.wrap(JOB_NAME) + " job.")
     );
 
     public static final LangText COMMAND_LEVEL_SET_DONE = LangText.of("Command.Level.Set.Done",
         LIGHT_GRAY.wrap("Set " + LIGHT_YELLOW.wrap(GENERIC_AMOUNT) + " level for " + LIGHT_YELLOW.wrap(PLAYER_NAME) + "'s " + LIGHT_YELLOW.wrap(JOB_NAME) + " job.")
     );
 
-    public static final LangText COMMAND_LEVEL_SET_NOTIFY = LangText.of("Command.Level.Set.Notify",
-        LIGHT_GRAY.wrap("Your " + LIGHT_YELLOW.wrap(JOB_NAME) + " job level has been set to " + LIGHT_YELLOW.wrap(GENERIC_AMOUNT) + ".")
-    );
 
 
     public static final LangText COMMAND_RESET_DONE = LangText.of("Command.Reset.Done",
@@ -170,6 +149,9 @@ public class Lang extends CoreLang {
     public static final LangText JOB_JOIN_ERROR_ALREADY_HIRED = LangText.of("Job.Join.Error.AlreadyHired",
         LIGHT_GRAY.wrap("You're already hired for the " + LIGHT_RED.wrap(JOB_NAME) + " job!"));
 
+    public static final LangText JOB_JOIN_ERROR_COOLDOWN = LangText.of("Job.Join.Error.Cooldown",
+        LIGHT_GRAY.wrap("You can join the " + LIGHT_RED.wrap(JOB_NAME) + " job again in " + LIGHT_RED.wrap(GENERIC_TIME)));
+
     public static final LangText JOB_JOIN_ERROR_LIMIT_STATE = LangText.of("Job.Join.Error.StateLimit",
         LIGHT_GRAY.wrap("You can't get more than " + LIGHT_RED.wrap(GENERIC_AMOUNT + " " + GENERIC_STATE) + " jobs!"));
 
@@ -191,6 +173,9 @@ public class Lang extends CoreLang {
     public static final LangText JOB_LEAVE_ERROR_NOT_JOINED = LangText.of("Job.Leave.Error.NotJoined",
         LIGHT_GRAY.wrap("You're not employed for the " + LIGHT_RED.wrap(JOB_NAME) + " job!"));
 
+    public static final LangText JOB_LEAVE_ERROR_COOLDOWN = LangText.of("Job.Leave.Error.Cooldown",
+        LIGHT_GRAY.wrap("You can leave the " + LIGHT_RED.wrap(JOB_NAME) + " job in " + LIGHT_RED.wrap(GENERIC_TIME)));
+
     public static final LangText JOB_LEAVE_ERROR_NOT_ALLOWED = LangText.of("Job.Leave.Error.NotAllowed",
         LIGHT_GRAY.wrap("You can't leave the " + LIGHT_RED.wrap(JOB_NAME) + " job!"));
 
@@ -200,24 +185,31 @@ public class Lang extends CoreLang {
         LIGHT_GRAY.wrap("All " + LIGHT_GREEN.wrap(JOB_NAME) + " progress have been reset!")
     );
 
-    public static final LangText JOB_PAYMENT_RECEIPT = LangText.of("Job.Payment.Receipt.General",
+
+
+    public static final LangText JOB_PAYMENT_NOTIFY = LangText.of("Job.Payment.Notify",
         TAG_NO_PREFIX,
-        " ",
-        LIGHT_YELLOW.wrap(BOLD.wrap("Work Payment for " + LIGHT_GREEN.wrap(GENERIC_TIME) + ":")),
-        " ",
-        GENERIC_ENTRY,
-        " ",
-        LIGHT_ORANGE.wrap(BOLD.wrap("Total: ") + LIGHT_GREEN.wrap(GENERIC_TOTAL)),
-        " "
+        GRAY.wrap(GREEN.wrap("[$]") + " You got paid for the " + WHITE.wrap(JOB_NAME) + "'s work: " + GREEN.wrap(GENERIC_AMOUNT))
     );
 
-    public static final LangString JOB_PAYMENT_RECEIPT_ENTRY_JOB = LangString.of("Job.Payment.Receipt.Entry.Job",
-        LIGHT_YELLOW.wrap(BOLD.wrap(JOB_NAME) + " " + HOVER.wrapShowText("[" + LIGHT_GREEN.wrap("Details") + "]", GENERIC_CURRENCY))
-    );
-
-    public static final LangString JOB_PAYMENT_RECEIPT_ENTRY_CURRENCY = LangString.of("Job.Payment.Receipt.Entry.Currency",
-        LIGHT_GREEN.wrap(GENERIC_AMOUNT)
-    );
+//    public static final LangText JOB_PAYMENT_RECEIPT = LangText.of("Job.Payment.Receipt.General",
+//        TAG_NO_PREFIX,
+//        " ",
+//        LIGHT_YELLOW.wrap(BOLD.wrap("Work Payment for " + LIGHT_GREEN.wrap(GENERIC_TIME) + ":")),
+//        " ",
+//        GENERIC_ENTRY,
+//        " ",
+//        LIGHT_ORANGE.wrap(BOLD.wrap("Total: ") + LIGHT_GREEN.wrap(GENERIC_TOTAL)),
+//        " "
+//    );
+//
+//    public static final LangString JOB_PAYMENT_RECEIPT_ENTRY_JOB = LangString.of("Job.Payment.Receipt.Entry.Job",
+//        LIGHT_YELLOW.wrap(BOLD.wrap(JOB_NAME) + " " + HOVER.wrapShowText("[" + LIGHT_GREEN.wrap("Details") + "]", GENERIC_CURRENCY))
+//    );
+//
+//    public static final LangString JOB_PAYMENT_RECEIPT_ENTRY_CURRENCY = LangString.of("Job.Payment.Receipt.Entry.Currency",
+//        LIGHT_GREEN.wrap(GENERIC_AMOUNT)
+//    );
 
     public static final LangText SPECIAL_ORDER_ERROR_DISABLED_SERVER = LangText.of("SpecialOrder.Error.DisabledByServer",
         GRAY.wrap("Special Orders are " + LIGHT_RED.wrap("disabled") + " on the server."));
@@ -445,6 +437,11 @@ public class Lang extends CoreLang {
     public static final LangText ERROR_COMMAND_INVALID_CURRENCY_ARGUMENT = LangText.of("Error.Error.Command.Argument.InvalidCurrency",
         LIGHT_GRAY.wrap(LIGHT_RED.wrap(GENERIC_VALUE) + " is not a valid currency!"));
 
+
+    public static final LangString OTHER_NO_JOBS            = LangString.of("Other.NoJobs", GRAY.wrap("<No Jobs>"));
+    public static final LangString OTHER_NO_INCOME          = LangString.of("Other.NoIncome", GRAY.wrap("$0"));
+    public static final LangString OTHER_JOB_DELIMITER      = LangString.of("Other.JobDelimiter", ", ");
+    public static final LangString OTHER_CURRENCY_DELIMITER = LangString.of("Other.CurrencyDelimiter", ", ");
 
     public static final LangString EDITOR_TITLE_ZONES                  = LangString.of("Editor.Title.Zone.List", BLACK.wrap("Job Zones"));
     public static final LangString EDITOR_TITLE_ZONE_SETTINGS          = LangString.of("Editor.Title.Zone.Settings", BLACK.wrap("Zone Settings"));

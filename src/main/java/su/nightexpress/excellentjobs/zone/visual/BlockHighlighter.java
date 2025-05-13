@@ -12,6 +12,9 @@ import java.util.*;
 
 public abstract class BlockHighlighter {
 
+    public static final ChatColor COLOR = ChatColor.AQUA;
+    public static final float SIZE = 0.98f;
+
     protected final JobsPlugin plugin;
     private final Map<UUID, List<Integer>> entityIdMap;
 
@@ -31,12 +34,12 @@ public abstract class BlockHighlighter {
         this.destroyEntity(player, list);
     }
 
-    public void addVisualBlock(@NotNull Player player, @NotNull Location location, @NotNull BlockData blockData, @NotNull ChatColor color, float size) {
+    public void addVisualBlock(@NotNull Player player, @NotNull Location location, @NotNull BlockData blockData) {
         //List<FakeEntity> entities = this.getEntityMap(player.getUniqueId()).computeIfAbsent(type, k -> new ArrayList<>());
         List<Integer> idList = this.entityIdMap.computeIfAbsent(player.getUniqueId(), k -> new ArrayList<>());
 
         // To shift scaled down/up displays to the center of a block location.
-        float offset = 1f - size;
+        float offset = 1f - SIZE;
         // Half-sized (0.5f) block displays got shifted on 1/2 of the size difference, so 0.5f modifier comes from here.
         float shift = 0.5f * offset;
 
@@ -46,7 +49,7 @@ public abstract class BlockHighlighter {
 
         int entityID = this.nextEntityId();
 
-        /*FakeEntity entity = */this.spawnVisualBlock(entityID, player, location, blockData, color, size);
+        /*FakeEntity entity = */this.spawnVisualBlock(entityID, player, location, blockData, COLOR, SIZE);
         //entities.add(entity);
 
         idList.add(entityID);

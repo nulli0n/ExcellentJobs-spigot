@@ -6,12 +6,12 @@ import org.jetbrains.annotations.NotNull;
 import su.nightexpress.excellentjobs.data.impl.JobData;
 import su.nightexpress.excellentjobs.user.JobUser;
 
-public class JobLevelUpEvent extends JobDataEvent {
+public class JobLevelUpEvent extends JobLevelEvent {
 
     private static final HandlerList HANDLER_LIST = new HandlerList();
 
-    public JobLevelUpEvent(@NotNull Player player, @NotNull JobUser user, @NotNull JobData data) {
-        super(player, user, data);
+    public JobLevelUpEvent(@NotNull Player player, @NotNull JobUser user, @NotNull JobData data, int oldLevel) {
+        super(player, user, data, oldLevel);
     }
 
     public static HandlerList getHandlerList() {
@@ -22,9 +22,5 @@ public class JobLevelUpEvent extends JobDataEvent {
     @Override
     public HandlerList getHandlers() {
         return HANDLER_LIST;
-    }
-
-    public int getNewLevel() {
-        return this.getJobData().getLevel();
     }
 }

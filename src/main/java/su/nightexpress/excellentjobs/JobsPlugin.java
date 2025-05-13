@@ -57,11 +57,7 @@ public class JobsPlugin extends NightPlugin implements ImprovedCommands {
             return;
         }
 
-        JobsAPI.load(this);
-        Keys.load(this);
-        WorkRegistry.load(this);
-        BaseCommands.load(this);
-
+        this.loadEngine();
         this.loadIntegrations();
 
         this.dataHandler = new DataHandler(this);
@@ -103,6 +99,7 @@ public class JobsPlugin extends NightPlugin implements ImprovedCommands {
         if (Plugins.hasPlaceholderAPI()) {
             PlaceholderHook.shutdown();
         }
+
         if (this.boosterManager != null) this.boosterManager.shutdown();
         if (this.zoneManager != null) this.zoneManager.shutdown();
         if (this.statsManager != null) this.statsManager.shutdown();
@@ -113,6 +110,14 @@ public class JobsPlugin extends NightPlugin implements ImprovedCommands {
 
         WorkRegistry.clear();
         JobsAPI.clear();
+        Keys.clear();
+    }
+
+    private void loadEngine() {
+        JobsAPI.load(this);
+        Keys.load(this);
+        WorkRegistry.load(this);
+        BaseCommands.load(this);
     }
 
     private void loadIntegrations() {

@@ -62,9 +62,9 @@ public abstract class Work<E extends Event, O> {
 
         String objectName = this.getObjectName(object);
         String localizedName = this.getObjectLocalizedName(object);
-        WorkObjective objective = new WorkObjective(this.id, objectName, localizedName);
+        WorkObjective objective = new WorkObjective(this.id, objectName, localizedName, amount, multiplier);
 
-        this.plugin.getJobManager().doObjective(player, objective, amount, multiplier);
+        this.plugin.getJobManager().doObjective(player, objective);
     }
 
     public abstract boolean handle(@NotNull E event);

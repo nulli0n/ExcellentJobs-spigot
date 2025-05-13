@@ -6,19 +6,28 @@ import su.nightexpress.excellentjobs.JobsPlugin;
 
 public class Keys {
 
-    public static NamespacedKey ENTITY_TRACKED;
-    public static NamespacedKey BREWING_HOLDER;
-    public static NamespacedKey LEVEL_FIREWORK;
+    public static NamespacedKey entityTracked;
+    public static NamespacedKey brewingHolder;
+    public static NamespacedKey levelFirework;
 
     public static NamespacedKey wandItem;
     public static NamespacedKey wandZoneId;
 
     public static void load(@NotNull JobsPlugin plugin) {
-        ENTITY_TRACKED = new NamespacedKey(plugin, "entity.tracked");
-        BREWING_HOLDER = new NamespacedKey(plugin, "brewing.holder");
-        LEVEL_FIREWORK = new NamespacedKey(plugin, "job.firework");
+        entityTracked = new NamespacedKey(plugin, "entity.tracked");
+        brewingHolder = new NamespacedKey(plugin, "brewing.holder");
+        levelFirework = new NamespacedKey(plugin, "job.firework");
 
         wandItem = new NamespacedKey(plugin, "wand.item");
         wandZoneId = new NamespacedKey(plugin, "wand.zone_id");
+    }
+
+    public static void clear() {
+        entityTracked = null;
+        brewingHolder = null;
+        levelFirework = null;
+
+        wandItem = null;
+        wandZoneId = null;
     }
 }

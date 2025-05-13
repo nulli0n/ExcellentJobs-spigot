@@ -1,63 +1,66 @@
 package su.nightexpress.excellentjobs.job.impl;
 
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.economybridge.api.Currency;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class JobIncome {
 
-    private final Job                                      job;
-    private final Map<JobObjective, Map<Currency, Double>> paymentMap;
+    private final Map<Currency, Double> currencyMap;
 
-    public JobIncome(@NotNull Job job) {
-        this.job = job;
-        this.paymentMap = new HashMap<>();
+    public JobIncome() {
+        this.currencyMap = new ConcurrentHashMap<>();
     }
 
-    @NotNull
-    public Map<Currency, Double> getSumAndClear() {
-        Map<Currency, Double> total = this.getSum();
-        this.getPaymentMap().clear();
-
-        return total;
+    public void payAndClear(@NotNull Player player) {
+        this.pay(player);
+        this.clear();
     }
 
-    @NotNull
-    public Map<Currency, Double> getSum() {
-        Map<Currency, Double> total = new HashMap<>();
-
-        this.getPaymentMap().forEach((objective, map) -> {
-            map.forEach((currency, amount) -> {
-                total.merge(currency, amount, Double::sum);
-            });
+    public void pay(@NotNull Player player) {
+        this.currencyMap.forEach((currency, amount) -> {
+            currency.give(player, amount);
         });
-        total.values().removeIf(d -> d == 0D);
-
-        return total;
     }
 
-    public void add(@NotNull JobObjective objective, @NotNull Currency currency, double amount) {
-        var currencyMap = this.getPaymentMap().computeIfAbsent(objective, k -> new HashMap<>());
-
-        double has = currencyMap.computeIfAbsent(currency, k -> 0D);
-        currencyMap.put(currency, has + amount);
+    public void clear() {
+        this.currencyMap.clear();
     }
 
-    public boolean isZero() {
-        if (this.getPaymentMap().isEmpty()) return true;
+    public void set(@NotNull Currency currency, double amount) {
+        if (amount <= 0) {
+            this.remove(currency);
+            return;
+        }
 
-        return this.getPaymentMap().values().stream().allMatch(map -> map.isEmpty() || map.values().stream().mapToDouble(d -> d).sum() == 0D);
+        this.currencyMap.put(currency, amount);
+    }
+
+    public void add(@NotNull Currency currency, double amount) {
+        if (amount == 0) return;
+
+        double has = this.currencyMap.getOrDefault(currency, 0D);
+
+        this.set(currency, has + amount);
+    }
+
+    public void reduce(@NotNull Currency currency, double amount) {
+        this.add(currency, -amount);
+    }
+
+    public void remove(@NotNull Currency currency) {
+        this.currencyMap.remove(currency);
+    }
+
+    public boolean isEmpty() {
+        return this.currencyMap.isEmpty() || this.currencyMap.values().stream().mapToDouble(amount -> amount).sum() == 0D;
     }
 
     @NotNull
-    public Job getJob() {
-        return job;
-    }
-
-    @NotNull
-    public Map<JobObjective, Map<Currency, Double>> getPaymentMap() {
-        return paymentMap;
+    public Map<Currency, Double> getCurrencyMap() {
+        return this.currencyMap;
     }
 }

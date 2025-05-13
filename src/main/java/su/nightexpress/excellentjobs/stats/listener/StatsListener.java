@@ -9,6 +9,7 @@ import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.api.event.JobObjectiveIncomeEvent;
 import su.nightexpress.excellentjobs.api.event.JobPaymentEvent;
 import su.nightexpress.excellentjobs.job.impl.Job;
+import su.nightexpress.excellentjobs.job.impl.JobIncome;
 import su.nightexpress.excellentjobs.stats.StatsManager;
 import su.nightexpress.nightcore.manager.AbstractListener;
 
@@ -30,9 +31,10 @@ public class StatsListener extends AbstractListener<JobsPlugin> {
     public void onJobPayment(JobPaymentEvent event) {
         Player player = event.getPlayer();
         Job job = event.getJob();
+        JobIncome income = event.getIncome();
 
         this.statsManager.addStats(player, job, stats -> {
-            stats.addCurrency(event.getCurrency(), event.getAmount());
+            income.getCurrencyMap().forEach(stats::addCurrency);
             //player.sendMessage("Currency Amount: " + stats.getCurrencyEarned());
         });
     }

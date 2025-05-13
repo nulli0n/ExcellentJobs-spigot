@@ -44,9 +44,9 @@ public class JobGenericListener extends AbstractListener<JobsPlugin> {
     }
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
-    public void onSkillFireworkDamage(EntityDamageByEntityEvent event) {
+    public void onFireworkDamage(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof Firework firework)) return;
-        if (PDCUtil.getBoolean(firework, Keys.LEVEL_FIREWORK).orElse(false)) {
+        if (PDCUtil.getBoolean(firework, Keys.levelFirework).orElse(false)) {
             event.setCancelled(true);
         }
     }
@@ -84,7 +84,7 @@ public class JobGenericListener extends AbstractListener<JobsPlugin> {
         BrewingStand stand = inventory.getHolder();
         if (stand == null) return;
 
-        PDCUtil.set(stand, Keys.BREWING_HOLDER, event.getWhoClicked().getUniqueId().toString());
+        PDCUtil.set(stand, Keys.brewingHolder, event.getWhoClicked().getUniqueId().toString());
         stand.update();
     }
 }

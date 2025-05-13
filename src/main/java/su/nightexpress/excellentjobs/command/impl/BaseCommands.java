@@ -56,6 +56,14 @@ public class BaseCommands {
             .executes((context, arguments) -> leaveJob(plugin, context, arguments))
         );
 
+        root.addChildren(DirectNode.builder(plugin, "levels")
+            .playerOnly()
+            .description(Lang.COMMAND_LEVELS_DESC)
+            .permission(Perms.COMMAND_LEVELS)
+            .withArgument(CommandArguments.forJob(plugin).required())
+            .executes((context, arguments) -> viewLevels(plugin, context, arguments))
+        );
+
         root.addChildren(DirectNode.builder(plugin, "objectives")
             .playerOnly()
             .description(Lang.COMMAND_OBJECTIVES_DESC)
@@ -70,7 +78,7 @@ public class BaseCommands {
             .withArgument(CommandArguments.forJob(plugin).required())
             .withArgument(ArgumentTypes.playerName(CommandArguments.PLAYER).permission(Perms.COMMAND_RESET_OTHERS))
             .withFlag(CommandFlags.silent().permission(Perms.COMMAND_RESET_OTHERS))
-            .executes((context, arguments) -> resetStats(plugin, context, arguments))
+            .executes((context, arguments) -> resetProgress(plugin, context, arguments))
         );
 
         root.addChildren(DirectNode.builder(plugin, "setstate")
@@ -136,6 +144,19 @@ public class BaseCommands {
         return true;
     }
 
+    private static boolean viewLevels(@NotNull JobsPlugin plugin, @NotNull CommandContext context, @NotNull ParsedArguments arguments) {
+        Job job = arguments.getArgument(CommandArguments.JOB, Job.class);
+        Player player = context.getPlayerOrThrow();
+        if (!job.hasPermission(player)) {
+            context.errorPermission();
+            return false;
+        }
+
+        plugin.getJobManager().openRewardsMenu(player, job);
+        return true;
+    }
+
+
     private static boolean viewObjectives(@NotNull JobsPlugin plugin, @NotNull CommandContext context, @NotNull ParsedArguments arguments) {
         Job job = arguments.getArgument(CommandArguments.JOB, Job.class);
         Player player = context.getPlayerOrThrow();
@@ -148,9 +169,10 @@ public class BaseCommands {
         return true;
     }
 
-    private static boolean resetStats(@NotNull JobsPlugin plugin, @NotNull CommandContext context, @NotNull ParsedArguments arguments) {
+    private static boolean resetProgress(@NotNull JobsPlugin plugin, @NotNull CommandContext context, @NotNull ParsedArguments arguments) {
         Job job = arguments.getArgument(CommandArguments.JOB, Job.class);
         String playerName = arguments.getStringArgument(CommandArguments.PLAYER, context.getSender().getName());
+        boolean isAdmin = arguments.hasArgument(CommandArguments.PLAYER);
 
         plugin.getUserManager().manageUser(playerName, user -> {
             if (user == null) {
@@ -158,22 +180,13 @@ public class BaseCommands {
                 return;
             }
 
-            JobData jobData = user.getData(job);
-            jobData.reset();
-            if (!playerName.equalsIgnoreCase(user.getName())) {
-                jobData.resetAdditional();
-            }
-            plugin.getUserManager().save(user);
+            Player target = user.getPlayer();
+            plugin.getJobManager().handleJobReset(user, job, target, isAdmin, arguments.hasFlag(CommandFlags.SILENT));
 
             if (!context.getSender().getName().equalsIgnoreCase(user.getName())) {
                 context.send(Lang.COMMAND_RESET_DONE, replacer -> replacer
-                    .replace(jobData.replaceAllPlaceholders())
+                    .replace(job.replacePlaceholders())
                     .replace(Placeholders.PLAYER_NAME, user.getName()));
-            }
-
-            Player target = user.getPlayer();
-            if (target != null && !arguments.hasFlag(CommandFlags.SILENT)) {
-                Lang.JOB_RESET_NOTIFY.getMessage().send(target, replacer -> replacer.replace(jobData.replaceAllPlaceholders()));
             }
         });
         return true;
@@ -192,7 +205,7 @@ public class BaseCommands {
 
             JobData jobData = user.getData(job);
             jobData.setState(state);
-            jobData.normalize();
+            jobData.update();
             plugin.getUserManager().save(user);
 
             context.send(Lang.COMMAND_SET_STATE_DONE, replacer -> replacer
@@ -238,36 +251,22 @@ public class BaseCommands {
             }
 
             Player target = user.getPlayer();
-            JobData data = user.getData(job);
-
-            if (target != null) {
-                int level = data.getLevel();
-                int modified = mode.modify(level, amount);
-                int add = modified - level;
-                plugin.getJobManager().addLevel(target, job, add);
-            }
-            else {
-                data.setLevel(mode.modify(data.getLevel(), amount));
-                data.normalize();
-            }
-
-            plugin.getUserManager().save(user);
+            boolean silent = arguments.hasFlag(CommandFlags.SILENT);
 
             LangText doneMsg;
-            LangText notifyMsg;
 
             switch (mode) {
                 case ADD -> {
+                    plugin.getJobManager().handleLevelAdd(user, job, amount, target, silent);
                     doneMsg = Lang.COMMAND_LEVEL_ADD_DONE;
-                    notifyMsg = Lang.COMMAND_LEVEL_ADD_NOTIFY;
                 }
                 case REMOVE -> {
+                    plugin.getJobManager().handleLevelRemove(user, job, amount, target, silent);
                     doneMsg = Lang.COMMAND_LEVEL_REMOVE_DONE;
-                    notifyMsg = Lang.COMMAND_LEVEL_REMOVE_NOTIFY;
                 }
                 case SET -> {
+                    plugin.getJobManager().handleLevelSet(user, job, amount, target, silent);
                     doneMsg = Lang.COMMAND_LEVEL_SET_DONE;
-                    notifyMsg = Lang.COMMAND_LEVEL_SET_NOTIFY;
                 }
                 default -> {
                     return;
@@ -275,15 +274,9 @@ public class BaseCommands {
             }
 
             context.send(doneMsg, replacer -> replacer
-                .replace(data.replaceAllPlaceholders())
+                .replace(job.replacePlaceholders())
                 .replace(Placeholders.PLAYER_NAME, user.getName())
                 .replace(Placeholders.GENERIC_AMOUNT, amount));
-
-            if (target != null && !arguments.hasFlag(CommandFlags.SILENT)) {
-                notifyMsg.getMessage().send(target, replacer -> replacer
-                    .replace(data.replaceAllPlaceholders())
-                    .replace(Placeholders.GENERIC_AMOUNT, amount));
-            }
         });
 
         return true;
@@ -306,36 +299,22 @@ public class BaseCommands {
             }
 
             Player target = user.getPlayer();
-            JobData data = user.getData(job);
-
-            if (target != null) {
-                int xp = data.getXP();
-                int modified = mode.modify(xp, amount);
-                int add = modified - xp;
-                plugin.getJobManager().addXP(target, job, add);
-            }
-            else {
-                data.setXP(mode.modify(data.getXP(), amount));
-                data.normalize();
-            }
-
-            plugin.getUserManager().save(user);
+            boolean silent = arguments.hasFlag(CommandFlags.SILENT);
 
             LangText doneMsg;
-            LangText notifyMsg;
 
             switch (mode) {
                 case ADD -> {
+                    plugin.getJobManager().handleXPAdd(user, job, amount, silent, target);
                     doneMsg = Lang.COMMAND_XP_ADD_DONE;
-                    notifyMsg = Lang.COMMAND_XP_ADD_NOTIFY;
                 }
                 case REMOVE -> {
+                    plugin.getJobManager().handleXPRemove(user, job, amount, silent, target);
                     doneMsg = Lang.COMMAND_XP_REMOVE_DONE;
-                    notifyMsg = Lang.COMMAND_XP_REMOVE_NOTIFY;
                 }
                 case SET -> {
+                    plugin.getJobManager().handleXPSet(user, job, amount, silent, target);
                     doneMsg = Lang.COMMAND_XP_SET_DONE;
-                    notifyMsg = Lang.COMMAND_XP_SET_NOTIFY;
                 }
                 default -> {
                     return;
@@ -343,15 +322,9 @@ public class BaseCommands {
             }
 
             context.send(doneMsg, replacer -> replacer
-                .replace(data.replaceAllPlaceholders())
+                .replace(job.replacePlaceholders())
                 .replace(Placeholders.PLAYER_NAME, user.getName())
                 .replace(Placeholders.GENERIC_AMOUNT, amount));
-
-            if (target != null && !arguments.hasFlag(CommandFlags.SILENT)) {
-                notifyMsg.getMessage().send(target, replacer -> replacer
-                    .replace(data.replaceAllPlaceholders())
-                    .replace(Placeholders.GENERIC_AMOUNT, amount));
-            }
         });
         return true;
     }

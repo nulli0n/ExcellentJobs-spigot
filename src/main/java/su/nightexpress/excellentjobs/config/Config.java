@@ -4,7 +4,6 @@ import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.event.entity.CreatureSpawnEvent;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.excellentjobs.Placeholders;
 import su.nightexpress.excellentjobs.job.impl.OrderReward;
@@ -12,6 +11,8 @@ import su.nightexpress.excellentjobs.job.work.WorkId;
 import su.nightexpress.excellentjobs.util.JobUtils;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.util.*;
+import su.nightexpress.nightcore.util.bukkit.NightItem;
+import su.nightexpress.nightcore.util.rankmap.IntRankMap;
 
 import java.util.Map;
 import java.util.Set;
@@ -38,24 +39,36 @@ public class Config {
         true,
         "Sets whether or not '/jobs menu' command is set as default plugin command instead of '/jobs help' one.");
 
+    public static final ConfigValue<Boolean> GENERAL_PAYMENT_INSTANT = ConfigValue.create("General.Payment.Instant",
+        false,
+        "Controls whether players get payments for their work (job objectives) instantly without a delay (interval)."
+    );
+
     public static final ConfigValue<Integer> GENERAL_PAYMENT_INTERVAL = ConfigValue.create("General.Payment.Interval",
         900,
         "Sets how often (in seconds) players will get payments for their work.",
         "Players will get instant payment when leaving server.",
+        "[*] Useless if 'Instant' is set on 'true'.",
         "[Default is 900 (15 minues)]");
 
     public static final ConfigValue<Boolean> GENERAL_PROGRESS_BAR_ENABLED = ConfigValue.create("General.ProgressBar.Enabled",
         true,
-        "Enables boss bar indicating gained job XP and future income for the latest X seconds.");
+        "Enables progress bar indicating gained job XP and future income for the latest X seconds."
+    );
+
+    public static final ConfigValue<Boolean> GENERAL_PROGRESS_BAR_BOSS_BAR_ENABLED = ConfigValue.create("General.ProgressBar.BossBar.Enabled",
+        true,
+        "Controls whether job progress bar should display as Boss Bar."
+    );
 
     public static final ConfigValue<Integer> GENERAL_PROGRESS_BAR_STAY_TIME = ConfigValue.create("General.ProgressBar.StayTime",
         8,
         "Sets for how long (in seconds) progress bar will stay before reset and disappear.");
 
     public static final ConfigValue<String> GENERAL_PROGRESS_BAR_TITLE = ConfigValue.create("General.ProgressBar.Title",
-        GRAY.enclose(LIGHT_YELLOW.enclose(BOLD.enclose(JOB_NAME + " Job")) + " (Lv. " + WHITE.enclose(JOB_DATA_LEVEL) + ") | " + LIGHT_RED.enclose("+" + GENERIC_XP + " XP") + " | " + LIGHT_GREEN.enclose("+" + GENERIC_INCOME)),
+        GRAY.wrap(LIGHT_YELLOW.wrap(BOLD.wrap(JOB_NAME + " Job")) + " (Lv. " + WHITE.wrap(JOB_DATA_LEVEL) + ") | " + LIGHT_RED.wrap("+" + GENERIC_XP + " XP") + " | " + LIGHT_GREEN.wrap("+" + GENERIC_INCOME)),
         "Sets title for job progress bar.",
-        "You can use 'Job' placeholders (not all of them): " + URL_WIKI_PLACEHOLDERS
+        "You can use 'Job' placeholders: " + URL_WIKI_PLACEHOLDERS
     );
 
     public static final ConfigValue<BarStyle> GENERAL_PROGRESS_BAR_STYLE = ConfigValue.create("General.ProgressBar.Style",
@@ -64,14 +77,30 @@ public class Config {
         "Allowed values: " + StringUtil.inlineEnum(BarStyle.class, ", ")
     );
 
-    public static final ConfigValue<String> PLACEHOLDERS_JOBS_DELIMITER = ConfigValue.create("Placeholders.Jobs.Delimiter",
-        ", ",
-        "Sets delimiter for placeholders listing job name(s)."
+    public static final ConfigValue<Boolean> PROGRESS_BAR_ACTION_BAR_ENABLED = ConfigValue.create("General.ProgressBar.ActionBar.Enabled",
+        false,
+        "Controls whether job progress bar should display in Action Bar."
     );
 
-    public static final ConfigValue<String> PLACEHOLDERS_JOBS_FALLBACK = ConfigValue.create("Placeholders.Jobs.Fallback",
-        GRAY.enclose("<No Jobs>"),
-        "Sets fallback text for job listing placeholders if player has no jobs."
+    public static final ConfigValue<String> PROGRESS_BAR_ACTION_BAR_TEXT = ConfigValue.create("General.ProgressBar.ActionBar.Text",
+        GRAY.wrap(LIGHT_YELLOW.wrap(BOLD.wrap(JOB_NAME + " Job")) + " (Lv. " + WHITE.wrap(JOB_DATA_LEVEL) + ") | " + LIGHT_RED.wrap("+" + GENERIC_XP + " XP") + " | " + LIGHT_GREEN.wrap("+" + GENERIC_INCOME)),
+        "Sets text for the job progression in action bar.",
+        "You can use 'Job' placeholders: " + URL_WIKI_PLACEHOLDERS
+    );
+
+    public static final ConfigValue<Boolean> JOBS_COOLDOWN_ON_JOIN = ConfigValue.create("Jobs.Cooldown.OnJoin",
+        true,
+        "Controls whether the job cooldown is applied when player joins the job.");
+
+    public static final ConfigValue<Boolean> JOBS_COOLDOWN_ON_LEAVE = ConfigValue.create("Jobs.Cooldown.OnLeave",
+        true,
+        "Controls whether the job cooldown is applied when player quits the job.");
+
+    public static final ConfigValue<IntRankMap> JOBS_COOLDOWN_VALUES = ConfigValue.create("Jobs.Cooldown.Values",
+        IntRankMap::read,
+        (cfg, path, r) -> r.write(cfg, path),
+        () -> IntRankMap.ranked(86400).addValue("vip", 42200).addValue("admin", 0),
+        "Sets job cooldown values based on player rank or permissions."
     );
 
     public static final ConfigValue<RankMap<Integer>> JOBS_PRIMARY_AMOUNT = ConfigValue.create("Jobs.Primary_Amount",
@@ -147,7 +176,7 @@ public class Config {
         "Even if disabled, it still won't allow players to have zone bonuses and the whole ability to work there unless all conditions are met."
     );
 
-    public static final ConfigValue<ItemStack> ZONES_WAND_ITEM = ConfigValue.create("Zones.WandItem",
+    public static final ConfigValue<NightItem> ZONES_WAND_ITEM = ConfigValue.create("Zones.WandItem",
         JobUtils.getDefaultZoneWand(),
         "Item used to define zone's cuboid."
     );
@@ -204,7 +233,8 @@ public class Config {
         "You can also use " + Plugins.PLACEHOLDER_API + " placeholders in commands."
     );
 
-    public static final ConfigValue<Boolean> LEVELING_FIREWORKS = ConfigValue.create("Leveling.Fireworks", true,
+    public static final ConfigValue<Boolean> LEVELING_FIREWORKS = ConfigValue.create("Leveling.Fireworks",
+        true,
         "Sets whether or not a random firework will be spawned above the player on job level up.");
 
     public static final ConfigValue<Boolean> ABUSE_TRACK_PLAYER_BLOCKS = ConfigValue.create("Abuse_Protection.Track_Player_Blocks",
@@ -282,6 +312,10 @@ public class Config {
 
     public static boolean isSpecialOrdersEnabled() {
         return SPECIAL_ORDERS_ENABLED.get();
+    }
+
+    public static boolean isInstantPayment() {
+        return GENERAL_PAYMENT_INSTANT.get();
     }
 
     @NotNull

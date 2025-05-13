@@ -24,6 +24,7 @@ import su.nightexpress.excellentjobs.zone.impl.Zone;
 import su.nightexpress.excellentjobs.zone.listener.GenericZoneListener;
 import su.nightexpress.excellentjobs.zone.listener.SelectionZoneListener;
 import su.nightexpress.excellentjobs.zone.visual.BlockHighlighter;
+import su.nightexpress.excellentjobs.zone.visual.BlockInfo;
 import su.nightexpress.excellentjobs.zone.visual.BlockPacketsHighlighter;
 import su.nightexpress.excellentjobs.zone.visual.BlockProtocolHighlighter;
 import su.nightexpress.nightcore.manager.AbstractManager;
@@ -294,7 +295,7 @@ public class ZoneManager extends AbstractManager<JobsPlugin> {
 
     @NotNull
     public ItemStack getCuboidWand(@Nullable Zone zone) {
-        ItemStack item = new ItemStack(Config.ZONES_WAND_ITEM.get());
+        ItemStack item = Config.ZONES_WAND_ITEM.get().getItemStack();
         if (zone != null) {
             PDCUtil.set(item, Keys.wandZoneId, zone.getId());
         }
@@ -407,7 +408,7 @@ public class ZoneManager extends AbstractManager<JobsPlugin> {
         World world = player.getWorld();
         Material cornerType = Config.getHighlightCorner();
         Material wireType = Config.getHighlightWire();
-        Set<Pair<BlockPos, BlockData>> dataSet = new HashSet<>();
+        Set<BlockInfo> dataSet = new HashSet<>();
 
         // Draw corners of the chunk/region all the time.
         this.collectBlockData(cuboid.getCorners(), dataSet, cornerType.createBlockData());
@@ -421,20 +422,18 @@ public class ZoneManager extends AbstractManager<JobsPlugin> {
         this.collectBlockData(cuboid.getCornerWiresZ(), dataSet, dataZ);
 
         // Draw all visual blocks at prepated positions with prepared block data.
-        dataSet.forEach(pair -> {
-            BlockPos blockPos = pair.getFirst();
+        dataSet.forEach(blockInfo -> {
+            BlockPos blockPos = blockInfo.getBlockPos();
             Location location = blockPos.toLocation(world);
-            ChatColor color = ChatColor.AQUA;//this.getBlockColor(player, world, blockPos, cuboid);
-            float size = 0.98f; // Size 1f will cause texture glitch when inside a block.
 
-            this.highlighter.addVisualBlock(player, location, pair.getSecond(), color, size);
+            this.highlighter.addVisualBlock(player, location, blockInfo.getBlockData());
         });
     }
 
-    private void collectBlockData(@NotNull Collection<BlockPos> source, @NotNull Set<Pair<BlockPos, BlockData>> target, @NotNull BlockData data) {
+    private void collectBlockData(@NotNull Collection<BlockPos> source, @NotNull Set<BlockInfo> target, @NotNull BlockData data) {
         if (data.getMaterial().isAir()) return;
 
-        source.stream().filter(blockPos -> blockPos != null && !blockPos.isEmpty()).map(blockPos -> Pair.of(blockPos, data)).forEach(target::add);
+        source.stream().filter(blockPos -> blockPos != null && !blockPos.isEmpty()).map(blockPos -> new BlockInfo(blockPos, data)).forEach(target::add);
     }
 
     @NotNull

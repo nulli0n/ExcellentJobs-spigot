@@ -178,7 +178,7 @@ public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
         .add(JOB_DATA_LEVEL, jobData -> NumberUtil.format(jobData.getLevel()))
         .add(JOB_DATA_LEVEL_MAX, jobData -> NumberUtil.format(jobData.getMaxLevel()))
         .add(JOB_DATA_XP, jobData -> NumberUtil.format(jobData.getXP()))
-        .add(JOB_DATA_XP_MAX, jobData -> NumberUtil.format(jobData.getMaxXP()))
+        .add(JOB_DATA_XP_MAX, jobData -> NumberUtil.format(jobData.getLevelXP()))
         .add(JOB_DATA_XP_TO_UP, jobData -> NumberUtil.format(jobData.getXPToLevelUp()))
         .add(JOB_DATA_XP_TO_DOWN, jobData -> NumberUtil.format(jobData.getXPToLevelDown()))
     );

@@ -1,14 +1,8 @@
 package su.nightexpress.excellentjobs.job;
 
-import org.bukkit.Color;
-import org.bukkit.FireworkEffect;
-import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.Firework;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.meta.FireworkMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import su.nightexpress.economybridge.EconomyBridge;
@@ -18,8 +12,6 @@ import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.Placeholders;
 import su.nightexpress.excellentjobs.api.booster.MultiplierType;
 import su.nightexpress.excellentjobs.api.event.*;
-import su.nightexpress.excellentjobs.job.work.Work;
-import su.nightexpress.excellentjobs.job.work.WorkObjective;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Keys;
 import su.nightexpress.excellentjobs.config.Lang;
@@ -33,6 +25,8 @@ import su.nightexpress.excellentjobs.job.listener.JobExploitListener;
 import su.nightexpress.excellentjobs.job.listener.JobGenericListener;
 import su.nightexpress.excellentjobs.job.menu.*;
 import su.nightexpress.excellentjobs.job.reward.LevelReward;
+import su.nightexpress.excellentjobs.job.work.Work;
+import su.nightexpress.excellentjobs.job.work.WorkObjective;
 import su.nightexpress.excellentjobs.user.JobUser;
 import su.nightexpress.excellentjobs.util.JobCreator;
 import su.nightexpress.excellentjobs.util.JobUtils;
@@ -43,7 +37,6 @@ import su.nightexpress.nightcore.util.FileUtil;
 import su.nightexpress.nightcore.util.NumberUtil;
 import su.nightexpress.nightcore.util.PDCUtil;
 import su.nightexpress.nightcore.util.TimeUtil;
-import su.nightexpress.nightcore.util.random.Rnd;
 import su.nightexpress.nightcore.util.time.TimeFormatType;
 import su.nightexpress.nightcore.util.time.TimeFormats;
 
@@ -58,7 +51,6 @@ import java.util.stream.Collectors;
 public class JobManager extends AbstractManager<JobsPlugin> {
 
     private final Map<String, Job>                    jobMap;
-    private final Map<UUID, Map<String, JobIncome>>   incomeMap;
     private final Map<UUID, Map<String, ProgressBar>> progressBarMap;
 
     private JobsMenu       jobsMenu;
@@ -70,7 +62,6 @@ public class JobManager extends AbstractManager<JobsPlugin> {
     public JobManager(@NotNull JobsPlugin plugin) {
         super(plugin);
         this.jobMap = new HashMap<>();
-        this.incomeMap = new HashMap<>();
         this.progressBarMap = new ConcurrentHashMap<>();
     }
 
@@ -89,11 +80,11 @@ public class JobManager extends AbstractManager<JobsPlugin> {
     }
 
     public static void devastateEntity(@NotNull Entity entity) {
-        PDCUtil.set(entity, Keys.ENTITY_TRACKED, true);
+        PDCUtil.set(entity, Keys.entityTracked, true);
     }
 
     public static boolean isDevastated(@NotNull Entity entity) {
-        return PDCUtil.getBoolean(entity, Keys.ENTITY_TRACKED).isPresent();
+        return PDCUtil.getBoolean(entity, Keys.entityTracked).isPresent();
     }
 
     @Override
@@ -104,7 +95,10 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         this.addListener(new JobGenericListener(this.plugin, this));
         this.addListener(new JobExploitListener(this.plugin));
 
-        this.addAsyncTask(this::payForJob, Config.GENERAL_PAYMENT_INTERVAL.get());
+        // Use 1 second interval for "instant" payments to avoid currency plugin's API usage spam + keep it async.
+        int paymentInterval = Config.isInstantPayment() ? 1 : Config.GENERAL_PAYMENT_INTERVAL.get();
+        this.addAsyncTask(this::payForJob, paymentInterval);
+
         if (Config.GENERAL_PROGRESS_BAR_ENABLED.get()) {
             this.addAsyncTask(this::tickProgressBars, 1);
         }
@@ -122,7 +116,6 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         if (this.jobsMenu != null) this.jobsMenu.clear();
 
         this.jobMap.clear();
-        this.incomeMap.clear();
         this.progressBarMap.clear();
     }
 
@@ -195,30 +188,16 @@ public class JobManager extends AbstractManager<JobsPlugin> {
             .collect(Collectors.toSet());
     }
 
-//    @NotNull
-//    @Deprecated
-//    public <O> Set<Job> getJobsByObjective(@NotNull Work<?, O> type, @NotNull O objective) {
-//        return this.getJobs().stream().filter(job -> job.hasObjective(type, objective)).collect(Collectors.toCollection(HashSet::new));
-//    }
-
-    @NotNull
-    public Map<UUID, Map<String, JobIncome>> getIncomeMap() {
-        return incomeMap;
-    }
-
-    @NotNull
-    private Map<String, JobIncome> getIncomeMap(@NotNull Player player) {
-        return this.incomeMap.computeIfAbsent(player.getUniqueId(), k -> new ConcurrentHashMap<>());
-    }
-
     @NotNull
     public JobIncome getIncome(@NotNull Player player, @NotNull Job job) {
-        return this.getIncomeMap(player).computeIfAbsent(job.getId(), k -> new JobIncome(job));
+        JobUser user = plugin.getUserManager().getOrFetch(player);
+        return user.getData(job).getIncome();
     }
 
     @NotNull
-    public Collection<JobIncome> getIncomes(@NotNull Player player) {
-        return this.getIncomeMap(player).values();
+    public Set<JobIncome> getIncomes(@NotNull Player player) {
+        JobUser user = plugin.getUserManager().getOrFetch(player);
+        return user.getDatas().stream().map(JobData::getIncome).collect(Collectors.toSet());
     }
 
     @NotNull
@@ -313,14 +292,13 @@ public class JobManager extends AbstractManager<JobsPlugin> {
             .build());
     }
 
+    @Deprecated // TODO Add use
     public void openResetMenu(@NotNull Player player, @NotNull Job job) {
         JobData data = plugin.getUserManager().getOrFetch(player).getData(job);
 
         UIUtils.openConfirmation(player, Confirmation.builder()
             .onAccept((viewer, event) -> {
-                data.reset();
-                plugin.getUserManager().save(player);
-                Lang.JOB_RESET_NOTIFY.getMessage().send(player, replacer -> replacer.replace(data.replaceAllPlaceholders()));
+                this.resetJobProgress(player, job);
                 this.plugin.runTask(task -> player.closeInventory());
             })
             .onReturn((viewer, event) -> {
@@ -328,6 +306,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
             })
             .setIcon(job.getIcon().localized(Lang.UI_JOB_LEAVE_INFO).replacement(replacer -> replacer.replace(data.replaceAllPlaceholders())))
             .build());
+        // TODO Icon localize
     }
 
     public boolean canGetMoreJobs(@NotNull Player player) {
@@ -353,7 +332,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
     public void handleQuit(@NotNull Player player) {
         this.payForJob(player);
         this.getProgressBars(player).forEach(ProgressBar::discard);
-        this.incomeMap.remove(player.getUniqueId());
+        //this.incomeMap.remove(player.getUniqueId());
         this.progressBarMap.remove(player.getUniqueId());
     }
 
@@ -366,14 +345,19 @@ public class JobManager extends AbstractManager<JobsPlugin> {
     }
 
     public void validateJobs(@NotNull Player player) {
-        if (!Config.JOBS_FORCE_LEAVE_WHEN_LOST_PERMISSION.get()) return;
+        boolean leaveOnPermissionLost = Config.JOBS_FORCE_LEAVE_WHEN_LOST_PERMISSION.get();
 
         JobUser user = this.plugin.getUserManager().getOrFetch(player);
         this.getJobs().forEach(job -> {
             JobData data = user.getData(job);
-            if (data.isActive() && !job.hasPermission(player)) {
-                this.onLeaveJob(job, data);
+            if (!data.isActive()) return;
+
+            if (leaveOnPermissionLost && !job.hasPermission(player)) {
+                this.onLeaveJob(player, job, data);
+                return;
             }
+
+            this.checkLevelsRewards(player, job);
         });
         this.plugin.getUserManager().save(user);
     }
@@ -390,6 +374,13 @@ public class JobManager extends AbstractManager<JobsPlugin> {
             return false;
         }
 
+        if (data.isOnCooldown()) {
+            Lang.JOB_LEAVE_ERROR_COOLDOWN.getMessage().send(player, replacer -> replacer
+                .replace(job.replacePlaceholders())
+                .replace(Placeholders.GENERIC_TIME, TimeFormats.formatDuration(data.getCooldown(), TimeFormatType.LITERAL)));
+            return false;
+        }
+
         if (!job.isAllowedState(JobState.INACTIVE)) {
             Lang.JOB_LEAVE_ERROR_NOT_ALLOWED.getMessage().send(player, replacer -> replacer.replace(job.replacePlaceholders()));
             return false;
@@ -399,32 +390,24 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         this.plugin.getPluginManager().callEvent(event);
         if (event.isCancelled()) return false;
 
-        this.onLeaveJob(job, data);
+        this.onLeaveJob(player, job, data);
         this.plugin.getUserManager().save(user);
 
         Lang.JOB_LEAVE_SUCCESS.getMessage().send(player, replacer -> replacer.replace(job.replacePlaceholders()));
         return true;
     }
 
-    private void onLeaveJob(@NotNull Job job, @NotNull JobData data) {
+    private void onLeaveJob(@NotNull Player player, @NotNull Job job, @NotNull JobData data) {
+        this.payForJob(player, job); // Pay what player earned.
+
         job.removeEmployee(data.getState(), 1);
         data.setState(JobState.INACTIVE);
+        if (Config.JOBS_COOLDOWN_ON_LEAVE.get()) {
+            data.setCooldown(JobUtils.getJobCooldownTimestamp(player));
+        }
         if (Config.JOBS_LEAVE_RESET_PROGRESS.get()) {
             data.reset();
         }
-    }
-
-    @Deprecated
-    public boolean joinJob(@NotNull Player player, @NotNull Job job, boolean forced) {
-        if (forced || (this.canGetMoreJobs(player, JobState.PRIMARY) && job.isAllowedState(JobState.PRIMARY))) {
-            return this.joinJob(player, job, JobState.PRIMARY, forced);
-        }
-        if (this.canGetMoreJobs(player, JobState.SECONDARY) && job.isAllowedState(JobState.SECONDARY)) {
-            return this.joinJob(player, job, JobState.SECONDARY, false);
-        }
-
-        Lang.JOB_JOIN_ERROR_LIMIT_GENERAL.getMessage().replace(job.replacePlaceholders()).send(player);
-        return false;
     }
 
     public boolean joinJob(@NotNull Player player, @NotNull Job job, @NotNull JobState state, boolean forced) {
@@ -443,6 +426,13 @@ public class JobManager extends AbstractManager<JobsPlugin> {
                 return false;
             }
 
+            if (data.isOnCooldown()) {
+                Lang.JOB_JOIN_ERROR_COOLDOWN.getMessage().send(player, replacer -> replacer
+                    .replace(job.replacePlaceholders())
+                    .replace(Placeholders.GENERIC_TIME, TimeFormats.formatDuration(data.getCooldown(), TimeFormatType.LITERAL)));
+                return false;
+            }
+
             if (!this.canGetMoreJobs(player, state)) {
                 Lang.JOB_JOIN_ERROR_LIMIT_STATE.getMessage().send(player, replacer -> replacer
                     .replace(Placeholders.GENERIC_AMOUNT, NumberUtil.format(getJobsLimit(player, state)))
@@ -457,11 +447,39 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         if (event.isCancelled()) return false;
 
         data.setState(event.getState());
+        if (Config.JOBS_COOLDOWN_ON_JOIN.get()) {
+            data.setCooldown(JobUtils.getJobCooldownTimestamp(player));
+        }
         job.addEmployee(event.getState(), 1);
+        this.checkLevelsRewards(player, job);
         this.plugin.getUserManager().save(user);
 
         Lang.JOB_JOIN_SUCCESS.getMessage().send(player, replacer -> replacer.replace(job.replacePlaceholders()));
         return true;
+    }
+
+    public void resetJobProgress(@NotNull Player player, @NotNull Job job) {
+        this.resetJobProgress(player, job, false);
+    }
+
+    public void resetJobProgress(@NotNull Player player, @NotNull Job job, boolean full) {
+        JobUser user = plugin.getUserManager().getOrFetch(player);
+
+        this.handleJobReset(user, job, player, full, false);
+    }
+
+    public void handleJobReset(@NotNull JobUser user, @NotNull Job job, @Nullable Player player, boolean full, boolean silent) {
+        if (player != null) {
+            this.payForJob(player, job);
+        }
+
+        JobData data = user.getData(job);
+        data.reset(full);
+        plugin.getUserManager().save(user);
+
+        if (player != null) {
+            if (!silent) Lang.JOB_RESET_NOTIFY.getMessage().send(player, replacer -> replacer.replace(data.replaceAllPlaceholders()));
+        }
     }
 
     public void tickProgressBars() {
@@ -473,64 +491,35 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         this.plugin.getServer().getOnlinePlayers().forEach(this::payForJob);
     }
 
+    /**
+     * Get player paid for all their active jobs.
+     * @param player Player to paid.
+     */
     public void payForJob(@NotNull Player player) {
-        Map<Job, Map<Currency, Double>> perJob = new HashMap<>();
+        this.getJobs().forEach(job -> this.payForJob(player, job));
+    }
 
-        // Get payment sum of all objectives for each job.
-        this.getIncomes(player).forEach(jobIncome -> {
-            Job job = jobIncome.getJob();
+    public boolean payForJob(@NotNull Player player, @NotNull Job job) {
+        JobUser user = plugin.getUserManager().getOrFetch(player);
+        JobData data = user.getData(job);
+        JobIncome income = data.getIncome();
+        if (income.isEmpty()) return false;
 
-            JobPrePaymentEvent event = new JobPrePaymentEvent(player, job, jobIncome);
-            this.plugin.getPluginManager().callEvent(event);
-            if (event.isCancelled()) return;
+        JobPaymentEvent event = new JobPaymentEvent(player, job, income);
+        this.plugin.getPluginManager().callEvent(event);
+        if (event.isCancelled()) return false;
 
-            perJob.put(job, jobIncome.getSumAndClear());
-        });
-        perJob.values().removeIf(Map::isEmpty); // Clear empty job payments
+        // Send message only for scheduled payments.
+        if (!Config.isInstantPayment()) {
+            Lang.JOB_PAYMENT_NOTIFY.getMessage().send(player, replacer -> replacer
+                .replace(data.replaceAllPlaceholders())
+                .replace(Placeholders.GENERIC_AMOUNT, JobUtils.formatIncome(income))
+            );
+        }
 
+        income.payAndClear(player);
 
-        // Calculate total payment from all jobs.
-        Map<Currency, Double> total = new HashMap<>();
-        perJob.forEach((job, map) -> map.forEach((currency, amount) -> {
-
-            JobPaymentEvent event = new JobPaymentEvent(player, job, currency, amount);
-            this.plugin.getPluginManager().callEvent(event);
-            if (event.isCancelled()) return;
-
-            total.merge(event.getCurrency(), event.getAmount(), Double::sum);
-        }));
-        if (total.isEmpty()) return;
-
-
-        // Pay the worker.
-        total.forEach((currency, amount) -> {
-            currency.give(player, amount);
-        });
-
-        String totalPay = total.entrySet().stream().map(entry -> {
-            Currency currency = entry.getKey();
-            String amount = currency.format(entry.getValue());
-            return Lang.JOB_PAYMENT_RECEIPT_ENTRY_CURRENCY.getString().replace(Placeholders.GENERIC_AMOUNT, amount);
-        }).collect(Collectors.joining(", "));
-
-        Lang.JOB_PAYMENT_RECEIPT.getMessage().send(player, replacer -> replacer
-            .replace(Placeholders.GENERIC_TIME, TimeFormats.toLiteral(Config.GENERAL_PAYMENT_INTERVAL.get() * 1000L + 100L))
-            .replace(Placeholders.GENERIC_TOTAL, totalPay)
-            .replace(Placeholders.GENERIC_ENTRY, list -> {
-                perJob.forEach((job, moneyMap) -> {
-                    String currencies = moneyMap.entrySet().stream()
-                        .map(entry -> {
-                            Currency currency = entry.getKey();
-                            String amount = currency.format(entry.getValue());
-                            return Lang.JOB_PAYMENT_RECEIPT_ENTRY_CURRENCY.getString().replace(Placeholders.GENERIC_AMOUNT, amount);
-                        })
-                        .collect(Collectors.joining(Placeholders.TAG_LINE_BREAK));
-
-                    list.add(job.replacePlaceholders().apply(Lang.JOB_PAYMENT_RECEIPT_ENTRY_JOB.getString()
-                        .replace(Placeholders.GENERIC_CURRENCY, currencies)
-                    ));
-                });
-            }));
+        return true;
     }
 
     public boolean createSpecialOrder(@NotNull Player player, @NotNull Job job, boolean force) {
@@ -649,10 +638,8 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         return true;
     }
 
-    public void doObjective(@NotNull Player player, @NotNull WorkObjective workObjective, int amount, double multiplier) {
+    public void doObjective(@NotNull Player player, @NotNull WorkObjective workObjective) {
         JobUser user = plugin.getUserManager().getOrFetch(player);
-
-        String objectId = workObjective.getObjectName();
 
         user.getDatas().forEach(jobData -> {
             if (jobData.getState() == JobState.INACTIVE) return;
@@ -663,195 +650,309 @@ public class JobManager extends AbstractManager<JobsPlugin> {
             JobObjective jobObjective = job.getObjectiveByWork(workObjective);
             if (jobObjective == null || !jobObjective.isUnlocked(player, jobData)) return;
 
-            JobOrderData orderData = jobData.getOrderData();
-            Label_Order:
-            if (jobData.hasOrder()) {
-                if (!orderData.isCompleted()) {
-                    JobOrderObjective orderObjective = orderData.getObjectiveMap().get(jobObjective.getId());
-                    if (orderObjective == null) break Label_Order;
-
-                    JobOrderCount count = orderObjective.getCount(objectId);
-                    if (count == null) break Label_Order;
-
-                    orderObjective.countObject(objectId, amount);
-
-                    Lang.SPECIAL_ORDER_PROGRESS.getMessage().send(player, replacer -> replacer
-                        .replace(job.replacePlaceholders())
-                        .replace(Placeholders.GENERIC_NAME, workObjective.getLocalizedName())
-                        .replace(Placeholders.GENERIC_CURRENT, NumberUtil.format(count.getCurrent()))
-                        .replace(Placeholders.GENERIC_MAX, NumberUtil.format(count.getRequired())));
-                }
-                if (orderData.isCompleted() && !orderData.isRewarded()) {
-                    List<OrderReward> rewards = orderData.translateRewards();
-                    rewards.forEach(reward -> reward.give(player));
-                    orderData.setRewarded(true);
-                    Lang.SPECIAL_ORDER_COMPLETED.getMessage().send(player, replacer -> replacer.replace(job.replacePlaceholders()));
-                }
-            }
-
-            int jobLevel = jobData.getLevel();
-            double xpBoost = JobsAPI.getBoost(player, job, MultiplierType.XP);
-            double incomeBoost = JobsAPI.getBoost(player, job, MultiplierType.INCOME);
             ProgressBar progressBar = this.getProgressBarOrCreate(player, job);
 
-            if (jobObjective.canPay()) {
-                JobIncome income = this.getIncome(player, job);
-                jobObjective.getPaymentMap().forEach((currencyId, rewardInfo) -> {
-                    // Do no process payment for limited currencies.
-                    if (jobData.isPaymentLimitReached(currencyId)) return;
-
-                    Currency currency = EconomyBridge.getCurrency(currencyId);
-                    if (currency == null) return;
-
-                    double payment = rewardInfo.rollAmountNaturally() * amount;
-                    double paymentMultiplier = 1D;
-
-                    if (JobUtils.canBeBoosted(currency)) {
-                        paymentMultiplier += incomeBoost;
-                    }
-                    paymentMultiplier += job.getPaymentMultiplier(jobLevel);
-                    paymentMultiplier += multiplier;
-
-                    JobObjectiveIncomeEvent event = new JobObjectiveIncomeEvent(
-                        player, user, jobData, jobObjective, workObjective, objectId, currency, payment, paymentMultiplier
-                    );
-                    this.plugin.getPluginManager().callEvent(event);
-                    if (event.isCancelled()) return;
-
-                    payment = event.getPayment() * event.getPaymentMultiplier();
-                    if (payment == 0D || Double.isNaN(payment) || Double.isInfinite(payment)) return;
-
-                    income.add(jobObjective, currency, payment);
-                    if (progressBar != null) progressBar.addPayment(currency, payment);
-
-                    if (!player.hasPermission(Perms.PREFIX_BYPASS_LIMIT_CURRENCY + job.getId()) && job.hasDailyPaymentLimit(currencyId, jobLevel)) {
-                        jobData.getLimitData().addCurrency(currencyId, payment);
-
-                        if (jobData.isPaymentLimitReached(currencyId)) {
-                            Lang.JOB_LIMIT_CURRENCY_NOTIFY.getMessage().send(player, replacer -> replacer
-                                .replace(job.replacePlaceholders())
-                                .replace(currency.replacePlaceholders()));
-                        }
-                    }
-                });
-            }
-
-
-            XP:
-            if (!jobData.isXPLimitReached()) {
-                double xpRoll = jobObjective.getXPReward().rollAmountNaturally() * amount;
-                double xpMultiplier = 1D;
-
-                xpMultiplier += xpBoost;//Booster.getPlainXPBoost(boosters);
-                xpMultiplier += job.getXPMultiplier(jobLevel);
-                xpMultiplier += multiplier;
-
-                JobObjectiveXPEvent event = new JobObjectiveXPEvent(
-                    player, user, jobData, jobObjective, workObjective, xpRoll, xpMultiplier
-                );
-                this.plugin.getPluginManager().callEvent(event);
-                if (event.isCancelled()) break XP;
-
-                xpRoll = event.getXPAmount() * event.getXPMultiplier();
-                if (xpRoll == 0D || Double.isNaN(xpRoll) || Double.isInfinite(xpRoll)) break XP;
-
-                if (this.addXP(player, job, xpRoll, false)) {
-                    if (progressBar != null) progressBar.addXP((int) xpRoll);
-
-                    if (!player.hasPermission(Perms.PREFIX_BYPASS_LIMIT_XP + job.getId()) && job.hasDailyXPLimit(jobLevel)) {
-                        jobData.getLimitData().addXP((int) xpRoll);
-
-                        if (jobData.isXPLimitReached()) {
-                            Lang.JOB_LIMIT_XP_NOTIFY.getMessage().send(player, replacer -> replacer.replace(job.replacePlaceholders()));
-                        }
-                    }
-                }
-            }
+            this.proceedOrder(player, workObjective, job, jobData, jobObjective);
+            this.proceedIncome(player, workObjective, job, jobData, jobObjective, progressBar);
+            this.proceedXP(player, workObjective, job, jobData, jobObjective, progressBar);
 
             if (progressBar != null) progressBar.updateDisplay();
         });
     }
 
+    private void proceedOrder(@NotNull Player player, @NotNull WorkObjective workObjective, @NotNull Job job, @NotNull JobData jobData, @NotNull JobObjective jobObjective) {
+        if (!jobData.hasOrder()) return;
 
-    public void addLevel(@NotNull Player player, @NotNull Job job, int amount) {
-        JobUser user = plugin.getUserManager().getOrFetch(player);
-        JobData jobData = user.getData(job);
-        boolean isMinus = amount < 0;
+        JobOrderData orderData = jobData.getOrderData();
 
-        for (int count = 0; count < Math.abs(amount); count++) {
-            int exp = isMinus ? -jobData.getXPToLevelDown() : jobData.getXPToLevelUp();
-            this.addXP(player, job, exp, false);
+        String objectId = workObjective.getObjectName();
+        int amount = workObjective.getAmount();
+
+        if (!orderData.isCompleted()) {
+            JobOrderObjective orderObjective = orderData.getObjectiveMap().get(jobObjective.getId());
+            if (orderObjective == null) return;
+
+            JobOrderCount count = orderObjective.getCount(objectId);
+            if (count == null) return;
+
+            orderObjective.countObject(objectId, amount);
+
+            Lang.SPECIAL_ORDER_PROGRESS.getMessage().send(player, replacer -> replacer
+                .replace(job.replacePlaceholders())
+                .replace(Placeholders.GENERIC_NAME, workObjective.getLocalizedName())
+                .replace(Placeholders.GENERIC_CURRENT, NumberUtil.format(count.getCurrent()))
+                .replace(Placeholders.GENERIC_MAX, NumberUtil.format(count.getRequired())));
+        }
+
+        if (orderData.isCompleted() && !orderData.isRewarded()) {
+            List<OrderReward> rewards = orderData.translateRewards();
+            rewards.forEach(reward -> reward.give(player));
+            orderData.setRewarded(true);
+            Lang.SPECIAL_ORDER_COMPLETED.getMessage().send(player, replacer -> replacer.replace(job.replacePlaceholders()));
         }
     }
 
-    public boolean addXP(@NotNull Player player, @NotNull Job job, double amount) {
-        return this.addXP(player, job, amount, true);
-    }
+    private void proceedIncome(@NotNull Player player, @NotNull WorkObjective workObjective, @NotNull Job job, @NotNull JobData jobData, @NotNull JobObjective jobObjective,
+                               @Nullable ProgressBar progressBar) {
 
-    public boolean addXP(@NotNull Player player, @NotNull Job job, double amount, boolean notify) {
-        if (amount == 0D) return false;
+        if (!jobObjective.canPay()) return;
 
         JobUser user = plugin.getUserManager().getOrFetch(player);
-        JobData jobData = user.getData(job);
+        JobIncome income = jobData.getIncome();
 
-        boolean isLose = amount < 0;
-        int xp = (int) Math.floor(amount);
+        String objectId = workObjective.getObjectName();
+        int jobLevel = jobData.getLevel();
+        int amount = workObjective.getAmount();
+        double multiplier = workObjective.getMultiplier();
+        double boost = JobsAPI.getBoost(player, job, MultiplierType.INCOME);
 
-        JobXPEvent xpEvent = JobXPEvent.createEvent(player, user, jobData, xp);
-        plugin.getPluginManager().callEvent(xpEvent);
-        if (xpEvent.isCancelled()) return false;
 
-        xp = xpEvent.getXP();
+        jobObjective.getPaymentMap().forEach((currencyId, rewardInfo) -> {
+            // Do no process payment for limited currencies.
+            if (jobData.isPaymentLimitReached(currencyId)) return;
 
-        int levelHas = jobData.getLevel();
-        if (isLose) {
-            jobData.removeXP(xp);
+            Currency currency = EconomyBridge.getCurrency(currencyId);
+            if (currency == null) return;
+
+            double payment = rewardInfo.rollAmountNaturally() * amount;
+            double paymentMultiplier = 1D;
+
+            if (JobUtils.canBeBoosted(currency)) {
+                paymentMultiplier += boost;
+            }
+            paymentMultiplier += job.getPaymentMultiplier(jobLevel);
+            paymentMultiplier += multiplier;
+
+            JobObjectiveIncomeEvent event = new JobObjectiveIncomeEvent(player, user, jobData, jobObjective, workObjective, objectId, currency, payment, paymentMultiplier);
+            this.plugin.getPluginManager().callEvent(event);
+            if (event.isCancelled()) return;
+
+            payment = event.getPayment() * event.getPaymentMultiplier();
+            if (payment == 0D || Double.isNaN(payment) || Double.isInfinite(payment)) return;
+
+            income.add(currency, payment);
+            if (progressBar != null) progressBar.addPayment(currency, payment);
+
+            if (!player.hasPermission(Perms.PREFIX_BYPASS_LIMIT_CURRENCY + job.getId()) && job.hasDailyPaymentLimit(currencyId, jobLevel)) {
+                jobData.getLimitData().addCurrency(currencyId, payment);
+
+                if (jobData.isPaymentLimitReached(currencyId)) {
+                    Lang.JOB_LIMIT_CURRENCY_NOTIFY.getMessage().send(player, replacer -> replacer
+                        .replace(job.replacePlaceholders())
+                        .replace(currency.replacePlaceholders()));
+                }
+            }
+        });
+    }
+
+    private void proceedXP(@NotNull Player player, @NotNull WorkObjective workObjective, @NotNull Job job, @NotNull JobData jobData, @NotNull JobObjective jobObjective,
+                           @Nullable ProgressBar progressBar) {
+
+        if (jobData.isXPLimitReached()) return;
+
+        JobUser user = plugin.getUserManager().getOrFetch(player);
+        int jobLevel = jobData.getLevel();
+        int amount = workObjective.getAmount();
+        double multiplier = workObjective.getMultiplier();
+        double boost = JobsAPI.getBoost(player, job, MultiplierType.XP);
+
+        double xpRoll = jobObjective.getXPReward().rollAmountNaturally() * amount;
+        double xpMultiplier = 1D;
+
+        xpMultiplier += boost;
+        xpMultiplier += job.getXPMultiplier(jobLevel);
+        xpMultiplier += multiplier;
+
+        JobObjectiveXPEvent event = new JobObjectiveXPEvent(player, user, jobData, jobObjective, workObjective, xpRoll, xpMultiplier);
+        this.plugin.getPluginManager().callEvent(event);
+        if (event.isCancelled()) return;
+
+        xpRoll = event.getXPAmount() * event.getXPMultiplier();
+        if (xpRoll == 0D || Double.isNaN(xpRoll) || Double.isInfinite(xpRoll)) return;
+
+        int xpFinal = (int) xpRoll;
+
+        if (xpFinal < 0) {
+            this.removeXP(player, job, amount, true);
         }
         else {
-            jobData.addXP(xp);
+            this.addXP(player, job, amount, true);
         }
 
-        // Send exp gain/lose message.
-        if (notify) {
-            (isLose ? Lang.JOB_XP_LOSE : Lang.JOB_XP_GAIN).getMessage().send(player, replacer -> replacer
-                .replace(jobData.replaceAllPlaceholders())
+        if (progressBar != null) progressBar.addXP(xpFinal);
+
+        if (!player.hasPermission(Perms.PREFIX_BYPASS_LIMIT_XP + job.getId()) && job.hasDailyXPLimit(jobLevel)) {
+            jobData.getLimitData().addXP(xpFinal);
+
+            if (jobData.isXPLimitReached()) {
+                Lang.JOB_LIMIT_XP_NOTIFY.getMessage().send(player, replacer -> replacer.replace(job.replacePlaceholders()));
+            }
+        }
+    }
+
+
+
+    public void addLevel(@NotNull Player player, @NotNull Job job, int amount) {
+        this.addLevel(player, job, amount, false);
+    }
+
+    public void addLevel(@NotNull Player player, @NotNull Job job, int amount, boolean silent) {
+        JobUser user = plugin.getUserManager().getOrFetch(player);
+        this.handleLevelAdd(user, job, amount, player, silent);
+    }
+
+    public void handleLevelAdd(@NotNull JobUser user, @NotNull Job job, int amount, @Nullable Player player, boolean silent) {
+        JobData data = user.getData(job);
+        if (!data.isMaxLevel()) {
+            this.handleLevelSet(user, job, data.getLevel() + amount, player, silent);
+        }
+    }
+
+    public void handleLevelRemove(@NotNull JobUser user, @NotNull Job job, int amount, @Nullable Player player, boolean silent) {
+        JobData data = user.getData(job);
+        if (!data.isStartLevel()) {
+            this.handleLevelSet(user, job, data.getLevel() - amount, player, silent);
+        }
+    }
+
+    public void handleLevelSet(@NotNull JobUser user, @NotNull Job job, int amount, @Nullable Player player, boolean silent) {
+        JobData data = user.getData(job);
+        int oldLevel = data.getLevel();
+
+        data.setLevel(amount);
+        data.setXP(0);
+        data.update();
+        plugin.getUserManager().save(user);
+
+        if (player != null) {
+            if (data.getLevel() > oldLevel) {
+                this.handleLevelUp(player, job, oldLevel, silent);
+                this.checkLevelsRewards(player, job);
+            }
+            else if (data.getLevel() < oldLevel) {
+                this.handleLevelDown(player, job, oldLevel, silent);
+            }
+        }
+    }
+
+    private void handleLevelUp(@NotNull Player player, @NotNull Job job, int oldLevel, boolean silent) {
+        JobUser user = plugin.getUserManager().getOrFetch(player);
+        JobData data = user.getData(job);
+
+        JobLevelUpEvent event = new JobLevelUpEvent(player, user, data, oldLevel);
+        plugin.getPluginManager().callEvent(event);
+
+        if (!silent) {
+            Lang.JOB_LEVEL_UP.getMessage().send(player, replacer -> replacer.replace(data.replaceAllPlaceholders()));
+
+            if (Config.LEVELING_FIREWORKS.get()) {
+                JobUtils.createFirework(player.getWorld(), player.getLocation());
+            }
+        }
+    }
+
+    private void handleLevelDown(@NotNull Player player, @NotNull Job job, int oldLevel, boolean silent) {
+        JobUser user = plugin.getUserManager().getOrFetch(player);
+        JobData data = user.getData(job);
+
+        JobLevelDownEvent event = new JobLevelDownEvent(player, user, data, oldLevel);
+        plugin.getPluginManager().callEvent(event);
+
+        if (!silent) {
+            Lang.JOB_LEVEL_DOWN.getMessage().send(player, replacer -> replacer.replace(data.replaceAllPlaceholders()));
+        }
+    }
+
+
+
+    public void addXP(@NotNull Player player, @NotNull Job job, int amount) {
+        this.addXP(player, job, amount, false);
+    }
+
+    public void addXP(@NotNull Player player, @NotNull Job job, int amount, boolean silent) {
+        JobUser user = plugin.getUserManager().getOrFetch(player);
+        this.handleXPAdd(user, job, amount, silent, player);
+    }
+
+    public void handleXPAdd(@NotNull JobUser user, @NotNull Job job, int amount, boolean silent, @Nullable Player player) {
+        JobData data = user.getData(job);
+
+        if (player != null && !silent) {
+            Lang.JOB_XP_GAIN.getMessage().send(player, replacer -> replacer
+                .replace(data.replaceAllPlaceholders())
                 .replace(Placeholders.GENERIC_AMOUNT, NumberUtil.format(amount)));
         }
 
-        this.plugin.getUserManager().save(user);
-
-        // Call events for level up/down.
-        if (levelHas > jobData.getLevel()) {
-            JobLevelDownEvent event = new JobLevelDownEvent(player, user, jobData);
-            plugin.getPluginManager().callEvent(event);
-
-            Lang.JOB_LEVEL_DOWN.getMessage().send(player, replacer -> replacer.replace(jobData.replaceAllPlaceholders()));
-        }
-        else if (levelHas < jobData.getLevel()) {
-            JobLevelUpEvent event = new JobLevelUpEvent(player, user, jobData);
-            plugin.getPluginManager().callEvent(event);
-
-            // TODO force permission
-            this.triggerLevelRewards(player, job, jobData.getLevel(), false);
-
-            Lang.JOB_LEVEL_UP.getMessage().send(player, replacer -> replacer.replace(jobData.replaceAllPlaceholders()));
-
-            if (Config.LEVELING_FIREWORKS.get()) {
-                this.createFirework(player.getWorld(), player.getLocation());
-            }
-        }
-        return true;
+        this.handleXPSet(user, job, data.getXP() + amount, silent, player);
     }
 
-    public boolean addXPNaturally(@NotNull Player player, @NotNull Job job, double amount) {
-        double toAdd = amount * JobsAPI.getBoost(player, job, MultiplierType.XP);
 
-        return this.addXP(player, job, toAdd);
+
+
+
+    public void removeXP(@NotNull Player player, @NotNull Job job, int amount) {
+        this.removeXP(player, job, amount, false);
+    }
+
+    public void removeXP(@NotNull Player player, @NotNull Job job, int amount, boolean silent) {
+        JobUser user = plugin.getUserManager().getOrFetch(player);
+        this.handleXPRemove(user, job, amount, silent, player);
+    }
+
+    public void handleXPRemove(@NotNull JobUser user, @NotNull Job job, int amount, boolean silent, @Nullable Player player) {
+        JobData data = user.getData(job);
+
+        if (!silent && player != null) Lang.JOB_XP_LOSE.getMessage().send(player, replacer -> replacer
+            .replace(data.replaceAllPlaceholders())
+            .replace(Placeholders.GENERIC_AMOUNT, NumberUtil.format(amount)));
+
+        this.handleXPSet(user, job, data.getXP() - amount, silent, player);
+    }
+
+    public void handleXPSet(@NotNull JobUser user, @NotNull Job job, int amount, boolean silent, @Nullable Player player) {
+        JobData data = user.getData(job);
+        int oldLevel = data.getLevel();
+
+        data.setXP(amount);
+        data.update();
+        plugin.getUserManager().save(user);
+
+        if (player != null) {
+            if (data.getLevel() > oldLevel) {
+                this.handleLevelUp(player, job, oldLevel, silent);
+                this.checkLevelsRewards(player, job);
+            }
+            else if (data.getLevel() < oldLevel) {
+                this.handleLevelDown(player, job, oldLevel, silent);
+            }
+        }
+    }
+
+//    @Deprecated
+//    public boolean addXPNaturally(@NotNull Player player, @NotNull Job job, double amount) {
+//        double toAdd = amount * JobsAPI.getBoost(player, job, MultiplierType.XP);
+//
+//        return this.addXP(player, job, toAdd);
+//    }
+
+    public void checkLevelsRewards(@NotNull Player player, @NotNull Job job) {
+        JobUser user = plugin.getUserManager().getOrFetch(player);
+        JobData data = user.getData(job);
+
+        for (int level = JobUtils.START_LEVEL; level < data.getLevel() + 1; level++) {
+            this.triggerLevelRewards(player, data, level, false);
+        }
     }
 
     public void triggerLevelRewards(@NotNull Player player, @NotNull Job job, int level, boolean force) {
         JobUser user = this.plugin.getUserManager().getOrFetch(player);
         JobData jobData = user.getData(job);
+
+        this.triggerLevelRewards(player, jobData, level, force);
+    }
+
+    private void triggerLevelRewards(@NotNull Player player, @NotNull JobData jobData, int level, boolean force) {
+        Job job = jobData.getJob();
 
         if (force || !jobData.isLevelRewardObtained(level)) {
             job.getLevelUpCommands(level).forEach(command -> {
@@ -861,8 +962,6 @@ public class JobManager extends AbstractManager<JobsPlugin> {
 
         List<LevelReward> rewards = job.getRewards().getRewards(level);
         rewards.removeIf(reward -> !force && (jobData.isLevelRewardObtained(level) || !reward.isAvailable(player, level)));
-
-        //rewards.removeIf(reward -> !force && jobData.isLevelRewardObtained(reward.getLevel()) && !reward.isRepeatable());
 
         if (!rewards.isEmpty()) {
             rewards.forEach(reward -> reward.run(player));
@@ -876,22 +975,5 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         }
 
         jobData.setLevelRewardObtained(level);
-    }
-
-    @NotNull
-    private Firework createFirework(@NotNull World world, @NotNull Location location) {
-        Firework firework = world.spawn(location, Firework.class);
-        FireworkMeta meta = firework.getFireworkMeta();
-        FireworkEffect.Type type = Rnd.get(FireworkEffect.Type.values());
-        Color color = Color.fromBGR(Rnd.get(256), Rnd.get(256), Rnd.get(256));
-        Color fade = Color.fromBGR(Rnd.get(256), Rnd.get(256), Rnd.get(256));
-        FireworkEffect effect = FireworkEffect.builder()
-            .flicker(Rnd.nextBoolean()).withColor(color).withFade(fade).with(type).trail(Rnd.nextBoolean()).build();
-
-        meta.addEffect(effect);
-        meta.setPower(Rnd.get(4));
-        firework.setFireworkMeta(meta);
-        PDCUtil.set(firework, Keys.LEVEL_FIREWORK, true);
-        return firework;
     }
 }

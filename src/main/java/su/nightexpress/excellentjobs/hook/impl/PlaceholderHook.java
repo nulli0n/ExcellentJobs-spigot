@@ -6,14 +6,14 @@ import org.jetbrains.annotations.NotNull;
 import su.nightexpress.excellentjobs.JobsAPI;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.api.booster.MultiplierType;
-import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.data.impl.JobData;
-import su.nightexpress.excellentjobs.user.JobUser;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.job.impl.JobState;
 import su.nightexpress.excellentjobs.stats.StatsManager;
 import su.nightexpress.excellentjobs.stats.impl.TopEntry;
+import su.nightexpress.excellentjobs.user.JobUser;
+import su.nightexpress.excellentjobs.util.JobUtils;
 import su.nightexpress.nightcore.util.NumberUtil;
 import su.nightexpress.nightcore.util.text.NightMessage;
 
@@ -105,7 +105,7 @@ public class PlaceholderHook {
                     return NumberUtil.format(data.getXP());
                 }
                 if (rest.equalsIgnoreCase("xp_required")) {
-                    return NumberUtil.format(data.getMaxXP());
+                    return NumberUtil.format(data.getLevelXP());
                 }
                 if (rest.equalsIgnoreCase("xp_to_up")) {
                     return NumberUtil.format(data.getXPToLevelUp());
@@ -130,6 +130,9 @@ public class PlaceholderHook {
                 }
                 if (rest.equalsIgnoreCase("income_boost_percent")) {
                     return NumberUtil.format(JobsAPI.getBoostPercent(player, job, MultiplierType.INCOME));
+                }
+                if (rest.equalsIgnoreCase("income")) {
+                    return JobUtils.formatIncome(data.getIncome());
                 }
 
                 if (rest.startsWith("top_level_")) {
@@ -169,14 +172,14 @@ public class PlaceholderHook {
 
         @NotNull
         private static String listJobs(@NotNull JobUser user, @NotNull JobState state) {
-            String delimiter = Config.PLACEHOLDERS_JOBS_DELIMITER.get();
+            String delimiter = Lang.OTHER_JOB_DELIMITER.getString();
             List<String> jobNames = user.getDatas().stream()
                 .filter(data -> data.getState() == state)
                 .map(data -> data.getJob().getName())
                 .sorted(String::compareTo)
                 .toList();
 
-            return NightMessage.asLegacy(jobNames.isEmpty() ? Config.PLACEHOLDERS_JOBS_FALLBACK.get() : String.join(delimiter, jobNames));
+            return NightMessage.asLegacy(jobNames.isEmpty() ? Lang.OTHER_NO_JOBS.getString() : String.join(delimiter, jobNames));
         }
     }
 }

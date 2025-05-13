@@ -1,9 +1,9 @@
 <div align="center">
   <img src="https://nightexpressdev.com/excellentjobs/header.png">
 
-<a href="https://discord.gg/EwNFGsnGaW"><img src="https://nightexpressdev.com/img/generic/btn_discord.png"></a>
-<a href="https://ko-fi.com/nightexpress"><img src="https://nightexpressdev.com/img/generic/btn_donate.png"></a>
-<a href="https://nightexpressdev.com/excellentjobs/"><img src="https://nightexpressdev.com/img/generic/btn_wiki.png"></a>
+<a href="https://discord.gg/EwNFGsnGaW"><img src="https://img.shields.io/discord/903053383475277844?style=for-the-badge&label=Discord&color=%2333a8ff"></a>
+<a href="https://ko-fi.com/nightexpress"><img src="https://img.shields.io/badge/donate-%E2%9D%A4%EF%B8%8F_to_support-dff33?style=for-the-badge"></a>
+<a href="https://nightexpressdev.com/excellentjobs/"><img src="https://img.shields.io/badge/wiki-documentation-ff9c33?style=for-the-badge"></a>
 
 ![](https://repo.nightexpressdev.com/api/badge/latest/releases/su/nightexpress/excellentjobs/ExcellentJobs?color=40c14a&name=ExcellentJobs&prefix=v)
 
@@ -29,6 +29,7 @@
 - [**Auto-Picked Jobs**](https://nightexpressdev.com/excellentjobs/jobs/states/#auto-picked-jobs). Auto-join certain jobs for new players!
 - [**Job Amount Limits**](https://nightexpressdev.com/excellentjobs/jobs/states/#jobs-amount-limits). Limit how many jobs players can have at the same time!
 - **Job Stats**. View personal job stats, such as earnings and objectives amount for custom periods in a customizable GUI!
+- [**Job Cooldowns**](https://nightexpressdev.com/excellentjobs/jobs/cooldowns/). Prevent players from changing jobs too often!
 - [**Leveling**](https://nightexpressdev.com/excellentjobs/jobs/leveling). Get XP points, level up in jobs and get even more income!
 - [**Level Rewards**](https://nightexpressdev.com/excellentjobs/jobs/level-rewards). Auto-scalable rewards with custom commands and placeholders!
 - [**XP & Income Bonus**](https://nightexpressdev.com/excellentjobs/jobs/xp-income-bonus). Increase amount of the XP and Income with job level!

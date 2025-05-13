@@ -26,11 +26,13 @@ import java.util.stream.Collectors;
 
 public class JobObjective {
 
-    private final String id;
-    private final String workId;
-    private final String      displayName;
-    private final NightItem   icon;
-    private final Set<String> items;
+    private static final String EXCLUSIVE_PREFIX = "-";
+
+    private final String                       id;
+    private final String                       workId;
+    private final String                       displayName;
+    private final NightItem                    icon;
+    private final Set<String>                  items;
     private final Map<String, ObjectiveReward> paymentMap;
     private final ObjectiveReward              xpReward;
     private final int                          unlockLevel;
@@ -64,45 +66,38 @@ public class JobObjective {
     }
 
     @NotNull
-    public static JobObjective read(@NotNull JobsPlugin plugin, @NotNull FileConfig cfg, @NotNull String path, @NotNull String id) {
-        String workType = ConfigValue.create(path + ".Type", "null").read(cfg);
+    public static JobObjective read(@NotNull JobsPlugin plugin, @NotNull FileConfig config, @NotNull String path, @NotNull String id) {
+        String workType = ConfigValue.create(path + ".Type", "null").read(config);
 
-        // Add missing currencies for users to know they can use them.
-        /*plugin.getCurrencyManager().getCurrencies().forEach(currency -> {
-            if (!cfg.contains(path + ".Payment." + currency.getId())) {
-                ObjectiveReward.EMPTY.write(cfg, path + ".Payment." + currency.getId());
-            }
-        });*/
+        String displayName = config.getString(path + ".Display.Name", id);
+        NightItem icon = config.getCosmeticItem(path + ".Display.Icon");
 
-        String displayName = cfg.getString(path + ".Display.Name", id);
-        NightItem icon = cfg.getCosmeticItem(path + ".Display.Icon");
-
-        Set<String> objects = cfg.getStringSet(path + ".Objects")
+        Set<String> objects = config.getStringSet(path + ".Objects")
             .stream().map(String::toLowerCase).collect(Collectors.toSet());
 
         Map<String, ObjectiveReward> currencyDrop = new HashMap<>();
-        for (String curId : cfg.getSection(path + ".Payment")) {
-            ObjectiveReward objectiveReward = ObjectiveReward.read(cfg, path + ".Payment." + curId);
+        for (String curId : config.getSection(path + ".Payment")) {
+            ObjectiveReward objectiveReward = ObjectiveReward.read(config, path + ".Payment." + curId);
             currencyDrop.put(CurrencyId.reroute(curId), objectiveReward);
         }
-        ObjectiveReward xpDrop = ObjectiveReward.read(cfg, path + ".Job_XP");
+        ObjectiveReward xpDrop = ObjectiveReward.read(config, path + ".Job_XP");
 
-        int unlockLevel = ConfigValue.create(path + ".Unlock_Level", 1).read(cfg);
+        int unlockLevel = ConfigValue.create(path + ".Unlock_Level", 1).read(config);
 
         boolean specialOrderAllowed = false;
         UniInt specialOrderObjectsAmount = null;
         UniInt specialOrderObjectCount = null;
 
         if (Config.SPECIAL_ORDERS_ENABLED.get()) {
-            specialOrderAllowed = ConfigValue.create(path + ".SpecialOrder.Allowed", true).read(cfg);
+            specialOrderAllowed = ConfigValue.create(path + ".SpecialOrder.Allowed", true).read(config);
 
             specialOrderObjectsAmount = ConfigValue.create(path + ".SpecialOrder.Objects_Amount",
                 UniInt::read,
-                UniInt.of(1, 5)).read(cfg);
+                UniInt.of(1, 5)).read(config);
 
             specialOrderObjectCount = ConfigValue.create(path + ".SpecialOrder.Objects_Count",
                 UniInt::read,
-                UniInt.of(100, 500)).read(cfg);
+                UniInt.of(100, 500)).read(config);
         }
 
         return new JobObjective(id, workType, displayName, icon, objects, currencyDrop, xpDrop, unlockLevel,
@@ -145,7 +140,15 @@ public class JobObjective {
     }
 
     public boolean hasObject(@NotNull String name) {
-        return this.getItems().contains(name.toLowerCase()) || this.getItems().contains(Placeholders.WILDCARD);
+        String itemId = name.toLowerCase();
+
+        if (this.items.contains(itemId)) return true;
+
+        if (this.items.contains(Placeholders.WILDCARD)) {
+            return !this.items.contains(EXCLUSIVE_PREFIX + itemId);
+        }
+
+        return false;
     }
 
     public boolean isUnlocked(@NotNull Player player, @NotNull JobData jobData) {
@@ -154,8 +157,8 @@ public class JobObjective {
         return this.isUnlocked(jobData.getLevel());
     }
 
-    public boolean isUnlocked(int skillLevel) {
-        return skillLevel >= this.getUnlockLevel();
+    public boolean isUnlocked(int jobLevel) {
+        return jobLevel >= this.getUnlockLevel();
     }
 
     public boolean canPay() {

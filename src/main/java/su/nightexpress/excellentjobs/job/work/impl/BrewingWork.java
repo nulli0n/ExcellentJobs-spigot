@@ -38,7 +38,7 @@ public class BrewingWork extends Work<BrewEvent, PotionEffectType> {
         BrewingStand stand = inventory.getHolder();
         if (stand == null) return false;
 
-        String uuidRaw = PDCUtil.getString(stand, Keys.BREWING_HOLDER).orElse(null);
+        String uuidRaw = PDCUtil.getString(stand, Keys.brewingHolder).orElse(null);
         UUID uuid = uuidRaw == null ? null : UUID.fromString(uuidRaw);
         if (uuid == null) return false;
 
