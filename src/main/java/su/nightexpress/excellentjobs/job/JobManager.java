@@ -883,7 +883,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
                 .replace(Placeholders.GENERIC_AMOUNT, NumberUtil.format(amount)));
         }
 
-        this.handleXPSet(user, job, data.getXP() + amount, silent, player);
+        this.handleXPSet(user, job, data.getXP() + amount, player);
     }
 
 
@@ -906,10 +906,10 @@ public class JobManager extends AbstractManager<JobsPlugin> {
             .replace(data.replaceAllPlaceholders())
             .replace(Placeholders.GENERIC_AMOUNT, NumberUtil.format(amount)));
 
-        this.handleXPSet(user, job, data.getXP() - amount, silent, player);
+        this.handleXPSet(user, job, data.getXP() - amount, player);
     }
 
-    public void handleXPSet(@NotNull JobUser user, @NotNull Job job, int amount, boolean silent, @Nullable Player player) {
+    public void handleXPSet(@NotNull JobUser user, @NotNull Job job, int amount, /*boolean silent,*/ @Nullable Player player) {
         JobData data = user.getData(job);
         int oldLevel = data.getLevel();
 
@@ -919,11 +919,11 @@ public class JobManager extends AbstractManager<JobsPlugin> {
 
         if (player != null) {
             if (data.getLevel() > oldLevel) {
-                this.handleLevelUp(player, job, oldLevel, silent);
+                this.handleLevelUp(player, job, oldLevel, false);
                 this.checkLevelsRewards(player, job);
             }
             else if (data.getLevel() < oldLevel) {
-                this.handleLevelDown(player, job, oldLevel, silent);
+                this.handleLevelDown(player, job, oldLevel, false);
             }
         }
     }

@@ -313,7 +313,7 @@ public class BaseCommands {
                     doneMsg = Lang.COMMAND_XP_REMOVE_DONE;
                 }
                 case SET -> {
-                    plugin.getJobManager().handleXPSet(user, job, amount, silent, target);
+                    plugin.getJobManager().handleXPSet(user, job, amount, target);
                     doneMsg = Lang.COMMAND_XP_SET_DONE;
                 }
                 default -> {
