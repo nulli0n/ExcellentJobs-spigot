@@ -773,10 +773,10 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         int xpFinal = (int) xpRoll;
 
         if (xpFinal < 0) {
-            this.removeXP(player, job, amount, true);
+            this.removeXP(player, job, Math.abs(xpFinal), true);
         }
         else {
-            this.addXP(player, job, amount, true);
+            this.addXP(player, job, xpFinal, true);
         }
 
         if (progressBar != null) progressBar.addXP(xpFinal);
