@@ -26,7 +26,7 @@ public class WorkFormatters {
             @Override
             @NotNull
             public String getName(@NotNull T object) {
-                return BukkitThing.getValue(object);
+                return BukkitThing.getAsString(object);
             }
 
             @Override
