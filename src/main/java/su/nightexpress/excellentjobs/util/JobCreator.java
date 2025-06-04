@@ -18,6 +18,7 @@ import su.nightexpress.excellentjobs.job.work.WorkId;
 import su.nightexpress.excellentjobs.job.work.wrapper.WrappedEnchant;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.util.*;
+import su.nightexpress.nightcore.util.bridge.RegistryType;
 import su.nightexpress.nightcore.util.bukkit.NightItem;
 import su.nightexpress.nightcore.util.wrapper.UniInt;
 
@@ -370,7 +371,7 @@ public class JobCreator {
             );
 
             this.createObjectives(job, objectives -> {
-                BukkitThing.allFromRegistry(Registry.ENTITY_TYPE).forEach(entityType -> {
+                BukkitThing.getAll(RegistryType.ENTITY_TYPE).forEach(entityType -> {
                     Class<? extends Entity> clazz = entityType.getEntityClass();
                     if (clazz == null || !entityType.isSpawnable()) return;
 
@@ -468,7 +469,7 @@ public class JobCreator {
                                           @NotNull Material icon,
                                           @NotNull ObjectiveReward money,
                                           @NotNull ObjectiveReward xp) {
-        return createEntityObjective(BukkitThing.toString(object), type, Lists.newSet(object), NightItem.fromType(icon), money, xp, 1);
+        return createEntityObjective(BukkitThing.getValue(object), type, Lists.newSet(object), NightItem.fromType(icon), money, xp, 1);
     }
 
     @NotNull
@@ -484,17 +485,17 @@ public class JobCreator {
 
     @NotNull
     private static JobObjective forMaterial(@NotNull String type, @NotNull Material object, @NotNull Material icon, @NotNull ObjectiveReward money, @NotNull ObjectiveReward xp) {
-        return forMaterials(BukkitThing.toString(object), type, Lists.newSet(object), NightItem.fromType(icon), money, xp, 1);
+        return forMaterials(BukkitThing.getValue(object), type, Lists.newSet(object), NightItem.fromType(icon), money, xp, 1);
     }
 
     @NotNull
     private static JobObjective forMaterial(@NotNull String type, @NotNull Material object, @NotNull ObjectiveReward money, @NotNull ObjectiveReward xp) {
-        return forMaterials(BukkitThing.toString(object), type, Lists.newSet(object), NightItem.fromType(object), money, xp, 1);
+        return forMaterials(BukkitThing.getValue(object), type, Lists.newSet(object), NightItem.fromType(object), money, xp, 1);
     }
 
     @NotNull
     private static JobObjective forEnchant(@NotNull String type, @NotNull Enchantment enchantment, int level, @NotNull ObjectiveReward money, @NotNull ObjectiveReward xp) {
-        String id = BukkitThing.toString(enchantment) + "_" + NumberUtil.toRoman(level);
+        String id = BukkitThing.getValue(enchantment) + "_" + NumberUtil.toRoman(level);
         WrappedEnchant wrapped = new WrappedEnchant(enchantment, level);
 
         return createObjective(id, type, WorkFormatters.WRAPPED_ENCHANTMENT, Lists.newSet(wrapped), NightItem.fromType(Material.ENCHANTED_BOOK), money, xp, 1);

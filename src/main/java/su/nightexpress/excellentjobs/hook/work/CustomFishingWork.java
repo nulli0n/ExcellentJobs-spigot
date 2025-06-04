@@ -35,7 +35,8 @@ public class CustomFishingWork extends Work<FishingResultEvent, Loot> implements
     @Nullable
     @Override
     public Loot parseObject(@NotNull String name) {
-        return getAPI().getLootManager().getLoot(name).orElse(null);
+        return getAPI().getLootManager().getRegisteredLoots().stream().filter(loot -> loot.id().equalsIgnoreCase(name)).findFirst().orElse(null);
+        //return getAPI().getLootManager().getLoot(name).orElse(null);
     }
 
     @Override

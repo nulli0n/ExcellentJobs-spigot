@@ -273,6 +273,12 @@ public class JobData  {
     }
 
     @NotNull
+    public JobLimitData getLimitDataUpdated() {
+        this.limitData.checkExpiration();
+        return this.limitData;
+    }
+
+    @NotNull
     public JobOrderData getOrderData() {
         return orderData;
     }

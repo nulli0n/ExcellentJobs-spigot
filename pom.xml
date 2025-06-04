@@ -6,7 +6,7 @@
 
     <groupId>su.nightexpress.excellentjobs</groupId>
     <artifactId>ExcellentJobs</artifactId>
-    <version>1.11.1</version>
+    <version>1.12.0</version>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
@@ -96,14 +96,14 @@
 
         <dependency>
             <groupId>su.nightexpress.nightcore</groupId>
-            <artifactId>nightcore</artifactId>
-            <version>2.7.5</version>
+            <artifactId>main</artifactId>
+            <version>2.7.6.1</version>
         </dependency>
 
         <dependency>
             <groupId>su.nightexpress.economybridge</groupId>
             <artifactId>economy-bridge</artifactId>
-            <version>1.2.0</version>
+            <version>1.2.1</version>
         </dependency>
 
         <dependency>
@@ -158,7 +158,14 @@
         <dependency>
             <groupId>net.momirealms</groupId>
             <artifactId>custom-fishing</artifactId>
-            <version>2.3.4</version>
+            <version>2.3.7</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>net.momirealms</groupId>
+            <artifactId>custom-crops</artifactId>
+            <version>3.6.29</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

@@ -43,7 +43,7 @@ public class MythicMobsWork extends Work<MythicMobDeathEvent, MythicMob> impleme
     @NotNull
     @Override
     public String getLocalized(@NotNull MythicMob object) {
-        return object.getDisplayName().get();
+        return object.getDisplayName() == null ? object.getEntityTypeString() : object.getDisplayName().get();
     }
 
     @Nullable

@@ -60,8 +60,12 @@ public class JobUser extends AbstractUser {
         this.statsMap.putAll(statsMap);
     }
 
-    public int countTotalLevel() {
+    public int countTotalEffectiveLevel() {
         return this.getDatas().stream().mapToInt(data -> data.isActive() ? data.getLevel() : 0).sum();
+    }
+
+    public int countTotalLevel() {
+        return this.getDatas().stream().mapToInt(JobData::getLevel).sum();
     }
 
     public int countActiveJobs() {

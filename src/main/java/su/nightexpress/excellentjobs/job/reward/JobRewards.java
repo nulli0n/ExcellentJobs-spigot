@@ -27,10 +27,9 @@ public class JobRewards implements Writeable {
     }
 
     public void load(@NotNull FileConfig config, @NotNull String path) {
-        this.rewardMap.putAll(ConfigValue.forMap(path + ".List",
-            (cfg, path1, id) -> LevelReward.read(cfg, path1 + "." + id, id),
-            (cfg, path1, map) -> map.forEach((id, reward) -> reward.write(cfg, path1 + "." + id)),
-            JobRewards::getDefaultRewards,
+        this.rewardMap.putAll(ConfigValue.forMapById(path + ".List",
+            LevelReward::read,
+            map -> map.putAll(JobRewards.getDefaultRewards()),
             "Here you can create unlimited amount of custom job rewards.",
             Placeholders.URL_WIKI_LEVEL_REWARDS,
             "Settings:",
@@ -105,7 +104,7 @@ public class JobRewards implements Writeable {
     public List<LevelReward> getRewards(int jobLevel) {
         Replacer replacer = this.getModifierReplacer(jobLevel);
 
-        return new ArrayList<>(this.getRewards().stream().filter(reward -> reward.isGoodLevel(jobLevel)).map(reward -> reward.parse(replacer)).toList());
+        return new ArrayList<>(this.rewardMap.values().stream().filter(reward -> reward.isGoodLevel(jobLevel)).map(reward -> reward.parse(replacer)).toList());
     }
 
     @NotNull

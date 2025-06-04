@@ -74,6 +74,9 @@ public class PlaceholderHook {
 
             JobUser user = this.plugin.getUserManager().getOrFetch(player);
 
+            if (params.equalsIgnoreCase("total_effective_level")) {
+                return String.valueOf(user.countTotalEffectiveLevel());
+            }
             if (params.equalsIgnoreCase("total_level")) {
                 return String.valueOf(user.countTotalLevel());
             }

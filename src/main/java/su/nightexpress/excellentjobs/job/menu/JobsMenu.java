@@ -149,7 +149,7 @@ public class JobsMenu extends NormalMenu<JobsPlugin> implements Filled<Job>, Con
     private NightItem replaceJobItem(@NotNull Player player, @NotNull Job job) {
         JobUser user = plugin.getUserManager().getOrFetch(player);
         JobData jobData = user.getData(job);
-        JobLimitData limitData = jobData.getLimitData();
+        JobLimitData limitData = jobData.getLimitDataUpdated();
         JobState state = jobData.getState();
 
         int level = jobData.getLevel();
