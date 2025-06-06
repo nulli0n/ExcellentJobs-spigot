@@ -11,15 +11,14 @@ import su.nightexpress.economybridge.api.Currency;
 import su.nightexpress.economybridge.currency.CurrencyId;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.Placeholders;
-import su.nightexpress.excellentjobs.job.work.Work;
-import su.nightexpress.excellentjobs.job.work.WorkObjective;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Perms;
 import su.nightexpress.excellentjobs.data.impl.JobOrderCount;
 import su.nightexpress.excellentjobs.data.impl.JobOrderData;
 import su.nightexpress.excellentjobs.data.impl.JobOrderObjective;
 import su.nightexpress.excellentjobs.job.reward.JobRewards;
-import su.nightexpress.excellentjobs.job.work.WorkRegistry;
+import su.nightexpress.excellentjobs.job.work.Work;
+import su.nightexpress.excellentjobs.job.work.WorkObjective;
 import su.nightexpress.excellentjobs.util.JobUtils;
 import su.nightexpress.excellentjobs.util.Modifier;
 import su.nightexpress.nightcore.config.ConfigValue;
@@ -293,7 +292,7 @@ public class Job extends AbstractFileData<JobsPlugin> {
         String id = objective.getId();
         String fileName = "'" + config.getFile().getPath() + "' -> '" + id + "'";
 
-        var workType = WorkRegistry.getByName(objective.getWorkId());
+        Work<?, ?> workType = objective.getWork();
         if (workType == null) {
             plugin.error("Invalid objective type '" + objective.getWorkId() + "'. Found in " + fileName + ".");
             return false;

@@ -75,6 +75,12 @@ public abstract class Work<E extends Event, O> {
     }
 
     @NotNull
+    public String reparse(@NotNull String objectId) {
+        O parsed = this.parse(objectId);
+        return parsed == null ? objectId : this.getObjectName(parsed);
+    }
+
+    @NotNull
     public String getObjectName(@NotNull O object) {
         return this.getFormatter().getName(object).toLowerCase();
     }

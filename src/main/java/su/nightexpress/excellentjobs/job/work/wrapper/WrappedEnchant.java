@@ -8,7 +8,7 @@ import su.nightexpress.nightcore.util.NumberUtil;
 
 public class WrappedEnchant {
 
-    private static final String DELIMITER = ":";
+    private static final String DELIMITER = ";";
 
     private final Enchantment enchantment;
     private final int level;
@@ -20,17 +20,34 @@ public class WrappedEnchant {
 
     @Nullable
     public static WrappedEnchant deserialize(@NotNull String string) {
-        String[] split = string.split(DELIMITER);
-        Enchantment enchant = BukkitThing.getEnchantment(split[0]);
+        String enchantName;
+        String numberStr;
+
+        if (string.contains(DELIMITER)) {
+            String[] split = string.split(DELIMITER);
+            enchantName = split[0];
+            numberStr = split.length >= 2 ? split[1] : "1";
+        }
+        else {
+            int lastIndex = string.lastIndexOf(':');
+            if (lastIndex != -1) {
+                enchantName = string.substring(0, lastIndex);
+                numberStr = string.substring(lastIndex + 1);
+            }
+            else return null;
+        }
+
+        //String[] split = string.split(DELIMITER);
+        Enchantment enchant = BukkitThing.getEnchantment(enchantName);
         if (enchant == null) return null;
 
-        int level = split.length >= 2 ? NumberUtil.getIntegerAbs(split[1]) : 1;
+        int level = NumberUtil.getIntegerAbs(numberStr);
         return new WrappedEnchant(enchant, level);
     }
 
     @NotNull
     public String serialize() {
-        return BukkitThing.toString(this.enchantment) + DELIMITER + this.level;
+        return BukkitThing.getAsString(this.enchantment) + DELIMITER + this.level;
     }
 
     @NotNull

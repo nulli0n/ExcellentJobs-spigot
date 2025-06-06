@@ -15,6 +15,7 @@ import su.nightexpress.excellentjobs.job.work.WorkObjective;
 import su.nightexpress.excellentjobs.job.work.WorkRegistry;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
+import su.nightexpress.nightcore.util.Lists;
 import su.nightexpress.nightcore.util.bukkit.NightItem;
 import su.nightexpress.nightcore.util.wrapper.UniInt;
 
@@ -22,7 +23,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class JobObjective {
 
@@ -68,12 +68,20 @@ public class JobObjective {
     @NotNull
     public static JobObjective read(@NotNull JobsPlugin plugin, @NotNull FileConfig config, @NotNull String path, @NotNull String id) {
         String workType = ConfigValue.create(path + ".Type", "null").read(config);
+        Work<?, ?> work = WorkRegistry.getByName(workType);
 
         String displayName = config.getString(path + ".Display.Name", id);
         NightItem icon = config.getCosmeticItem(path + ".Display.Icon");
 
-        Set<String> objects = config.getStringSet(path + ".Objects")
-            .stream().map(String::toLowerCase).collect(Collectors.toSet());
+        Set<String> objects = Lists.modify(config.getStringSet(path + ".Objects"), raw -> {
+            if (work == null || raw.equalsIgnoreCase(Placeholders.WILDCARD)) return raw;
+
+            boolean negative = raw.startsWith(EXCLUSIVE_PREFIX);
+            if (negative) raw = raw.substring(1);
+
+            String fined = work.reparse(raw);
+            return negative ? (EXCLUSIVE_PREFIX + fined) : fined;
+        });
 
         Map<String, ObjectiveReward> currencyDrop = new HashMap<>();
         for (String curId : config.getSection(path + ".Payment")) {
@@ -105,24 +113,24 @@ public class JobObjective {
         );
     }
 
-    public void write(@NotNull FileConfig cfg, @NotNull String path) {
-        cfg.set(path + ".Type", this.workId);
-        cfg.set(path + ".Display.Name", this.getDisplayName());
-        cfg.set(path + ".Display.Icon", this.getIcon());
+    public void write(@NotNull FileConfig config, @NotNull String path) {
+        config.set(path + ".Type", this.workId);
+        config.set(path + ".Display.Name", this.getDisplayName());
+        config.set(path + ".Display.Icon", this.getIcon());
 
-        cfg.set(path + ".Objects", this.getItems());
+        config.set(path + ".Objects", this.getItems());
 
         this.getPaymentMap().forEach((currencyId, objectiveReward) -> {
-            objectiveReward.write(cfg, path + ".Payment." + currencyId);
+            objectiveReward.write(config, path + ".Payment." + currencyId);
         });
-        this.getXPReward().write(cfg, path + ".Job_XP");
+        this.getXPReward().write(config, path + ".Job_XP");
 
-        cfg.set(path + ".Unlock_Level", this.getUnlockLevel());
+        config.set(path + ".Unlock_Level", this.getUnlockLevel());
 
         if (Config.SPECIAL_ORDERS_ENABLED.get()) {
-            cfg.set(path + ".SpecialOrder.Allowed", this.isSpecialOrderAllowed());
-            this.getSpecialOrderObjectsAmount().write(cfg, path + ".SpecialOrder.Objects_Amount");
-            this.getSpecialOrderObjectCount().write(cfg, path + ".SpecialOrder.Objects_Count");
+            config.set(path + ".SpecialOrder.Allowed", this.isSpecialOrderAllowed());
+            this.getSpecialOrderObjectsAmount().write(config, path + ".SpecialOrder.Objects_Amount");
+            this.getSpecialOrderObjectCount().write(config, path + ".SpecialOrder.Objects_Count");
         }
     }
 
