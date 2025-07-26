@@ -253,7 +253,7 @@ public class JobCreator {
                 objectives.add(forMaterial(WorkId.MINING, Material.BEETROOTS, Material.BEETROOT, reward(2, 4), reward(8, 12)));
                 objectives.add(forMaterial(WorkId.MINING, Material.CACTUS, reward(60, 80), reward(300, 350)));
                 objectives.add(forMaterial(WorkId.MINING, Material.SUGAR_CANE, reward(3, 6), reward(20, 30)));
-                objectives.add(forMaterial(WorkId.MINING, Material.COCOA_BEANS, reward(15, 20), reward(80, 100)));
+                objectives.add(forMaterial(WorkId.MINING, Material.COCOA, Material.COCOA_BEANS, reward(15, 20), reward(80, 100)));
                 objectives.add(forMaterial(WorkId.MINING, Material.MELON, reward(5, 7), reward(35, 45)));
                 objectives.add(forMaterial(WorkId.MINING, Material.PUMPKIN, reward(5, 7), reward(35, 45)));
                 objectives.add(forMaterial(WorkId.MINING, Material.BROWN_MUSHROOM, reward(50, 70), reward(150, 250)));

@@ -50,9 +50,9 @@ public class BlockPacketsHighlighter extends BlockHighlighter {
 
         var dataPacket = this.createMetadataPacket(entityID, dataList -> {
 //            if (type == EntityType.BLOCK_DISPLAY) {
-                dataList.add(new EntityData(0, EntityDataTypes.BYTE, (byte) (0x20 | 0x40))); // glow
-                dataList.add(new EntityData(12, EntityDataTypes.VECTOR3F, new Vector3f(size, size, size))); // scale
-                dataList.add(new EntityData(23, EntityDataTypes.BLOCK_STATE, state.getGlobalId())); // block ID
+                dataList.add(new EntityData<>(0, EntityDataTypes.BYTE, (byte) (0x20 | 0x40))); // glow
+                dataList.add(new EntityData<>(12, EntityDataTypes.VECTOR3F, new Vector3f(size, size, size))); // scale
+                dataList.add(new EntityData<>(23, EntityDataTypes.BLOCK_STATE, state.getGlobalId())); // block ID
 //            }
 //            else {
 //                dataList.add(new EntityData(0, EntityDataTypes.BYTE, (byte) 0x20 | 0x40)); // invisible
@@ -92,8 +92,8 @@ public class BlockPacketsHighlighter extends BlockHighlighter {
     }
 
     @NotNull
-    private PacketWrapper<?> createMetadataPacket(int entityID, @NotNull Consumer<List<EntityData>> consumer) {
-        List<EntityData> dataList = new ArrayList<>();
+    private PacketWrapper<?> createMetadataPacket(int entityID, @NotNull Consumer<List<EntityData<?>>> consumer) {
+        List<EntityData<?>> dataList = new ArrayList<>();
 
         consumer.accept(dataList);
 

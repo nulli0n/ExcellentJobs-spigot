@@ -41,6 +41,7 @@ public class ProgressBar {
         }
 
         this.replacer = new Replacer()
+            .replacePlaceholderAPI(this.player)
             .replace(Placeholders.JOB_NAME, this.job::getName)
             .replace(Placeholders.GENERIC_XP, () -> NumberUtil.format(this.xp))
             .replace(Placeholders.GENERIC_INCOME, () -> JobUtils.formatIncome(this.income));
