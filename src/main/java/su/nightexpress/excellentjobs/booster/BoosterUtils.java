@@ -2,11 +2,9 @@ package su.nightexpress.excellentjobs.booster;
 
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.economybridge.api.Currency;
-import su.nightexpress.excellentjobs.Placeholders;
 import su.nightexpress.excellentjobs.booster.config.BoosterConfig;
 import su.nightexpress.excellentjobs.booster.impl.BoosterSchedule;
-import su.nightexpress.excellentjobs.config.Lang;
-import su.nightexpress.nightcore.util.NumberUtil;
+import su.nightexpress.excellentjobs.util.JobUtils;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
@@ -39,12 +37,6 @@ public class BoosterUtils {
 
     @NotNull
     public static String formatMultiplier(double multiplier) {
-        return formatPercent(getAsPercent(multiplier));
-    }
-
-    @NotNull
-    public static String formatPercent(double amount) {
-        String format = (amount >= 0 ? Lang.BOOSTER_FORMAT_POSITIVE : Lang.BOOSTER_FORMAT_NEGATIVE).getString();
-        return format.replace(Placeholders.GENERIC_AMOUNT, NumberUtil.format(amount));
+        return JobUtils.formatBonus(getAsPercent(multiplier));
     }
 }

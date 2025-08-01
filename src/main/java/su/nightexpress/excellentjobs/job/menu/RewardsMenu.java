@@ -29,12 +29,12 @@ import su.nightexpress.nightcore.util.placeholder.Replacer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import static su.nightexpress.excellentjobs.Placeholders.*;
-import static su.nightexpress.nightcore.util.text.tag.Tags.*;
+import static su.nightexpress.nightcore.util.text.night.wrapper.TagWrappers.*;
 
-@SuppressWarnings("UnstableApiUsage")
 public class RewardsMenu extends LinkedMenu<JobsPlugin, Job> implements Filled<Integer>, ConfigBased {
 
     public static final String FILE_NAME = "job_level_rewards.yml";
@@ -43,6 +43,7 @@ public class RewardsMenu extends LinkedMenu<JobsPlugin, Job> implements Filled<I
     private NightItem lockedReward;
     private NightItem emptyReward;
     private NightItem claimedReward;
+    private NightItem unclaimedReward;
     private NightItem upcomingReward;
 
     private List<String> rewardFormat;
@@ -98,25 +99,29 @@ public class RewardsMenu extends LinkedMenu<JobsPlugin, Job> implements Filled<I
         JobData data = user.getData(job);
         JobState state = data.getState();
         int jobLevel = data.getLevel();
+        boolean claimRequired = Config.isRewardClaimRequired();
+        AtomicInteger upcoming = new AtomicInteger(-1);
         
         return MenuFiller.builder(this)
             .setSlots(this.rewardSlots)
-            .setItems(IntStream.range(1, job.getMaxLevel(state) + 1).boxed().toList())
+            .setItems(IntStream.range(1, job.getMaxLevel() + 1).boxed().toList())
             .setItemCreator(level -> {
                 List<LevelReward> rewards = job.getRewards().getRewards(level);
 
-                NightItem item;
-                if (rewards.isEmpty()) {
-                    item = this.emptyReward.copy();
-                }
-                else {
-                    if (jobLevel >= level) {
+                NightItem item = (rewards.isEmpty() ? this.emptyReward : this.lockedReward).copy();
+                boolean hasRewards = rewards.stream().anyMatch(reward -> reward.isAvailable(player) && reward.isGoodState(state));
+
+                if (hasRewards) {
+                    if (data.isLevelRewardObtained(level)) {
                         item = this.claimedReward.copy();
                     }
-                    else if (level - jobLevel == 1) {
-                        item = this.upcomingReward.copy();
+                    else if (jobLevel == level) {
+                        item = (claimRequired ? this.unclaimedReward : this.claimedReward).copy();
                     }
-                    else item = this.lockedReward.copy();
+                    else if (level > jobLevel && upcoming.get() < 0) {
+                        item = this.upcomingReward.copy();
+                        upcoming.set(level);
+                    }
                 }
 
                 List<String> rewardFormats = new ArrayList<>();
@@ -125,12 +130,26 @@ public class RewardsMenu extends LinkedMenu<JobsPlugin, Job> implements Filled<I
                 });
 
                 return item
-                    .setHideComponents(true)
+                    .hideAllComponents()
                     .replacement(replacer -> replacer
                         .replace(job.replacePlaceholders())
                         .replace(GENERIC_LEVEL, NumberUtil.format(level))
                         .replace(REWARDS, rewardFormats)
                     );
+            })
+            .setItemClick(level -> (viewer1, event) -> {
+                if (!data.isActive() || !claimRequired || data.isLevelRewardObtained(level) || jobLevel < level) return;
+
+                List<LevelReward> rewards = job.getRewards().getRewards(level, state);
+                rewards.forEach(levelReward -> {
+                    if (levelReward.isAvailable(player)) {
+                        levelReward.run(player);
+                        data.setLevelRewardObtained(level);
+                        this.plugin.getUserManager().save(user);
+                    }
+                });
+
+                this.runNextTick(() -> this.flush(viewer));
             })
             .build();
     }
@@ -145,6 +164,17 @@ public class RewardsMenu extends LinkedMenu<JobsPlugin, Job> implements Filled<I
                 REWARDS
             ));
 
+        NightItem unclaimedItem = new NightItem(Material.ORANGE_STAINED_GLASS_PANE)
+            .setEnchantGlint(true)
+            .setDisplayName(SOFT_ORANGE.wrap(BOLD.wrap("Level " + GENERIC_LEVEL)) + GRAY.wrap(" • ") + RED.wrap("Unclaimed"))
+            .setLore(Lists.newList(
+                "",
+                SOFT_ORANGE.wrap(BOLD.wrap("Reward:")),
+                REWARDS,
+                "",
+                SOFT_ORANGE.wrap("→ " + UNDERLINED.wrap("Click to claim!"))
+            ));
+
         NightItem claimedItem = new NightItem(Material.LIME_STAINED_GLASS_PANE)
             .setDisplayName(GREEN.wrap(BOLD.wrap("Level " + GENERIC_LEVEL)) + GRAY.wrap(" • ") + WHITE.wrap("Unlocked"))
             .setLore(Lists.newList(
@@ -154,7 +184,7 @@ public class RewardsMenu extends LinkedMenu<JobsPlugin, Job> implements Filled<I
             ));
 
         NightItem emptyItem = new NightItem(Material.BLACK_STAINED_GLASS_PANE)
-            .setDisplayName(LIGHT_GRAY.wrap(BOLD.wrap("Level " + GENERIC_LEVEL)) + GRAY.wrap(" • ") + WHITE.wrap("No Rewards"));
+            .setDisplayName(GRAY.wrap(BOLD.wrap("Level " + GENERIC_LEVEL)) + GRAY.wrap(" • ") + WHITE.wrap("No Rewards"));
 
         NightItem upcomingItem = new NightItem(Material.YELLOW_STAINED_GLASS_PANE)
             .setDisplayName(YELLOW.wrap(BOLD.wrap("Level " + GENERIC_LEVEL)) + GRAY.wrap(" • ") + WHITE.wrap("In Progress"))
@@ -165,15 +195,13 @@ public class RewardsMenu extends LinkedMenu<JobsPlugin, Job> implements Filled<I
             ));
 
         this.lockedReward = ConfigValue.create("Reward.Locked", lockedItem).read(config);
+        this.unclaimedReward = ConfigValue.create("Reward.Unclaimed", unclaimedItem).read(config);
         this.claimedReward = ConfigValue.create("Reward.Claimed", claimedItem).read(config);
         this.emptyReward = ConfigValue.create("Reward.Empty", emptyItem).read(config);
         this.upcomingReward = ConfigValue.create("Reward.Upcoming", upcomingItem).read(config);
 
         this.rewardFormat = ConfigValue.create("Reward.Format", Lists.newList(
-            LIGHT_GRAY.wrap("• " + REWARD_NAME)
-            //REWARD_REQUIREMENT,
-            //LIGHT_GRAY.wrap(REWARD_DESCRIPTION),
-            //EMPTY_IF_BELOW
+            GRAY.wrap("• " + REWARD_NAME)
         )).read(config);
 
         this.rewardSlots = ConfigValue.create("Reward.Slots", new int[]{

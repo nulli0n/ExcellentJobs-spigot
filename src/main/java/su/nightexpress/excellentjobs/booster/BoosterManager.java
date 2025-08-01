@@ -15,6 +15,7 @@ import su.nightexpress.excellentjobs.booster.listener.BoosterListener;
 import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.user.JobUser;
+import su.nightexpress.excellentjobs.util.JobUtils;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.manager.AbstractManager;
 import su.nightexpress.nightcore.util.Players;
@@ -223,8 +224,8 @@ public class BoosterManager extends AbstractManager<JobsPlugin> {
 
         Lang.BOOSTER_LIST_INFO.getMessage().send(player, replacer -> replacer
             .replace(job.replacePlaceholders())
-            .replace(Placeholders.GENERIC_XP_BONUS, BoosterUtils.formatPercent(totalXPPercent))
-            .replace(Placeholders.GENERIC_INCOME_BONUS, BoosterUtils.formatPercent(totalPayPercent))
+            .replace(Placeholders.GENERIC_XP_BONUS, JobUtils.formatBonus(totalXPPercent))
+            .replace(Placeholders.GENERIC_INCOME_BONUS, JobUtils.formatBonus(totalPayPercent))
             .replace(Placeholders.GENERIC_ENTRY, list -> {
                 for (BoosterType type : BoosterType.values()) {
                     double xpMult = this.getBoosterMultiplier(player, job, type, MultiplierType.XP);

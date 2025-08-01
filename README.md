@@ -5,17 +5,19 @@
 <a href="https://ko-fi.com/nightexpress"><img src="https://img.shields.io/badge/donate-%E2%9D%A4%EF%B8%8F_to_support-dff33?style=for-the-badge"></a>
 <a href="https://nightexpressdev.com/excellentjobs/"><img src="https://img.shields.io/badge/wiki-documentation-ff9c33?style=for-the-badge"></a>
 
-![](https://repo.nightexpressdev.com/api/badge/latest/releases/su/nightexpress/excellentjobs/ExcellentJobs?color=40c14a&name=ExcellentJobs&prefix=v)
+<a href="https://www.spigotmc.org/resources/114783/"><img src="https://nightexpressdev.com/img/badge/spigotmc.svg"></a>
+<a href="https://builtbybit.com/resources/56338/"><img src="https://nightexpressdev.com/img/badge/bbb.svg"></a>
 
-**ExcellentJobs** is a lightweight, flexible, and modern jobs system for your server. It provides **full customization**, **multi-currency** support, **unique features** and **unlimited amount** of jobs to create!
+A lightweight and modern jobs system for your server that is **fully customizable**, **GUI-driven** and with **multi-currency** support. 
 
-<img src="https://nightexpressdev.com/img/excellentjobs/browse.gif"><img src="https://nightexpressdev.com/img/excellentjobs/rewards.gif">
-<img src="https://nightexpressdev.com/img/excellentjobs/stats.gif"><img src="https://nightexpressdev.com/img/excellentjobs/tasks.gif">
+Create **unlimited amount** of your own, **custom jobs** with **custom rewards**, objectives and leveling progression!
+
+<img src="https://nightexpressdev.com/img/excellentjobs/browse.gif"><img src="https://nightexpressdev.com/img/excellentjobs/rewards.gif"><br>
+<img src="https://nightexpressdev.com/img/excellentjobs/stats.gif"><img src="https://nightexpressdev.com/img/excellentjobs/tasks.gif"><br>
 <img src="https://nightexpressdev.com/img/excellentjobs/zones.gif"><img src="https://nightexpressdev.com/img/excellentjobs/progressbar.gif">
 </div>
 
 # Features
-
 - **Database**. Works with SQLite and MySQL!
 - **Synchronization**. Sync your jobs data across multiple servers!
 - **Customization**. Change every aspect of the plugin to your own preferences!
@@ -23,12 +25,12 @@
 - **Custom Jobs**. Create your own jobs with fully customizable [work types](https://nightexpressdev.com/excellentjobs/jobs/work-types) and [objectives](https://nightexpressdev.com/excellentjobs/jobs/objectives)!
 - [**25+ Work Types**](https://nightexpressdev.com/excellentjobs/jobs/work-types). A lot of actions that can be used in job objectives get paid!
 - **GUI Driven**. Simple and intuitive GUIs to interact with the plugin!
-- [**Multi-Currency**](https://nightexpressdev.com/excellentjobs/hooks/eco-currencies). Works with multiple currencies from different plugins!
-- [**Primary Jobs**](https://nightexpressdev.com/excellentjobs/jobs/states/#jobs-states-limits). Select preferrable jobs for max. income!
-- [**Secondary Jobs**](https://nightexpressdev.com/excellentjobs/jobs/states/#jobs-states-limits). Select additional jobs for less, but extra income!
-- [**Auto-Picked Jobs**](https://nightexpressdev.com/excellentjobs/jobs/states/#auto-picked-jobs). Auto-join certain jobs for new players!
-- [**Job Amount Limits**](https://nightexpressdev.com/excellentjobs/jobs/states/#jobs-amount-limits). Limit how many jobs players can have at the same time!
-- **Job Stats**. View personal job stats, such as earnings and objectives amount for custom periods in a customizable GUI!
+- [**Multi-Currency**](https://nightexpressdev.com/excellentjobs/hooks/eco-currencies). Supports [CoinsEngine](https://nightexpressdev.com/coinsengine/), [PlayerPoints](https://www.spigotmc.org/resources/80745/), [BeastTokens](https://www.spigotmc.org/resources/20806/), [Vault](https://www.spigotmc.org/resources/34315/) and more!
+- [**Jobs Priority**](https://nightexpressdev.com/excellentjobs/jobs/priorities). Make players to focus on certain job(s) only!
+- [**Auto-Join Jobs**](https://nightexpressdev.com/excellentjobs/jobs/auto-join). Assign certain job(s) for new players joined the server for the first time!
+- [**Priority Limits**](https://nightexpressdev.com/excellentjobs/jobs/priority-limits). Restrict which jobs can be used as primary or secondary jobs!
+- [**Amount Limits**](https://nightexpressdev.com/excellentjobs/jobs/amount-limits). Restrict amount of primary and secondary jobs available for players!
+- [**Leave & Join Commands**](https://nightexpressdev.com/excellentjobs/jobs/leave-join-commands). Run custom commands when a player leaves or joins a job!
 - [**Job Cooldowns**](https://nightexpressdev.com/excellentjobs/jobs/cooldowns/). Prevent players from changing jobs too often!
 - [**Leveling**](https://nightexpressdev.com/excellentjobs/jobs/leveling). Get XP points, level up in jobs and get even more income!
 - [**Level Rewards**](https://nightexpressdev.com/excellentjobs/jobs/level-rewards). Auto-scalable rewards with custom commands and placeholders!
@@ -38,16 +40,16 @@
 - **Payment Intervals**. Define how often players will get paid for their work!
 - **Reset Progress**. Reset job's progress on leave or manually using commands!
 - **Job Permissions**. Make certain jobs avaiable as donator perks!
+- **Job Stats**. View personal job stats, such as earnings and objectives amount for custom periods in a customizable GUI!
 - [**Daily Limits**](https://nightexpressdev.com/excellentjobs/jobs/daily-limits). Set how much Income & XP players can get daily in each job!
 - **Leaderboards**. View top players by job levels.
 - [**Job Zones**](https://nightexpressdev.com/excellentjobs/zones/overview). Create special zones, where players can complete job objectives!
 - [**Special Orders**](https://nightexpressdev.com/excellentjobs/jobs/special-orders). Job quests with random objectives, custom rewards and completion time!
 - [**Boosters**](https://nightexpressdev.com/excellentjobs/boosters). Create global, personal and rank job boosters!
 - **LevelledMobs** Integration!
-- [**MythicMobs**](https://nightexpressdev.com/excellentjobs/hooks/mythic-mobs/) Integration!
-- [**EvenMoreFish**](https://nightexpressdev.com/excellentjobs/hooks/even-more-fish/) Integration!
-- [**CustomFishing**](https://nightexpressdev.com/excellentjobs/hooks/custom-fishing/) Integration!
-- [**CustomCrops**](https://nightexpressdev.com/excellentjobs/hooks/custom-crops/) Integration!
+- [**MythicMobs**](https://nightexpressdev.com/excellentjobs/hooks/mythic-mobs/) Integration with new objectives!
+- [**EvenMoreFish**](https://nightexpressdev.com/excellentjobs/hooks/even-more-fish/) Integration with new objectives!
+- [**CustomFishing**](https://nightexpressdev.com/excellentjobs/hooks/custom-fishing/) Integration with new objectives!
 - [**PlaceholderAPI**](https://nightexpressdev.com/excellentjobs/hooks/placeholder-api/) Support.
 - [**Developer API**](https://nightexpressdev.com/excellentjobs/developer-api)
 

@@ -134,6 +134,10 @@ public class JobData  {
         return this.state != JobState.INACTIVE;
     }
 
+    public boolean isInactive() {
+        return !this.isActive();
+    }
+
     public boolean hasOrder() {
         return !this.getOrderData().isEmpty() && !this.getOrderData().isExpired();
     }
@@ -200,6 +204,14 @@ public class JobData  {
         }
     }
 
+    public double getIncomeBonus() {
+        return this.job.getIncomeBonus().forStateAndLevel(this.state, this.level);
+    }
+
+    public double getXPBonus() {
+        return this.job.getXPBonus().forStateAndLevel(this.state, this.level);
+    }
+
     @NotNull
     public JobIncome getIncome() {
         return this.income;
@@ -244,7 +256,7 @@ public class JobData  {
     }
 
     public int getMaxLevel() {
-        return this.job.getMaxLevel(this.state);
+        return this.job.getMaxLevel();
     }
 
     public int getXP() {

@@ -10,6 +10,8 @@ import java.util.function.UnaryOperator;
 
 public class Modifier implements Writeable {
 
+    public static final Modifier EMPTY = new Modifier(0D, 0D, 0D, ModifierAction.ADD);
+
     private double base;
     private double perLevel;
     private double step;

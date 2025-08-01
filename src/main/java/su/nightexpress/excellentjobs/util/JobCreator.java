@@ -65,11 +65,9 @@ public class JobCreator {
         job.setInitialXP(904);
         job.setXPFactor(1.09095309);
         job.setMaxLevel(100);
-        job.setMaxSecondaryLevel(30);
         job.setProgressBarColor(BarColor.GREEN);
-        //job.getPaymentMultiplier().put(CurrencyId.VAULT, Modifier.add(0D, 0.01, 1D));
-        job.setPaymentMultiplier(JobUtils.getDefaultPaymentModifier());
-        job.setXPMultiplier(JobUtils.getDefaultXPModifier());
+        //job.setPaymentMultiplier(JobUtils.getDefaultPaymentModifier());
+        //job.setXPMultiplier(JobUtils.getDefaultXPModifier());
         job.getDailyPaymentLimits().put(CurrencyId.VAULT, Modifier.add(-1D, 0D, 0D));
         job.setXPDailyLimits(Modifier.add(-1D, 0D, 0D));
         job.save();

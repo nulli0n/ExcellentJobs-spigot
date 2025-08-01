@@ -6,11 +6,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.excellentjobs.JobsPlugin;
-import su.nightexpress.excellentjobs.job.work.Work;
-import su.nightexpress.excellentjobs.job.work.WorkFormatter;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.job.JobManager;
+import su.nightexpress.excellentjobs.job.work.Work;
+import su.nightexpress.excellentjobs.job.work.WorkFormatter;
 import su.nightexpress.excellentjobs.job.work.WorkFormatters;
+import su.nightexpress.excellentjobs.job.work.WorkUtils;
 import su.nightexpress.excellentjobs.util.JobUtils;
 
 public class KillEntityWork extends Work<EntityDeathEvent, EntityType> {
@@ -33,6 +34,8 @@ public class KillEntityWork extends Work<EntityDeathEvent, EntityType> {
 
         Player killer = entity.getKiller();
         if (killer == null) return false;
+
+        if (WorkUtils.isAbusingPetKilling(killer, entity)) return false;
 
         double multiplier = 0D;
 

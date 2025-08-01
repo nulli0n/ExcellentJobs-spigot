@@ -15,9 +15,10 @@ import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.data.impl.JobData;
 import su.nightexpress.excellentjobs.data.impl.JobLimitData;
 import su.nightexpress.excellentjobs.data.impl.JobOrderData;
-import su.nightexpress.excellentjobs.user.JobUser;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.job.impl.JobState;
+import su.nightexpress.excellentjobs.user.JobUser;
+import su.nightexpress.excellentjobs.util.JobUtils;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.config.Writeable;
@@ -39,7 +40,6 @@ import java.util.*;
 import static su.nightexpress.excellentjobs.Placeholders.*;
 import static su.nightexpress.nightcore.util.text.tag.Tags.*;
 
-@SuppressWarnings("UnstableApiUsage")
 public class JobsMenu extends NormalMenu<JobsPlugin> implements Filled<Job>, ConfigBased {
 
     private static final String FILE_NAME = "job_browse.yml";
@@ -132,18 +132,12 @@ public class JobsMenu extends NormalMenu<JobsPlugin> implements Filled<Job>, Con
     private void onJobClick(MenuViewer viewer, @NotNull Job job) {
         Player player = viewer.getPlayer();
 
-        JobUser user = this.plugin.getUserManager().getOrFetch(player);
-        if (user.getData(job).getState() != JobState.INACTIVE) {
-            this.plugin.getJobManager().openJobMenu(player, job);
-            return;
-        }
-
         if (!job.hasPermission(player)) {
             Lang.ERROR_NO_PERMISSION.getMessage().send(player);
             return;
         }
 
-        this.runNextTick(() -> this.plugin.getJobManager().openPreviewMenu(player, job));
+        this.runNextTick(() -> this.plugin.getJobManager().openJobMenu(player, job));
     }
 
     private NightItem replaceJobItem(@NotNull Player player, @NotNull Job job) {
@@ -156,8 +150,8 @@ public class JobsMenu extends NormalMenu<JobsPlugin> implements Filled<Job>, Con
         double xpBoost = JobsAPI.getBoostPercent(player, job, MultiplierType.XP);
         double payBoost = JobsAPI.getBoostPercent(player, job, MultiplierType.INCOME);
 
-        double xpMod = job.getXPMultiplier(level) * 100D;
-        double payMod = job.getPaymentMultiplier(level) * 100D;
+        double xpMod = jobData.getXPBonus() * 100D;
+        double payMod = jobData.getIncomeBonus() * 100D;
 
         double xpGain = xpMod + xpBoost;
         double payGain = payMod + payBoost;
@@ -220,14 +214,14 @@ public class JobsMenu extends NormalMenu<JobsPlugin> implements Filled<Job>, Con
 
         List<String> finalDailyLimits = dailyLimits;
         return job.getIcon()
-            .setHideComponents(true)
+            .hideAllComponents()
             .setDisplayName(name)
             .setLore(lore)
             .replacement(replacer -> replacer
-                .replace(GENERIC_XP_BONUS, NumberUtil.format(xpGain))
+                .replace(GENERIC_XP_BONUS, JobUtils.formatBonus(xpGain))
                 .replace(GENERIC_XP_MULTIPLIER, NumberUtil.format(xpMod))
                 .replace(GENERIC_XP_BOOST, NumberUtil.format(xpBoost))
-                .replace(GENERIC_INCOME_BONUS, NumberUtil.format(payGain))
+                .replace(GENERIC_INCOME_BONUS, JobUtils.formatBonus(payGain))
                 .replace(GENERIC_INCOME_MULTIPLIER, NumberUtil.format(payMod))
                 .replace(GENERIC_INCOME_BOOST, NumberUtil.format(payBoost))
                 .replace(DAILY_LIMITS, finalDailyLimits)
@@ -300,8 +294,8 @@ public class JobsMenu extends NormalMenu<JobsPlugin> implements Filled<Job>, Con
             LIGHT_YELLOW.wrap(BOLD.wrap("Your Stats:")),
             LIGHT_YELLOW.wrap("▪ " + LIGHT_GRAY.wrap("XP: ") + JOB_DATA_XP + LIGHT_GRAY.wrap("/") + JOB_DATA_XP_MAX),
             LIGHT_YELLOW.wrap("▪ " + LIGHT_GRAY.wrap("Level: ") + JOB_DATA_LEVEL + LIGHT_GRAY.wrap("/") + JOB_DATA_LEVEL_MAX),
-            LIGHT_YELLOW.wrap("▪ " + LIGHT_GRAY.wrap("XP Bonus: ") + "+" + GENERIC_XP_BONUS + "%") + " " + GRAY.wrap("(" + GENERIC_XP_MULTIPLIER + " + " + GENERIC_XP_BOOST + ")"),
-            LIGHT_YELLOW.wrap("▪ " + LIGHT_GRAY.wrap("Income Bonus: ") + "+" + GENERIC_INCOME_BONUS + "%") + " " + GRAY.wrap("(" + GENERIC_INCOME_MULTIPLIER + " + " + GENERIC_INCOME_BOOST + ")"),
+            LIGHT_YELLOW.wrap("▪ " + LIGHT_GRAY.wrap("XP Bonus: ") + GENERIC_XP_BONUS) + " " + GRAY.wrap("(" + GENERIC_XP_MULTIPLIER + " + " + GENERIC_XP_BOOST + ")"),
+            LIGHT_YELLOW.wrap("▪ " + LIGHT_GRAY.wrap("Income Bonus: ") + GENERIC_INCOME_BONUS) + " " + GRAY.wrap("(" + GENERIC_INCOME_MULTIPLIER + " + " + GENERIC_INCOME_BOOST + ")"),
             EMPTY_IF_BELOW,
             DAILY_LIMITS,
             EMPTY_IF_BELOW,

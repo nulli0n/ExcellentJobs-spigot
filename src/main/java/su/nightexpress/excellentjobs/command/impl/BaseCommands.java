@@ -23,12 +23,18 @@ import su.nightexpress.nightcore.util.Lists;
 
 public class BaseCommands {
 
+    public static final String JOBS_ALIAS = "jobs";
+
+    public static final String MENU_ALIAS       = "menu";
+    public static final String LEVELS_ALIAS     = "levels";
+    public static final String OBJECTIVES_ALIAS = "objectives";
+
     public static void load(@NotNull JobsPlugin plugin) {
         var root = plugin.getRootNode();
 
         root.addChildren(ReloadCommand.builder(plugin, Perms.COMMAND_RELOAD));
 
-        var menuNode = DirectNode.builder(plugin, "menu")
+        var menuNode = DirectNode.builder(plugin, MENU_ALIAS)
             .playerOnly()
             .description(Lang.COMMAND_MENU_DESC)
             .permission(Perms.COMMAND_MENU)
@@ -56,7 +62,7 @@ public class BaseCommands {
             .executes((context, arguments) -> leaveJob(plugin, context, arguments))
         );
 
-        root.addChildren(DirectNode.builder(plugin, "levels")
+        root.addChildren(DirectNode.builder(plugin, LEVELS_ALIAS)
             .playerOnly()
             .description(Lang.COMMAND_LEVELS_DESC)
             .permission(Perms.COMMAND_LEVELS)
@@ -64,7 +70,7 @@ public class BaseCommands {
             .executes((context, arguments) -> viewLevels(plugin, context, arguments))
         );
 
-        root.addChildren(DirectNode.builder(plugin, "objectives")
+        root.addChildren(DirectNode.builder(plugin, OBJECTIVES_ALIAS)
             .playerOnly()
             .description(Lang.COMMAND_OBJECTIVES_DESC)
             .permission(Perms.COMMAND_OBJECTIVES)
@@ -127,7 +133,7 @@ public class BaseCommands {
     private static boolean joinJob(@NotNull JobsPlugin plugin, @NotNull CommandContext context, @NotNull ParsedArguments arguments) {
         Job job = arguments.getArgument(CommandArguments.JOB, Job.class);
         Player player = context.getPlayerOrThrow();
-        plugin.getJobManager().openPreviewMenu(player, job);
+        plugin.getJobManager().joinJob(player, job);
         return true;
     }
 

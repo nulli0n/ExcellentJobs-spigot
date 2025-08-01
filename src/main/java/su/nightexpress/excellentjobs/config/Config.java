@@ -74,7 +74,7 @@ public class Config {
     public static final ConfigValue<BarStyle> GENERAL_PROGRESS_BAR_STYLE = ConfigValue.create("General.ProgressBar.Style",
         BarStyle.class, BarStyle.SOLID,
         "Sets style for job progress bar.",
-        "Allowed values: " + StringUtil.inlineEnum(BarStyle.class, ", ")
+        "Allowed values: " + Enums.inline(BarStyle.class, ", ")
     );
 
     public static final ConfigValue<Boolean> PROGRESS_BAR_ACTION_BAR_ENABLED = ConfigValue.create("General.ProgressBar.ActionBar.Enabled",
@@ -136,6 +136,12 @@ public class Config {
         true,
         "Sets whether or not players will lost their jobs for which they don't have permission(s) anymore.");
 
+    public static final ConfigValue<Boolean> JOBS_REWARDS_CLAIM_REQUIRED = ConfigValue.create("Jobs.Rewards.ClaimRequired",
+        false,
+        "Controls whether players must manually claim unlocked job rewards in the GUI.",
+        "[Default is false]"
+    );
+
     public static final ConfigValue<Double> JOBS_ENCHANT_MULTIPLIER_BY_LEVEL_COST = ConfigValue.create("Jobs.Details.Enchant.Multiplier_By_Level_Cost",
         1D,
         "Sets amount of percents (%) added to a job's objective XP and payment for each level in enchanting table cost for " + WorkId.ENCHANTING + " job objectives.",
@@ -190,14 +196,14 @@ public class Config {
         Material.class,
         Material.WHITE_STAINED_GLASS,
         "Block type used for a fake block display entity for zone selection's corners.",
-        "[Default is " + BukkitThing.toString(Material.WHITE_STAINED_GLASS) + "]"
+        "[Default is " + BukkitThing.getValue(Material.WHITE_STAINED_GLASS) + "]"
     );
 
     public static final ConfigValue<Material> ZONES_HIGHLIGHT_BLOCK_WIRE = ConfigValue.create("Zones.Highlighting.WireBlock",
         Material.class,
         Material.CHAIN,
         "Block type used for a fake block display entity for zone selection's corners connections.",
-        "[Default is " + BukkitThing.toString(Material.CHAIN) + "]"
+        "[Default is " + BukkitThing.getValue(Material.CHAIN) + "]"
     );
 
     public static final ConfigValue<Boolean> SPECIAL_ORDERS_ENABLED = ConfigValue.create("SpecialOrders.Enabled",
@@ -243,7 +249,7 @@ public class Config {
     );
 
     public static final ConfigValue<Set<CreatureSpawnEvent.SpawnReason>> ABUSE_IGNORE_SPAWN_REASONS = ConfigValue.forSet("Abuse_Protection.Ignore_SpawnReasons",
-        raw -> StringUtil.getEnum(raw, CreatureSpawnEvent.SpawnReason.class).orElse(null),
+        raw -> Enums.get(raw, CreatureSpawnEvent.SpawnReason.class),
         (cfg, path, set) -> cfg.set(path, set.stream().map(Enum::name).toList()),
         Set.of(
             CreatureSpawnEvent.SpawnReason.EGG,
@@ -259,7 +265,7 @@ public class Config {
     );
 
     public static final ConfigValue<Set<GameMode>> ABUSE_IGNORE_GAME_MODES = ConfigValue.forSet("Abuse_Protection.Ignore_GameModes",
-        raw -> StringUtil.getEnum(raw, GameMode.class).orElse(null),
+        raw -> Enums.get(raw, GameMode.class),
         (cfg, path, set) -> cfg.set(path, set.stream().map(Enum::name).toList()),
         Set.of(GameMode.CREATIVE),
         "A list of player GameModes where no job XP / currency will be given.",
@@ -291,6 +297,11 @@ public class Config {
         "Vehicles are all non-living entities (e.g. minecarts, boats, etc.)"
     );
 
+    public static final ConfigValue<Boolean> ABUSE_RESTRICT_PET_KILLS = ConfigValue.create("Abuse_Protection.Restrict_Pet_Kills",
+        false,
+        "Controls whether job objectives will produce XP & Income for mobs killed by player's pets."
+    );
+
     public static final ConfigValue<Boolean> STATISTIC_ENABLED = ConfigValue.create("Statistic.Enabled",
         true,
         "Sets whether or not Statistics module is enabled.",
@@ -312,6 +323,10 @@ public class Config {
 
     public static boolean isSpecialOrdersEnabled() {
         return SPECIAL_ORDERS_ENABLED.get();
+    }
+
+    public static boolean isRewardClaimRequired() {
+        return JOBS_REWARDS_CLAIM_REQUIRED.get();
     }
 
     public static boolean isInstantPayment() {

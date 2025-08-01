@@ -44,7 +44,7 @@ public class JobsPlugin extends NightPlugin implements ImprovedCommands {
     @Override
     @NotNull
     protected PluginDetails getDefaultDetails() {
-        return PluginDetails.create("Jobs", new String[]{"jobs", "job", "excellentjobs"})
+        return PluginDetails.create("Jobs", new String[]{BaseCommands.JOBS_ALIAS, "job", "excellentjobs"})
             .setConfigClass(Config.class)
             .setLangClass(Lang.class)
             .setPermissionsClass(Perms.class);

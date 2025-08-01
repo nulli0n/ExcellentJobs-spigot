@@ -18,7 +18,6 @@ import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.data.impl.JobData;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.job.impl.JobObjective;
-import su.nightexpress.excellentjobs.job.impl.JobState;
 import su.nightexpress.excellentjobs.user.JobUser;
 import su.nightexpress.excellentjobs.util.JobUtils;
 import su.nightexpress.nightcore.config.ConfigValue;
@@ -41,7 +40,6 @@ import java.util.stream.IntStream;
 import static su.nightexpress.excellentjobs.Placeholders.*;
 import static su.nightexpress.nightcore.util.text.tag.Tags.*;
 
-@SuppressWarnings("UnstableApiUsage")
 public class ObjectivesMenu extends LinkedMenu<JobsPlugin, ObjectivesMenu.Data> implements Filled<JobObjective>, ConfigBased {
 
     private static final String FILE_NAME = "job_obectives.yml";
@@ -53,6 +51,7 @@ public class ObjectivesMenu extends LinkedMenu<JobsPlugin, ObjectivesMenu.Data> 
     private String       objectiveName;
     private List<String> objectiveLockedLore;
     private List<String> objectiveUnlockedLore;
+    private NightItem objectiveLockedIcon;
     private List<String> itemsInfo;
     private String       itemEntry;
     private List<String> incomeRewardInfo;
@@ -129,9 +128,8 @@ public class ObjectivesMenu extends LinkedMenu<JobsPlugin, ObjectivesMenu.Data> 
             );
         }
 
-        int jobLevel = jobData.getLevel();
-        double xpMultiplier = 1D + JobsAPI.getBoost(player, job, MultiplierType.XP) + job.getXPMultiplier(jobLevel);
-        double incomeMultiplier = 1D + job.getPaymentMultiplier(jobLevel);
+        double xpMultiplier = 1D + JobsAPI.getBoost(player, job, MultiplierType.XP) + jobData.getXPBonus();
+        double incomeMultiplier = 1D + jobData.getIncomeBonus();
         double incomeBoost = JobsAPI.getBoost(player, job, MultiplierType.INCOME);
 
         return MenuFiller.builder(this)
@@ -140,6 +138,7 @@ public class ObjectivesMenu extends LinkedMenu<JobsPlugin, ObjectivesMenu.Data> 
             .setItemCreator(objective -> {
                 Work<?, ?> workType2 = objective.getWork();
                 boolean isUnlocked = objective.isUnlocked(player, jobData);
+                NightItem icon = isUnlocked ? objective.getIcon() : this.objectiveLockedIcon.copy();
 
                 if (workType2 == null) return NightItem.fromType(Material.AIR);
 
@@ -180,7 +179,10 @@ public class ObjectivesMenu extends LinkedMenu<JobsPlugin, ObjectivesMenu.Data> 
                     }
                 });
 
+                List<String> objectiveLore = objective.getIcon().getLore();
+
                 List<String> lore = Replacer.create()
+                    .replace(OBJECTIVE_LORE, objectiveLore == null ? Collections.emptyList() : objectiveLore)
                     .replace(OBJECTIVE_UNLOCK_LEVEL, NumberUtil.format(objective.getUnlockLevel()))
                     .replace(OBJECTIVE_ACTION_TYPE, workType2.getDisplayName())
                     .replace(ITEMS, itemsInfo)
@@ -188,7 +190,7 @@ public class ObjectivesMenu extends LinkedMenu<JobsPlugin, ObjectivesMenu.Data> 
                     .replace(INCOME, incomeInfo)
                     .apply(isUnlocked ? this.objectiveUnlockedLore : this.objectiveLockedLore);
 
-                return objective.getIcon().setHideComponents(true).setDisplayName(name).setLore(lore);
+                return icon.hideAllComponents().setDisplayName(name).setLore(lore);
             }).build();
     }
 
@@ -216,11 +218,17 @@ public class ObjectivesMenu extends LinkedMenu<JobsPlugin, ObjectivesMenu.Data> 
         this.objectiveUnlockedLore = ConfigValue.create("Objective.Unlocked", Lists.newList(
             DARK_GRAY.wrap(OBJECTIVE_ACTION_TYPE),
             EMPTY_IF_BELOW,
+            OBJECTIVE_LORE,
+            EMPTY_IF_BELOW,
             ITEMS,
             EMPTY_IF_BELOW,
             XP,
             INCOME
         )).read(config);
+
+        this.objectiveLockedIcon = ConfigValue.create("Objective.LockedIcon",
+            NightItem.fromType(Material.BARRIER).hideAllComponents()
+        ).read(config);
 
         this.itemsInfo = ConfigValue.create("Objective.Info.Items", Lists.newList(
             LIGHT_YELLOW.wrap(BOLD.wrap("Including:")),
@@ -255,11 +263,6 @@ public class ObjectivesMenu extends LinkedMenu<JobsPlugin, ObjectivesMenu.Data> 
         loader.addDefaultItem(MenuItem.buildReturn(this, 49, (viewer, event) -> {
             Player player = viewer.getPlayer();
             Job job = this.getLink(player).job;
-            JobUser user = plugin.getUserManager().getOrFetch(player);
-            if (user.getData(job).getState() == JobState.INACTIVE) {
-                this.runNextTick(() -> plugin.getJobManager().openPreviewMenu(viewer.getPlayer(), job));
-                return;
-            }
 
             this.runNextTick(() -> plugin.getJobManager().openJobMenu(viewer.getPlayer(), job));
         }).setPriority(10));

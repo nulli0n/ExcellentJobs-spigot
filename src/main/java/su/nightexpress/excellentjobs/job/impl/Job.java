@@ -24,9 +24,7 @@ import su.nightexpress.excellentjobs.util.Modifier;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.manager.AbstractFileData;
-import su.nightexpress.nightcore.util.Lists;
-import su.nightexpress.nightcore.util.NumberUtil;
-import su.nightexpress.nightcore.util.StringUtil;
+import su.nightexpress.nightcore.util.*;
 import su.nightexpress.nightcore.util.bukkit.NightItem;
 import su.nightexpress.nightcore.util.random.Rnd;
 import su.nightexpress.nightcore.util.wrapper.UniInt;
@@ -36,6 +34,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static su.nightexpress.excellentjobs.Placeholders.*;
 
@@ -46,17 +45,22 @@ public class Job extends AbstractFileData<JobsPlugin> {
 
     private String       name;
     private List<String> description;
-    private boolean   permissionRequired;
-    private NightItem icon;
-    private JobState  initialState;
+    private boolean      permissionRequired;
+    private NightItem    icon;
+    private JobState     initialState;
     private int          maxLevel;
-    private int          maxSecondaryLevel;
     private int          initialXP;
     private double       xpFactor;
-    private Modifier     xpMultiplier;
+    private BarColor     progressBarColor;
+
+    private List<String> joinCommands = new ArrayList<>();
+    private List<String> leaveCommands = new ArrayList<>();
+
+    private Bonus xpBonus = JobUtils.getDefaultXPBonus();
+    private Bonus incomeBonus = JobUtils.getDefaultIncomeBonus();
+
     private Modifier     xpDailyLimits;
-    private Modifier      paymentMultiplier;
-    private BarColor progressBarColor;
+    private JobRewards rewards = JobRewards.getDefault();
 
     private boolean                        specialOrdersAllowed;
     private UniInt                         specialOrdersObjectivesAmount;
@@ -69,8 +73,7 @@ public class Job extends AbstractFileData<JobsPlugin> {
     private final Set<String>                disabledWorlds;
     private final Map<JobState, Integer>     employeesAmount;
     private final Map<Integer, List<String>> levelUpCommands;
-    private final JobRewards rewards;
-    //private final Map<String, Modifier>      paymentMultiplier;
+
     private final Map<String, Modifier>      paymentDailyLimits;
     private final Map<String, JobObjective>  objectiveMap;
 
@@ -80,8 +83,6 @@ public class Job extends AbstractFileData<JobsPlugin> {
         this.disabledWorlds = new HashSet<>();
         this.employeesAmount = new ConcurrentHashMap<>();
         this.levelUpCommands = new HashMap<>();
-        this.rewards = new JobRewards();
-        //this.paymentMultiplier = new HashMap<>();
         this.paymentDailyLimits = new HashMap<>();
         this.objectiveMap = new HashMap<>();
     }
@@ -112,32 +113,28 @@ public class Job extends AbstractFileData<JobsPlugin> {
         this.setProgressBarColor(ConfigValue.create("ProgressBar.Color",
             BarColor.class, BarColor.GREEN,
             "Sets color for this job progress bar.",
-            "Allowed values: " + StringUtil.inlineEnum(BarColor.class, ", ")
+            "Allowed values: " + Enums.inline(BarColor.class)
         ).read(config));
 
         this.setInitialState(ConfigValue.create("Initial_State",
             JobState.class, JobState.INACTIVE,
-            "Sets initial (start) job state for players that don't have a data for this job.",
-            "This includes players joined the server for the first time, and all existent players if the job wasn't present on the server before.",
-            "This might be useful if you want to grant players all jobs on first join or to predefine some of them.",
-            URL_WIKI_JOB_STATES,
-            "[*] This setting bypasses the job limits defined in the config.",
-            "[Allowed values: " + StringUtil.inlineEnum(JobState.class, ", ") + "]",
+            "Assigns the job with specified state for new players joined for the first time.",
+            URL_WIKI_JOB_AUTO_JOIN,
+            "[Allowed values: " + Enums.inline(JobState.class) + "]",
             "[Default is " + JobState.INACTIVE.name() + "]"
         ).read(config));
 
         this.allowedStates.addAll(ConfigValue.forSet("Allowed_States",
-            id -> StringUtil.getEnum(id, JobState.class).orElse(null),
+            id -> Enums.get(id, JobState.class),
             (cfg, path, set) -> cfg.set(path, set.stream().map(Enum::name).toList()),
             Lists.newSet(
                 JobState.PRIMARY,
                 JobState.SECONDARY,
                 JobState.INACTIVE
             ),
-            "List of allowed Job States allowed for this job.",
-            "Removing " + JobState.INACTIVE.name() + " state will prevent players from leaving this job.",
-            URL_WIKI_JOB_STATES,
-            "[Allowed values: " + StringUtil.inlineEnum(JobState.class, ", ") + "]"
+            "Controls which states (priorities) are allowed for this job.",
+            URL_WIKI_JOB_PRIORITY_LIMITS,
+            "[Allowed values: " + Enums.inline(JobState.class) + "]"
         ).read(config));
 
         this.setDisabledWorlds(ConfigValue.create("Disabled_Worlds",
@@ -146,15 +143,12 @@ public class Job extends AbstractFileData<JobsPlugin> {
             URL_WIKI_DISABLED_WORLDS
         ).read(config));
 
+        this.joinCommands = ConfigValue.create("General.JoinCommands", this.joinCommands, URL_WIKI_LEAVE_JOIN_COMMANDS).read(config);
+        this.leaveCommands = ConfigValue.create("General.LeaveCommands",this.leaveCommands, URL_WIKI_LEAVE_JOIN_COMMANDS).read(config);
+
         this.setMaxLevel(ConfigValue.create("Leveling.Max_Level",
             100,
             "Defines max. possible job level if picked as Primary job.",
-            URL_WIKI_LEVELING
-        ).read(config));
-
-        this.setMaxSecondaryLevel(ConfigValue.create("Leveling.Max_Secondary_Level",
-            30,
-            "Defines max. possible job level if picked as Secondary job.",
             URL_WIKI_LEVELING
         ).read(config));
 
@@ -170,7 +164,10 @@ public class Job extends AbstractFileData<JobsPlugin> {
             URL_WIKI_LEVELING
         ).read(config));
 
-        this.rewards.load(config, "Leveling.Rewards");
+        this.rewards = ConfigValue.create("Leveling.Rewards", JobRewards::read, this.rewards,
+            "Leveling rewards.",
+            Placeholders.URL_WIKI_LEVEL_REWARDS
+        ).read(config);
 
         this.levelUpCommands.putAll(ConfigValue.forMap("Leveling.LevelUp_Commands",
             (key) -> NumberUtil.getInteger(key, 0),
@@ -191,22 +188,31 @@ public class Job extends AbstractFileData<JobsPlugin> {
             URL_WIKI_MODIFIERS
         ).read(config));
 
-        // TODO Config option to excempt currencies from payment modifiers
-        this.paymentMultiplier = ConfigValue.create("Payment_Modifier.Income",
-            Modifier::read,
-            JobUtils.getDefaultPaymentModifier(),
-            "Defines Income bonus for job levels.",
-            URL_WIKI_XP_INCOME_BONUS,
-            URL_WIKI_MODIFIERS
-        ).read(config);
+        if (config.contains("Payment_Modifier")) {
+            Modifier income = ConfigValue.create("Payment_Modifier.Income", Modifier::read, JobUtils.getDefaultPaymentModifier()).read(config);
+            Modifier xp = ConfigValue.create("Payment_Modifier.XP", Modifier::read, JobUtils.getDefaultXPModifier()).read(config);
 
-        this.xpMultiplier = ConfigValue.create("Payment_Modifier.XP",
-            Modifier::read,
-            JobUtils.getDefaultXPModifier(),
-            "Defines XP bonus for job levels.",
+            Modifier incomeSecond = Modifier.add(-0.6D, 0D, 1D);
+            Modifier xpSecond = Modifier.add(-0.3D, 0D, 1D);
+
+            config.set("Bonus.XP", new Bonus(xp, xpSecond));
+            config.set("Bonus.Income", new Bonus(income, incomeSecond));
+            config.remove("Payment_Modifier");
+        }
+
+        // TODO Config option to excempt currencies from payment bonus
+
+        this.setXPBonus(ConfigValue.create("Bonus.XP", Bonus::read, this.xpBonus,
+            "Sets XP bonus based on player's job state and level.",
             URL_WIKI_XP_INCOME_BONUS,
             URL_WIKI_MODIFIERS
-        ).read(config);
+        ).read(config));
+
+        this.setIncomeBonus(ConfigValue.create("Bonus.Income", Bonus::read, this.incomeBonus,
+            "Sets Income bonus based on player's job state and level.",
+            URL_WIKI_XP_INCOME_BONUS,
+            URL_WIKI_MODIFIERS
+        ).read(config));
 
         this.xpDailyLimits = ConfigValue.create("Daily_Limits.XP",
             Modifier::read,
@@ -317,8 +323,9 @@ public class Job extends AbstractFileData<JobsPlugin> {
         config.set("ProgressBar.Color", this.progressBarColor.name());
         config.set("Initial_State", this.initialState.name());
         config.set("Disabled_Worlds", this.disabledWorlds);
+        config.set("General.JoinCommands", this.joinCommands);
+        config.set("General.LeaveCommands", this.leaveCommands);
         config.set("Leveling.Max_Level", this.maxLevel);
-        config.set("Leveling.Max_Secondary_Level", this.maxSecondaryLevel);
         config.set("Leveling.XP_Initial", this.initialXP);
         config.set("Leveling.XP_Factor", this.xpFactor);
         config.set("Leveling.Rewards", this.rewards);
@@ -328,18 +335,13 @@ public class Job extends AbstractFileData<JobsPlugin> {
             config.set("Leveling.LevelUp_Commands." + level, list);
         });
 
-        config.remove("Payment_Modifier.Currency");
-//        this.getPaymentMultiplier().forEach((id, mod) -> {
-//            mod.write(config, "Payment_Modifier.Currency." + id);
-//        });
-
         config.remove("Daily_Limits.Currency");
         this.getDailyPaymentLimits().forEach((id, mod) -> {
             mod.write(config, "Daily_Limits.Currency." + id);
         });
 
-        config.set("Payment_Modifier.Income", this.paymentMultiplier);
-        config.set("Payment_Modifier.XP", this.xpMultiplier);
+        config.set("Bonus.XP", this.xpBonus);
+        config.set("Bonus.Income", this.incomeBonus);
         config.set("Daily_Limits.XP", this.xpDailyLimits);
 
         if (Config.SPECIAL_ORDERS_ENABLED.get() && this.getSpecialOrdersObjectivesAmount() != null) {
@@ -389,11 +391,12 @@ public class Job extends AbstractFileData<JobsPlugin> {
         return this.allowedStates.contains(state);
     }
 
-    public int getMaxLevel(@NotNull JobState state) {
-        if (state == JobState.PRIMARY) {
-            return this.getMaxLevel();
-        }
-        return this.getMaxSecondaryLevel();
+    public boolean isJoinable() {
+        return Stream.of(JobState.actives()).anyMatch(this::isAllowedState);
+    }
+
+    public boolean isLeaveable() {
+        return this.isAllowedState(JobState.INACTIVE);
     }
 
     public int getXPToLevel(int level) {
@@ -501,19 +504,6 @@ public class Job extends AbstractFileData<JobsPlugin> {
 
 
 
-//    public double getPaymentMultiplier(@NotNull Currency currency, int level) {
-//        return this.getPaymentMultiplier(currency.getInternalId(), level);
-//    }
-//
-//    public double getPaymentMultiplier(@NotNull String id, int level) {
-//        Modifier scaler = this.getPaymentMultiplier().getOrDefault(id.toLowerCase(), this.getPaymentMultiplier().get(Placeholders.DEFAULT));
-//        return scaler == null ? 0D : scaler.getValue(level);
-//    }
-
-    public double getPaymentMultiplier(int level) {
-        return this.paymentMultiplier.getValue(level);
-    }
-
     public boolean hasDailyPaymentLimit(@NotNull Currency currency, int level) {
         return this.hasDailyPaymentLimit(currency.getInternalId(), level);
     }
@@ -532,9 +522,22 @@ public class Job extends AbstractFileData<JobsPlugin> {
     }
 
 
+    @NotNull
+    public Bonus getXPBonus() {
+        return this.xpBonus;
+    }
 
-    public double getXPMultiplier(int level) {
-        return this.getXPMultiplier().getValue(level);
+    public void setXPBonus(@NotNull Bonus xpBonus) {
+        this.xpBonus = xpBonus;
+    }
+
+    @NotNull
+    public Bonus getIncomeBonus() {
+        return this.incomeBonus;
+    }
+
+    public void setIncomeBonus(@NotNull Bonus incomeBonus) {
+        this.incomeBonus = incomeBonus;
     }
 
     public boolean hasDailyXPLimit(int level) {
@@ -561,34 +564,10 @@ public class Job extends AbstractFileData<JobsPlugin> {
         return this.objectiveMap.values().stream().filter(objective -> objective.isWork(type)).collect(Collectors.toSet());
     }
 
-//    @Deprecated
-//    public <O> boolean hasObjective(@NotNull Work<?, O> type, @NotNull O objective) {
-//        return this.getObjectiveByObject(type, objective) != null;
-//    }
-
-//    @Deprecated
-//    public boolean hasObjective(@NotNull Work<?, ?> type, @NotNull String name) {
-//        return this.getObjectiveByObject(type, name) != null;
-//    }
-
     @Nullable
     public JobObjective getObjectiveById(@NotNull String id) {
         return this.objectiveMap.get(id.toLowerCase());
     }
-
-//    @Nullable
-//    @Deprecated
-//    public <O> JobObjective getObjectiveByObject(@NotNull Work<?, O> type, @NotNull O object) {
-//        return this.getObjectiveByObject(type, type.getObjectName(object));
-//    }
-
-//    @Nullable
-//    @Deprecated
-//    public JobObjective getObjectiveByObject(@NotNull Work<?, ?> type, @NotNull String name) {
-//        return this.getObjectiveMap().values().stream()
-//            .filter(objective -> objective.isWork(type) && objective.hasObject(name))
-//            .findFirst().orElse(null);
-//    }
 
     @Nullable
     public JobObjective getObjectiveByWork(@NotNull WorkObjective workObjective) {
@@ -618,6 +597,18 @@ public class Job extends AbstractFileData<JobsPlugin> {
 
     public void removeEmployee(@NotNull JobState state, int amount) {
         this.setEmployeesAmount(state, this.getEmployeesAmount(state) - amount);
+    }
+
+    public void runJoinCommands(@NotNull Player player) {
+        this.runCommands(player, this.joinCommands);
+    }
+
+    public void runLeaveCommands(@NotNull Player player) {
+        this.runCommands(player, this.leaveCommands);
+    }
+
+    private void runCommands(@NotNull Player player, @NotNull List<String> commands) {
+        Players.dispatchCommands(player, Lists.modify(commands, s -> this.replacePlaceholders().apply(s)));
     }
 
     @NotNull
@@ -668,14 +659,6 @@ public class Job extends AbstractFileData<JobsPlugin> {
         this.maxLevel = Math.max(1, Math.abs(maxLevel));
     }
 
-    public int getMaxSecondaryLevel() {
-        return maxSecondaryLevel;
-    }
-
-    public void setMaxSecondaryLevel(int maxSecondaryLevel) {
-        this.maxSecondaryLevel = Math.max(1, maxSecondaryLevel);
-    }
-
     @NotNull
     public JobState getInitialState() {
         return initialState;
@@ -698,6 +681,16 @@ public class Job extends AbstractFileData<JobsPlugin> {
     public void setDisabledWorlds(@NotNull Set<String> disabledWorlds) {
         this.getDisabledWorlds().clear();
         this.getDisabledWorlds().addAll(disabledWorlds.stream().map(String::toLowerCase).collect(Collectors.toSet()));
+    }
+
+    @NotNull
+    public List<String> getJoinCommands() {
+        return this.joinCommands;
+    }
+
+    @NotNull
+    public List<String> getLeaveCommands() {
+        return this.leaveCommands;
     }
 
     @NotNull
@@ -735,33 +728,9 @@ public class Job extends AbstractFileData<JobsPlugin> {
         return levelUpCommands;
     }
 
-//    @NotNull
-//    public Map<String, Modifier> getPaymentMultiplier() {
-//        return paymentMultiplier;
-//    }
-
-
-    @NotNull
-    public Modifier getPaymentMultiplier() {
-        return this.paymentMultiplier;
-    }
-
-    public void setPaymentMultiplier(@NotNull Modifier paymentMultiplier) {
-        this.paymentMultiplier = paymentMultiplier;
-    }
-
     @NotNull
     public Map<String, Modifier> getDailyPaymentLimits() {
         return paymentDailyLimits;
-    }
-
-    @NotNull
-    public Modifier getXPMultiplier() {
-        return xpMultiplier;
-    }
-
-    public void setXPMultiplier(@NotNull Modifier xpMultiplier) {
-        this.xpMultiplier = xpMultiplier;
     }
 
     @NotNull

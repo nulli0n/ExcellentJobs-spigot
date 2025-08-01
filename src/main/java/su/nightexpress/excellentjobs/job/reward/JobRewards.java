@@ -1,18 +1,19 @@
 package su.nightexpress.excellentjobs.job.reward;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import su.nightexpress.excellentjobs.Placeholders;
+import su.nightexpress.excellentjobs.job.impl.JobState;
 import su.nightexpress.excellentjobs.util.Modifier;
-import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.config.Writeable;
 import su.nightexpress.nightcore.util.Lists;
 import su.nightexpress.nightcore.util.NumberUtil;
-import su.nightexpress.nightcore.util.Players;
 import su.nightexpress.nightcore.util.placeholder.Replacer;
-import su.nightexpress.nightcore.util.text.tag.Tags;
+import su.nightexpress.nightcore.util.text.night.wrapper.TagWrappers;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class JobRewards implements Writeable {
 
@@ -21,38 +22,32 @@ public class JobRewards implements Writeable {
     private final Map<String, LevelReward> rewardMap;
     private final Map<String, Modifier>    modifierMap;
 
-    public JobRewards() {
-        this.rewardMap = new LinkedHashMap<>();
-        this.modifierMap = new HashMap<>();
+    public JobRewards(@NotNull Map<String, LevelReward> rewardMap, @NotNull Map<String, Modifier> modifierMap) {
+        this.rewardMap = rewardMap;
+        this.modifierMap = modifierMap;
     }
 
-    public void load(@NotNull FileConfig config, @NotNull String path) {
-        this.rewardMap.putAll(ConfigValue.forMapById(path + ".List",
-            LevelReward::read,
-            map -> map.putAll(JobRewards.getDefaultRewards()),
-            "Here you can create unlimited amount of custom job rewards.",
-            Placeholders.URL_WIKI_LEVEL_REWARDS,
-            "Settings:",
-            "  [Level] = Required player's job level.",
-            "  [Repeatable] true = Reward given every N job levels; false = Reward given once at exact level.",
-            "  [Required Permission] = Reward available for players with specific permission. Set to '' or 'null' to disable.",
-            "  [Required Ranks] = Reward available for players that has one of listed ranks.",
-            "      Required_Ranks:",
-            "      - donator",
-            "      - vip",
-            "Placeholders:",
-            "  Use '" + Placeholders.PLAYER_NAME + "' placeholder for a player name.",
-            "  Use '" + Placeholders.REWARD_MODIFIER.apply("name") + "' placeholder to display FORMATTED modifier value, where 'name' is name of the modifier.",
-            "  Use '" + Placeholders.REWARD_MODIFIER_RAW.apply("name") + "' placeholder to display RAW modifier value, where 'name' is name of the modifier.",
-            "  Use '" + Players.PLAYER_COMMAND_PREFIX + "' prefix to run command by a player."
-        ).read(config));
+    @NotNull
+    public static JobRewards getDefault() {
+        return new JobRewards(getDefaultRewards(), getDefaultModifiers());
+    }
 
-        this.modifierMap.putAll(ConfigValue.forMapById(path + ".Modifiers",
-            Modifier::read,
-            map -> map.putAll(JobRewards.getDefaultModifiers()),
-            "Here you can create unlimited amount of custom modifiers for rewards.",
-            Placeholders.URL_WIKI_LEVEL_REWARDS
-        ).read(config));
+    @NotNull
+    public static JobRewards read(@NotNull FileConfig config, @NotNull String path) {
+        Map<String, LevelReward> rewardMap = new LinkedHashMap<>();
+        Map<String, Modifier> modifierMap = new HashMap<>();
+
+        config.getSection(path + ".List").forEach(sId -> {
+            LevelReward reward = LevelReward.read(config, path + ".List." + sId, sId);
+            rewardMap.put(reward.getId(), reward);
+        });
+
+        config.getSection(path + ".Modifiers").forEach(sId -> {
+            Modifier modifier = Modifier.read(config, path + ".Modifiers." + sId);
+            modifierMap.put(sId.toLowerCase(), modifier);
+        });
+
+        return new JobRewards(rewardMap, modifierMap);
     }
 
     @Override
@@ -68,21 +63,23 @@ public class JobRewards implements Writeable {
         Map<String, LevelReward> map = new LinkedHashMap<>();
 
         LevelReward moneyReward = new LevelReward(
-            "every_1_level", 1, true, "$" + Placeholders.REWARD_MODIFIER.apply(DEF_MOD_MONEY),
-            Lists.newList(/*"$" + Placeholders.REWARD_MODIFIER.apply(DEF_MOD_MONEY)*/),
+            "every_1_level", new int[]{1}, true, "$" + Placeholders.REWARD_MODIFIER.apply(DEF_MOD_MONEY),
+            Lists.newList(),
             Lists.newList("money give " + Placeholders.PLAYER_NAME + " " + Placeholders.REWARD_MODIFIER_RAW.apply(DEF_MOD_MONEY)),
             "null",
             Lists.newList(),
+            Lists.newSet(),
             Lists.newList("")
         );
 
         LevelReward donatorReward = new LevelReward(
-            "donator_10_levels", 10, true, "x1 Jobs Crate Key " + Tags.RED.wrap("(Premium only)"),
-            Lists.newList(/*"x1 Jobs Crate Key."*/),
+            "donator_10_levels", new int[]{10}, true, "x1 Jobs Crate Key " + TagWrappers.RED.wrap("(Premium only)"),
+            Lists.newList(),
             Lists.newList("crates key give " + Placeholders.PLAYER_NAME + " jobs 1"),
             "null",
             Lists.newList("vip", "premium"),
-            Lists.newList(/*Tags.LIGHT_RED.wrap("You must have VIP or Premium rank.")*/)
+            Lists.newSet(JobState.PRIMARY),
+            Lists.newList()
         );
 
         map.put(moneyReward.getId(), moneyReward);
@@ -102,20 +99,21 @@ public class JobRewards implements Writeable {
 
     @NotNull
     public List<LevelReward> getRewards(int jobLevel) {
+        return this.getRewards(jobLevel, null);
+    }
+
+    @NotNull
+    public List<LevelReward> getRewards(int jobLevel, @Nullable JobState state) {
         Replacer replacer = this.getModifierReplacer(jobLevel);
 
-        return new ArrayList<>(this.rewardMap.values().stream().filter(reward -> reward.isGoodLevel(jobLevel)).map(reward -> reward.parse(replacer)).toList());
+        return this.rewardMap.values().stream()
+            .filter(reward -> reward.isGoodLevel(jobLevel) && (state == null || reward.isGoodState(state)))
+            .map(reward -> reward.parse(replacer))
+            .collect(Collectors.toCollection(ArrayList::new));
     }
 
     @NotNull
     public Replacer getModifierReplacer(int jobLevel) {
-//        PlaceholderMap map = new PlaceholderMap();
-//
-//        this.modifierMap.forEach((id, modifier) -> {
-//            map.add(Placeholders.REWARD_MODIFIER.apply(id), NumberUtil.format(modifier.getValue(jobLevel)));
-//            map.add(Placeholders.REWARD_MODIFIER_RAW.apply(id), String.valueOf(modifier.getValue(jobLevel)));
-//        });
-
         Replacer replacer = Replacer.create();
 
         this.modifierMap.forEach((id, modifier) -> {
@@ -124,8 +122,6 @@ public class JobRewards implements Writeable {
         });
 
         return replacer;
-
-        //return map.replacer();
     }
 
     @NotNull
