@@ -6,7 +6,7 @@
 
     <groupId>su.nightexpress.excellentjobs</groupId>
     <artifactId>ExcellentJobs</artifactId>
-    <version>1.13.0</version>
+    <version>1.13.1</version>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>

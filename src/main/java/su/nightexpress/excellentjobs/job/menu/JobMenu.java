@@ -97,6 +97,8 @@ public class JobMenu extends LinkedMenu<JobsPlugin, Job> implements ConfigBased 
     }
 
     private void replaceOrder(@NotNull Job job, @NotNull JobData jobData, @NotNull List<String> lore) {
+        if (!Config.isSpecialOrdersEnabled()) return;
+
         JobOrderData orderData = jobData.getOrderData();
         boolean hasActiveOrder = jobData.hasOrder() && !orderData.isCompleted();
 
@@ -309,7 +311,7 @@ public class JobMenu extends LinkedMenu<JobsPlugin, Job> implements ConfigBased 
             .setDisplayName(SOFT_ORANGE.wrap(BOLD.wrap("Special Order")) + " " + RED.wrap("(Locked)"))
             .setLore(Lists.newList(
                 GRAY.wrap("Orders will become available once"),
-                GRAY.wrap("join the job.")
+                GRAY.wrap("you join the job.")
             ))
             .toMenuItem()
             .setSlots(23)
@@ -333,7 +335,7 @@ public class JobMenu extends LinkedMenu<JobsPlugin, Job> implements ConfigBased 
             .setDisplayName(SOFT_GREEN.wrap(BOLD.wrap("Stats")) + " " + RED.wrap("(Locked)"))
             .setLore(Lists.newList(
                 GRAY.wrap("Stats will become available once"),
-                GRAY.wrap("join the job.")
+                GRAY.wrap("you join the job.")
             ))
             .toMenuItem()
             .setSlots(25)
