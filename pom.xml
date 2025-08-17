@@ -69,7 +69,7 @@
 
         <repository>
             <id>lumine-snapshot</id>
-            <url>http://mvn.lumine.io/repository/maven-snapshots/</url>
+            <url>https://mvn.lumine.io/repository/maven-snapshots/</url>
         </repository>
 
         <repository>

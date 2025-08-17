@@ -298,7 +298,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         JobUser user = this.plugin.getUserManager().getOrFetch(player);
         int limit = getJobsLimit(player, state);
 
-        return user.countJobs(state) > limit;
+        return limit >= 0 && user.countJobs(state) > limit;
     }
 
     public void handleQuit(@NotNull Player player) {
@@ -937,11 +937,11 @@ public class JobManager extends AbstractManager<JobsPlugin> {
                 job.getLevelUpCommands(level).forEach(command -> {
                     plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), Placeholders.forPlayer(player).apply(command));
                 });
-            }
 
-            for (LevelReward levelReward : rewards.getRewards(level, state)) {
-                if (!data.isLevelRewardObtained(level) && levelReward.isAvailable(player)) {
-                    levelRewards.add(levelReward);
+                for (LevelReward levelReward : rewards.getRewards(level, state)) {
+                    if (levelReward.isAvailable(player)) {
+                        levelRewards.add(levelReward);
+                    }
                 }
             }
 
