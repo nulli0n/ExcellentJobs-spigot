@@ -65,8 +65,7 @@ public class ZoneCommands {
         return CommandArgument.builder(CommandArguments.ZONE, (string, context) -> manager.getZoneById(string))
             .localized(Lang.COMMAND_ARGUMENT_NAME_ZONE)
             .customFailure(Lang.ERROR_COMMAND_INVALID_ZONE_ARGUMENT)
-            .withSamples(context -> manager.getZoneIds())
-            ;
+            .withSamples(context -> manager.getZoneIds());
     }
 
     private static boolean giveWand(@NotNull ZoneManager manager, @NotNull CommandContext context, @NotNull ParsedArguments arguments) {

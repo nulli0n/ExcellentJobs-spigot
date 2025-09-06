@@ -260,7 +260,6 @@ public class JobsMenu extends NormalMenu<JobsPlugin> implements Filled<Job>, Con
 
     @Override
     public void loadConfiguration(@NotNull FileConfig config, @NotNull MenuLoader loader) {
-        //int[] defSlots = new int[]{11,12,13,14,15,21,22,23};
         int[] defSlots = new int[]{10,12,14,16,29,31,33};
 
         this.gridAuto = ConfigValue.create("Job.Grid.Auto", false).read(config);
@@ -312,9 +311,6 @@ public class JobsMenu extends NormalMenu<JobsPlugin> implements Filled<Job>, Con
             LIGHT_GRAY.wrap("Upgrade your " + LIGHT_RED.wrap("/rank") + " to access this job.")
         )).read(config);
 
-
-
-
         this.jobDailyLimits = ConfigValue.create("Job.DailyLimits.Header", Lists.newList(
             LIGHT_YELLOW.wrap(BOLD.wrap("Daily Limits:")),
             GENERIC_CURRENCY,
@@ -350,7 +346,6 @@ public class JobsMenu extends NormalMenu<JobsPlugin> implements Filled<Job>, Con
             LIGHT_YELLOW.wrap(BOLD.wrap("Special Order:")),
             LIGHT_YELLOW.wrap("▪ " + LIGHT_GRAY.wrap("Timeleft: ") + GENERIC_TIME)
         )).read(config);
-
 
         loader.addDefaultItem(MenuItem.buildNextPage(this, 35).setPriority(10));
         loader.addDefaultItem(MenuItem.buildPreviousPage(this, 27).setPriority(10));

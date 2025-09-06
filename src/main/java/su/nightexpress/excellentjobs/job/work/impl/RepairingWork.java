@@ -55,7 +55,7 @@ public class RepairingWork extends Work<InventoryClickEvent, Material> {
         Player player = (Player) event.getWhoClicked();
         Material material = result.getType();
 
-        plugin.runTask(task -> {
+        plugin.runTask(() -> {
             ItemStack result2 = anvil.getItem(2);
             if (result2 != null && !result2.getType().isAir()) return;
 

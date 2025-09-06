@@ -47,7 +47,7 @@ public class BrewingWork extends Work<BrewEvent, PotionEffectType> {
 
         int[] slots = new int[]{0, 1, 2};
 
-        plugin.runTask(task -> {
+        plugin.runTask(() -> {
             for (int slot : slots) {
                 ItemStack item = inventory.getItem(slot);
                 if (item == null || item.getType().isAir()) continue;
@@ -61,9 +61,7 @@ public class BrewingWork extends Work<BrewEvent, PotionEffectType> {
                     }
                 }
 
-                potionMeta.getCustomEffects().forEach(effect -> {
-                    this.doObjective(player, effect.getType(), item.getAmount());
-                });
+                potionMeta.getCustomEffects().forEach(effect -> this.doObjective(player, effect.getType(), item.getAmount()));
             }
         });
         return true;

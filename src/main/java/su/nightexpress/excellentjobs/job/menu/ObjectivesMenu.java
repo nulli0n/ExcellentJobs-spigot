@@ -89,8 +89,6 @@ public class ObjectivesMenu extends LinkedMenu<JobsPlugin, ObjectivesMenu.Data> 
     @Override
     public void onPrepare(@NotNull MenuViewer viewer, @NotNull InventoryView view) {
         this.autoFill(viewer);
-
-
     }
 
     @Override
@@ -206,7 +204,6 @@ public class ObjectivesMenu extends LinkedMenu<JobsPlugin, ObjectivesMenu.Data> 
 
         this.workTypeSlots = ConfigValue.create("WorkType.Slots", new int[]{3,5,4,2,6}).read(config);
 
-
         this.objectiveName = ConfigValue.create("Objective.Name",
             LIGHT_GRAY.wrap(BOLD.wrap(OBJECTIVE_NAME))
         ).read(config);
@@ -256,7 +253,6 @@ public class ObjectivesMenu extends LinkedMenu<JobsPlugin, ObjectivesMenu.Data> 
         )).read(config);
 
         this.objectiveSlots = ConfigValue.create("Objective.Slots", IntStream.range(18, 45).toArray()).read(config);
-
 
         loader.addDefaultItem(MenuItem.buildNextPage(this, 53).setPriority(10));
         loader.addDefaultItem(MenuItem.buildPreviousPage(this, 45).setPriority(10));

@@ -12,14 +12,12 @@ public class UserSettingsSerializer implements JsonSerializer<UserSettings>, Jso
     public UserSettings deserialize(JsonElement element, Type type, JsonDeserializationContext context) throws JsonParseException {
         JsonObject object = element.getAsJsonObject();
 
-
         return new UserSettings();
     }
 
     @Override
     public JsonElement serialize(UserSettings settings, Type type, JsonSerializationContext context) {
         JsonObject object = new JsonObject();
-
 
         return object;
     }

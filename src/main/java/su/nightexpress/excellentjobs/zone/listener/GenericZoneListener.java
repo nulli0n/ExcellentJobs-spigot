@@ -102,7 +102,6 @@ public class GenericZoneListener extends AbstractListener<JobsPlugin> {
         if (!Config.ZONES_CONTROL_ENTRANCE.get()) return;
 
         Location to = event.getTo();
-        if (to == null) return;
 
         Location from = event.getFrom();
         if (from.getX() == to.getX() && from.getY() == to.getY() && from.getZ() == to.getZ()) return;

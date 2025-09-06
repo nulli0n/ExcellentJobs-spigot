@@ -50,7 +50,7 @@ public class CraftingWork extends Work<CraftItemEvent, Material> {
         }
         else {
             ItemStack cursor = event.getCursor();
-            if (cursor != null && !cursor.getType().isAir() && (!cursor.isSimilar(craft) || cursor.getAmount() >= cursor.getMaxStackSize())) return false;
+            if (!cursor.getType().isAir() && (!cursor.isSimilar(craft) || cursor.getAmount() >= cursor.getMaxStackSize())) return false;
 
             this.doObjective(player, type, 1);
         }

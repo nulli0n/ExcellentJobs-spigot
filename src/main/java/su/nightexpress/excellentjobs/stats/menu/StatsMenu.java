@@ -116,7 +116,6 @@ public class StatsMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
             }
             if (objectiveAmounts.isEmpty()) objectiveAmounts.add(this.nothingEntry);
 
-
             ItemReplacer.create(itemStack).hideFlags().trimmed()
                 .setDisplayName(this.entryName)
                 .setLore(this.entryLore)

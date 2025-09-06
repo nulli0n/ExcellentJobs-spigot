@@ -40,8 +40,6 @@ public class DayStats {
         return this.currencyEarned.getOrDefault(currencyId.toLowerCase(), 0D);
     }
 
-
-
     public int getObjectives(@NotNull JobObjective objective) {
         return this.getObjectives(objective.getId());
     }
@@ -59,8 +57,6 @@ public class DayStats {
         var map = this.objectivesCompleted.computeIfAbsent(objectiveId.toLowerCase(), k -> new HashMap<>());
         return map.getOrDefault(objectName.toLowerCase(), 0);
     }
-
-
 
     public void add(@NotNull DayStats stats) {
         stats.getCurrencyEarned().forEach(this::addCurrency);
@@ -93,8 +89,6 @@ public class DayStats {
     public void addOrders(int amount) {
         this.setOrdersCompleted(this.ordersCompleted + Math.abs(amount));
     }
-
-
 
     @NotNull
     public Map<String, Double> getCurrencyEarned() {

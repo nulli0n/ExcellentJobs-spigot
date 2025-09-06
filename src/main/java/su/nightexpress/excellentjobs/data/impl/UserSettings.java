@@ -4,7 +4,6 @@ package su.nightexpress.excellentjobs.data.impl;
 public class UserSettings {
 
     // TODO
-
     public UserSettings() {
 
     }

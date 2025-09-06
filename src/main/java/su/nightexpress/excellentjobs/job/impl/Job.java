@@ -179,9 +179,7 @@ public class Job extends AbstractFileData<JobsPlugin> {
 
         this.paymentDailyLimits.putAll(ConfigValue.forMapById("Daily_Limits.Currency",
             Modifier::read,
-            map -> {
-                map.put(CurrencyId.VAULT, Modifier.add(-1, 0, 0));
-            },
+            map -> map.put(CurrencyId.VAULT, Modifier.add(-1, 0, 0)),
             "Defines daily Income limits on per currency basis.",
             "You can use the '" + DEFAULT + "' keyword for all currencies that are not listed here.",
             URL_WIKI_DAILY_LIMITS,
@@ -443,7 +441,6 @@ public class Job extends AbstractFileData<JobsPlugin> {
             return null;
         }
 
-
         Map<String, JobOrderObjective> objectiveMap = new HashMap<>();
         List<JobObjective> jobObjectives = new ArrayList<>(this.getObjectives());
 
@@ -483,7 +480,6 @@ public class Job extends AbstractFileData<JobsPlugin> {
             return null;
         }
 
-
         List<String> rewardNames = new ArrayList<>(this.getSpecialOrdersAllowedRewards(jobLevel));
         if (rewardNames.contains(Placeholders.WILDCARD)) {
             rewardNames = new ArrayList<>(Config.SPECIAL_ORDERS_REWARDS.get().keySet());
@@ -502,8 +498,6 @@ public class Job extends AbstractFileData<JobsPlugin> {
         return new JobOrderData(objectiveMap, rewards, false, expireDate);
     }
 
-
-
     public boolean hasDailyPaymentLimit(@NotNull Currency currency, int level) {
         return this.hasDailyPaymentLimit(currency.getInternalId(), level);
     }
@@ -520,7 +514,6 @@ public class Job extends AbstractFileData<JobsPlugin> {
         Modifier scaler = this.getDailyPaymentLimits().getOrDefault(id.toLowerCase(), this.getDailyPaymentLimits().get(Placeholders.DEFAULT));
         return scaler == null ? -1D : scaler.getValue(level);
     }
-
 
     @NotNull
     public Bonus getXPBonus() {
@@ -547,7 +540,6 @@ public class Job extends AbstractFileData<JobsPlugin> {
     public double getDailyXPLimit(int level) {
         return this.getDailyXPLimits().getValue(level);
     }
-
 
     @NotNull
     public List<? extends Work<?, ?>> getObjectiveWorkTypes() {

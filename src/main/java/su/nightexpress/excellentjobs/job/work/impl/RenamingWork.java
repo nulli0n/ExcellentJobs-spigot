@@ -48,7 +48,7 @@ public class RenamingWork extends Work<InventoryClickEvent, Material> {
         if (nameSource.equalsIgnoreCase(nameResult)) return false;
 
         Player player = (Player) event.getWhoClicked();
-        plugin.runTask(task -> {
+        plugin.runTask(() -> {
             ItemStack result2 = anvil.getItem(2);
             if (result2 != null && !result2.getType().isAir()) return;
 

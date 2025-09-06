@@ -162,7 +162,6 @@ public class BaseCommands {
         return true;
     }
 
-
     private static boolean viewObjectives(@NotNull JobsPlugin plugin, @NotNull CommandContext context, @NotNull ParsedArguments arguments) {
         Job job = arguments.getArgument(CommandArguments.JOB, Job.class);
         Player player = context.getPlayerOrThrow();

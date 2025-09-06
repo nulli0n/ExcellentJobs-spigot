@@ -6,13 +6,10 @@ import su.nightexpress.nightcore.util.geodata.pos.BlockPos;
 
 public class Selection {
 
-    //private final Zone zone;
-
     private BlockPos first;
     private BlockPos second;
 
-    public Selection(/*@NotNull Zone zone*/) {
-        //this.zone = zone;
+    public Selection() {
     }
 
     public void clear() {
@@ -27,11 +24,6 @@ public class Selection {
     public boolean isCompleted() {
         return this.first != null && this.second != null;
     }
-
-//    @NotNull
-//    public Zone getZone() {
-//        return zone;
-//    }
 
     @Nullable
     public BlockPos getFirst() {

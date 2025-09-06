@@ -41,7 +41,7 @@ public class TradingWork extends Work<InventoryClickEvent, Material> {
         int uses = recipe.getUses();
         int userHas = Players.countItem(player, result);
 
-        plugin.runTask(task -> {
+        plugin.runTask(() -> {
             int uses2 = recipe.getUses();
             if (uses2 <= uses) return;
 

@@ -22,7 +22,6 @@ public class JobDataSerializer implements JsonDeserializer<JobData>, JsonSeriali
         String jobId = object.get("job").getAsString();
         String jobState = object.get("state").getAsString();
         JobState state = StringUtil.getEnum(jobState, JobState.class).orElse(JobState.INACTIVE);
-        //String rankId = object.get("rank").getAsString();
         int level = object.get("level").getAsInt();
         int xp = object.get("xp").getAsInt();
         long cooldown = object.get("cooldown") == null ? 0L : object.get("cooldown").getAsLong();
@@ -47,7 +46,6 @@ public class JobDataSerializer implements JsonDeserializer<JobData>, JsonSeriali
         JsonObject object = new JsonObject();
         object.addProperty("job", data.getJob().getId());
         object.addProperty("state", data.getState().name());
-        //object.addProperty("rank", data.getRank().getId());
         object.addProperty("level", data.getLevel());
         object.addProperty("xp", data.getXP());
         object.addProperty("cooldown", data.getCooldown());

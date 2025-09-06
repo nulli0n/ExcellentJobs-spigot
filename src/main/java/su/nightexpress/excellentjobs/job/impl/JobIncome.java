@@ -21,9 +21,7 @@ public class JobIncome {
     }
 
     public void pay(@NotNull Player player) {
-        this.currencyMap.forEach((currency, amount) -> {
-            currency.give(player, amount);
-        });
+        this.currencyMap.forEach((currency, amount) -> currency.give(player, amount));
     }
 
     public void clear() {

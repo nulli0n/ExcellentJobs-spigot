@@ -218,8 +218,6 @@ public class JobManager extends AbstractManager<JobsPlugin> {
             this.progressBarMap.computeIfAbsent(player.getUniqueId(), k -> new ConcurrentHashMap<>()).put(job.getId(), progressBar);
         }
         return progressBar;
-
-        //return this.getProgressBarMap(player).computeIfAbsent(job.getId(), k -> new ProgressBar(this.plugin, job, player));
     }
 
     @NotNull
@@ -269,11 +267,9 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         UIUtils.openConfirmation(player, Confirmation.builder()
             .onAccept((viewer, event) -> {
                 this.leaveJob(player, job);
-                this.plugin.runTask(task -> player.closeInventory());
+                this.plugin.runTask(player, player::closeInventory);
             })
-            .onReturn((viewer, event) -> {
-                this.plugin.runTask(task -> this.openJobMenu(viewer.getPlayer(), job));
-            })
+            .onReturn((viewer, event) -> this.plugin.runTask(player, () -> this.openJobMenu(viewer.getPlayer(), job)))
             .setIcon(job.getIcon().localized(Lang.UI_JOB_LEAVE_INFO).replacement(replacer -> replacer.replace(data.replaceAllPlaceholders())))
             .build());
     }
@@ -304,7 +300,6 @@ public class JobManager extends AbstractManager<JobsPlugin> {
     public void handleQuit(@NotNull Player player) {
         this.payForJob(player);
         this.getProgressBars(player).forEach(ProgressBar::discard);
-        //this.incomeMap.remove(player.getUniqueId());
         this.progressBarMap.remove(player.getUniqueId());
     }
 
@@ -781,8 +776,6 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         }
     }
 
-
-
     public void addLevel(@NotNull Player player, @NotNull Job job, int amount) {
         this.addLevel(player, job, amount, false);
     }
@@ -854,8 +847,6 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         }
     }
 
-
-
     public void addXP(@NotNull Player player, @NotNull Job job, int amount) {
         this.addXP(player, job, amount, false);
     }
@@ -876,10 +867,6 @@ public class JobManager extends AbstractManager<JobsPlugin> {
 
         this.handleXPSet(user, job, data.getXP() + amount, player);
     }
-
-
-
-
 
     public void removeXP(@NotNull Player player, @NotNull Job job, int amount) {
         this.removeXP(player, job, amount, false);

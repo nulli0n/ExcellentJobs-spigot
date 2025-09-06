@@ -44,7 +44,6 @@ public class JobCreator {
         this.createFarmerJob();
         this.createFisherJob();
         this.createHunterJob();
-        //this.createBuilderJob();
 
         if (Version.isPaper()) {
             this.createSpellsmithJob();
@@ -66,8 +65,6 @@ public class JobCreator {
         job.setXPFactor(1.09095309);
         job.setMaxLevel(100);
         job.setProgressBarColor(BarColor.GREEN);
-        //job.setPaymentMultiplier(JobUtils.getDefaultPaymentModifier());
-        //job.setXPMultiplier(JobUtils.getDefaultXPModifier());
         job.getDailyPaymentLimits().put(CurrencyId.VAULT, Modifier.add(-1D, 0D, 0D));
         job.setXPDailyLimits(Modifier.add(-1D, 0D, 0D));
         job.save();
@@ -142,10 +139,6 @@ public class JobCreator {
                 objectives.add(forMaterial(WorkId.MINING, Material.NETHER_GOLD_ORE, reward(10, 15), reward(20, 40)));
 
                 objectives.add(forMaterials("terracotta", WorkId.MINING, Tag.TERRACOTTA.getValues(), NightItem.fromType(Material.TERRACOTTA), reward(0.5, 1.5), reward(1, 3), 15));
-
-//        objectives.add(forMaterial(WorkId.SMELTING, Material.RAW_COPPER, reward(0.8, 1.2), reward(2, 5)));
-//        objectives.add(forMaterial(WorkId.SMELTING, Material.RAW_GOLD, reward(1.1, 2.2), reward(4, 7)));
-//        objectives.add(forMaterial(WorkId.SMELTING, Material.RAW_IRON, reward(0.9, 1.3), reward(3, 6)));
             });
         });
     }
@@ -264,18 +257,6 @@ public class JobCreator {
                 objectives.add(forMaterial(WorkId.MINING, Material.CHORUS_FLOWER, reward(80, 100), reward(80, 120)));
                 objectives.add(forMaterial(WorkId.MINING, Material.BAMBOO, reward(3, 5), reward(15, 20)));
 
-//                objectives.add(forMaterial(WorkId.BUILDING, Material.WHEAT, Material.WHEAT_SEEDS, reward(0.0, 0.0), reward(4, 6)));
-//                objectives.add(forMaterial(WorkId.BUILDING, Material.POTATOES, Material.POTATO, reward(0.0, 0.0), reward(4, 6)));
-//                objectives.add(forMaterial(WorkId.BUILDING, Material.CARROTS, Material.CARROT, reward(0.0, 0.0), reward(4, 6)));
-//                objectives.add(forMaterial(WorkId.BUILDING, Material.BEETROOTS, Material.BEETROOT_SEEDS, reward(0.0, 0.0), reward(4, 6)));
-//                objectives.add(forMaterial(WorkId.BUILDING, Material.CACTUS, reward(0.0, 0.0), reward(4, 6)));
-//                objectives.add(forMaterial(WorkId.BUILDING, Material.SUGAR_CANE, reward(0.0, 0.0), reward(4, 6)));
-//                objectives.add(forMaterial(WorkId.BUILDING, Material.COCOA, Material.COCOA_BEANS, reward(0.0, 0.0), reward(4, 6)));
-//                objectives.add(forMaterial(WorkId.BUILDING, Material.MELON_STEM, Material.MELON_SEEDS, reward(0.0, 0.0), reward(4, 6)));
-//                objectives.add(forMaterial(WorkId.BUILDING, Material.PUMPKIN_STEM, Material.PUMPKIN_SEEDS, reward(0.0, 0.0), reward(4, 6)));
-//                objectives.add(forMaterial(WorkId.BUILDING, Material.NETHER_WART, reward(0.0, 0.0), reward(4, 6)));
-//                objectives.add(forMaterial(WorkId.BUILDING, Material.VINE, reward(0.0, 0.0), reward(4, 6)));
-
                 objectives.add(forEntity(WorkId.BREEDING, EntityType.CAT, Material.CAT_SPAWN_EGG, reward(4, 8), reward(15, 25)));
                 objectives.add(forEntity(WorkId.BREEDING, EntityType.CHICKEN, Material.CHICKEN_SPAWN_EGG, reward(4, 8), reward(15, 25)));
                 objectives.add(forEntity(WorkId.BREEDING, EntityType.COW, Material.COW_SPAWN_EGG, reward(4, 8), reward(15, 25)));
@@ -373,10 +354,8 @@ public class JobCreator {
                     Class<? extends Entity> clazz = entityType.getEntityClass();
                     if (clazz == null || !entityType.isSpawnable()) return;
 
-                    World world = Bukkit.getWorlds().getFirst();
-                    Entity entity = world.createEntity(world.getSpawnLocation(), clazz);
-                    if (!(entity instanceof LivingEntity)) return;
-                    if (entity instanceof Fish) return;
+                    if (!LivingEntity.class.isAssignableFrom(clazz)) return;
+                    if (Fish.class.isAssignableFrom(clazz)) return;
 
                     double moneyMod = 1D;
                     double xpMod = 1D;
@@ -384,16 +363,13 @@ public class JobCreator {
                     if (entityType == EntityType.ENDER_DRAGON) {
                         moneyMod = 700D;
                         xpMod = 700D;
-                    }
-                    else if (entity instanceof Animals) {
+                    } else if (Animals.class.isAssignableFrom(clazz)) {
                         moneyMod = 1.15D;
                         xpMod = 1.15D;
-                    }
-                    else if (entity instanceof Raider) {
+                    } else if (Raider.class.isAssignableFrom(clazz)) {
                         moneyMod = 5D;
                         xpMod = 5D;
-                    }
-                    else if (entity instanceof Monster) {
+                    } else if (Monster.class.isAssignableFrom(clazz)) {
                         moneyMod = 3D;
                         xpMod = 3D;
                     }
@@ -404,10 +380,11 @@ public class JobCreator {
                     double xpMin = 9 * xpMod;
                     double xpMax = 26 * xpMod;
 
-                    Material material = plugin.getServer().getItemFactory().getSpawnEgg(entityType);
-                    if (material == null) return;
+                    Material egg = plugin.getServer().getItemFactory().getSpawnEgg(entityType);
+                    if (egg == null) return;
 
-                    objectives.add(forEntity(WorkId.KILL_ENTITY, entityType, material, reward(moneyMin, moneyMax), reward(xpMin, xpMax)));
+                    objectives.add(forEntity(WorkId.KILL_ENTITY, entityType, egg,
+                            reward(moneyMin, moneyMax), reward(xpMin, xpMax)));
                 });
             });
         });

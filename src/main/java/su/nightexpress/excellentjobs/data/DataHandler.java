@@ -64,9 +64,6 @@ public class DataHandler extends AbstractUserDataManager<JobsPlugin, JobUser> {
 
                 Map<String, JobStats> statsMap = new HashMap<>(); // Lazy load
 
-                //UserSettings settings = GSON.fromJson(resultSet.getString(COLUMN_SETTINGS.getName()), new TypeToken<UserSettings>(){}.getType());
-                //if (settings == null) settings = new UserSettings();
-
                 JobUser user = new JobUser(uuid, name, dateCreated, lastOnline, jobDataMap, boosters, statsMap, new UserSettings());
 
                 // Update missing jobs.
@@ -125,7 +122,6 @@ public class DataHandler extends AbstractUserDataManager<JobsPlugin, JobUser> {
         query.column(COLUMN_DATA);
         query.column(COLUMN_SETTINGS);
         query.column(COLUMN_BOOSTS);
-        //query.column(COLUMN_STATS);
     }
 
     @Override
@@ -144,62 +140,4 @@ public class DataHandler extends AbstractUserDataManager<JobsPlugin, JobUser> {
 
         return map == null ? Collections.emptyMap() : map;
     }
-
-//    @NotNull
-//    public Map<Job, Map<String, Integer>> getLevels() {
-//        Map<Job, Map<String, Integer>> map = new HashMap<>();
-//
-//        Function<ResultSet, Void> function = resultSet -> {
-//            try {
-//                String name = resultSet.getString(COLUMN_USER_NAME.getName());
-//                Map<String, JobData> dataMap = gson.fromJson(resultSet.getString(COLUMN_DATA.getName()), new TypeToken<Map<String, JobData>>(){}.getType());
-//
-//                this.plugin.getJobManager().getJobs().forEach(job -> {
-//                    JobData data = dataMap.get(job.getId());
-//                    if (data == null) return;
-//
-//                    map.computeIfAbsent(job, k -> new HashMap<>()).put(name, data.getLevel());
-//                });
-//            }
-//            catch (SQLException exception) {
-//                exception.printStackTrace();
-//            }
-//            return null;
-//        };
-//
-//        SelectQueryExecutor.builder(this.tableUsers, function)
-//            .columns(COLUMN_USER_NAME, COLUMN_DATA)
-//            .execute(this.getConnector());
-//
-//        return map;
-//    }
-
-//    @NotNull
-//    public Map<Job, Map<JobState, Integer>> getEmployees() {
-//        Map<Job, Map<JobState, Integer>> map = new HashMap<>();
-//
-//        Function<ResultSet, Void> function = resultSet -> {
-//            try {
-//                Map<String, JobData> dataMap = gson.fromJson(resultSet.getString(COLUMN_DATA.getName()), new TypeToken<Map<String, JobData>>(){}.getType());
-//
-//                dataMap.values().forEach(jobData -> {
-//                    if (jobData == null || jobData.getState() == JobState.INACTIVE) return;
-//
-//                    var jobMap = map.computeIfAbsent(jobData.getJob(), k -> new HashMap<>());
-//                    int has = jobMap.computeIfAbsent(jobData.getState(), k -> 0);
-//                    jobMap.put(jobData.getState(), has + 1);
-//                });
-//            }
-//            catch (SQLException exception) {
-//                exception.printStackTrace();
-//            }
-//            return null;
-//        };
-//
-//        SelectQueryExecutor.builder(this.tableUsers, function)
-//            .columns(COLUMN_DATA)
-//            .execute(this.getConnector());
-//
-//        return map;
-//    }
 }

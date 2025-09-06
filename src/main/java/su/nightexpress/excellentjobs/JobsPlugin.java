@@ -1,6 +1,5 @@
 package su.nightexpress.excellentjobs;
 
-import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import su.nightexpress.economybridge.EconomyBridge;
@@ -11,14 +10,8 @@ import su.nightexpress.excellentjobs.config.Keys;
 import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.config.Perms;
 import su.nightexpress.excellentjobs.data.DataHandler;
-import su.nightexpress.excellentjobs.hook.HookPlugin;
 import su.nightexpress.excellentjobs.hook.impl.PlaceholderHook;
-import su.nightexpress.excellentjobs.hook.work.CustomCropsWork;
-import su.nightexpress.excellentjobs.hook.work.CustomFishingWork;
-import su.nightexpress.excellentjobs.hook.work.EvenMoreFishWork;
-import su.nightexpress.excellentjobs.hook.work.MythicMobsWork;
 import su.nightexpress.excellentjobs.job.JobManager;
-import su.nightexpress.excellentjobs.job.work.Work;
 import su.nightexpress.excellentjobs.job.work.WorkRegistry;
 import su.nightexpress.excellentjobs.stats.StatsManager;
 import su.nightexpress.excellentjobs.user.UserManager;
@@ -28,8 +21,6 @@ import su.nightexpress.nightcore.command.experimental.ImprovedCommands;
 import su.nightexpress.nightcore.config.PluginDetails;
 import su.nightexpress.nightcore.util.Plugins;
 import su.nightexpress.nightcore.util.blocktracker.PlayerBlockTracker;
-
-import java.util.function.Supplier;
 
 public class JobsPlugin extends NightPlugin implements ImprovedCommands {
 
@@ -59,7 +50,6 @@ public class JobsPlugin extends NightPlugin implements ImprovedCommands {
         }
 
         this.loadEngine();
-        this.loadIntegrations();
 
         this.dataHandler = new DataHandler(this);
         this.dataHandler.setup();
@@ -119,20 +109,6 @@ public class JobsPlugin extends NightPlugin implements ImprovedCommands {
         Keys.load(this);
         WorkRegistry.load(this);
         BaseCommands.load(this);
-    }
-
-    private void loadIntegrations() {
-        this.loadIntegration(HookPlugin.MYTHIC_MOBS, () -> new MythicMobsWork(this, "kill_mythic_mob"));
-        this.loadIntegration(HookPlugin.EVEN_MORE_FISH, () -> new EvenMoreFishWork(this, "emf_fish_item"));
-        this.loadIntegration(HookPlugin.CUSTOM_FISHING, () -> new CustomFishingWork(this, "custom_fishing"));
-        this.loadIntegration(HookPlugin.CUSTOM_CROPS, () -> new CustomCropsWork(this, "custom_crops"));
-    }
-
-    private <E extends Event, O> void loadIntegration(@NotNull String plugin, @NotNull Supplier<Work<E, O>> supplier) {
-        if (Plugins.isLoaded(plugin)) {
-            this.info("Found " + plugin + "! Adding new work type(s)...");
-            WorkRegistry.register(supplier.get());
-        }
     }
 
     @NotNull

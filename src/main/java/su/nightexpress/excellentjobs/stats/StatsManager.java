@@ -53,7 +53,7 @@ public class StatsManager extends AbstractManager<JobsPlugin> {
     }
 
     private void loadStats() {
-        this.plugin.runTask(task -> this.plugin.getServer().getOnlinePlayers().forEach(this::loadStats));
+        this.plugin.runTask(() -> this.plugin.getServer().getOnlinePlayers().forEach(this::loadStats));
     }
 
     private void loadStats(@NotNull Player player) {
@@ -78,7 +78,7 @@ public class StatsManager extends AbstractManager<JobsPlugin> {
     }
 
     public void handleJoin(@NotNull Player player) {
-        this.plugin.runTaskAsync(task -> this.loadStats(player));
+        this.plugin.runTaskAsync(() -> this.loadStats(player));
     }
 
     public void openStats(@NotNull Player player, @NotNull Job job) {
@@ -94,8 +94,6 @@ public class StatsManager extends AbstractManager<JobsPlugin> {
     }
 
     public void updateJobLevelsAndEmployees() {
-        //this.updateEmployeesAmount();
-        //this.updateTopLevelLeaderboard();
         this.levelTopMap.clear();
 
         List<JobUser> users = this.plugin.getDataHandler().getUsers();
@@ -116,25 +114,4 @@ public class StatsManager extends AbstractManager<JobsPlugin> {
             });
         });
     }
-
-//    public void updateEmployeesAmount() {
-//        Map<Job, Map<JobState, Integer>> dataMap = this.plugin.getData().getEmployees();
-//
-//        dataMap.forEach((job, map) -> {
-//            map.forEach(job::setEmployeesAmount);
-//        });
-//    }
-//
-//    public void updateTopLevelLeaderboard() {
-//        Map<Job, Map<String, Integer>> dataMap = this.plugin.getData().getLevels();
-//
-//        this.levelTopMap.clear();
-//
-//        dataMap.forEach((job, userLevelMap) -> {
-//            AtomicInteger count = new AtomicInteger();
-//            Lists.sortDescent(userLevelMap).forEach((name, level) -> {
-//                this.levelTopMap.computeIfAbsent(job.getId(), k -> new ArrayList<>()).add(new TopEntry(name, level, count.incrementAndGet()));
-//            });
-//        });
-//    }
 }

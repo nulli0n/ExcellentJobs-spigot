@@ -35,7 +35,6 @@ public class StatsListener extends AbstractListener<JobsPlugin> {
 
         this.statsManager.addStats(player, job, stats -> {
             income.getCurrencyMap().forEach(stats::addCurrency);
-            //player.sendMessage("Currency Amount: " + stats.getCurrencyEarned());
         });
     }
 
@@ -46,7 +45,6 @@ public class StatsListener extends AbstractListener<JobsPlugin> {
 
         this.statsManager.addStats(player, job, stats -> {
             stats.addObjective(event.getObjective(), event.getWorkObjective().getObjectName(), 1);
-            //player.sendMessage("Objectives: " + stats.getObjectivesCompleted());
         });
     }
 }

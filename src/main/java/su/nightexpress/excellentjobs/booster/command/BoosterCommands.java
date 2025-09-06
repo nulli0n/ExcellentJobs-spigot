@@ -111,7 +111,6 @@ public class BoosterCommands {
         return true;
     }
 
-
     private static boolean create(@NotNull BoosterManager manager, @NotNull CommandContext context, @NotNull ParsedArguments arguments) {
         double xpMult = arguments.getDoubleArgument(CommandArguments.XP_MULTIPLIER);
         double payMult = arguments.getDoubleArgument(CommandArguments.INCOME_MULTIPLIER);

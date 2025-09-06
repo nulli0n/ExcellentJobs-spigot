@@ -65,7 +65,6 @@ public class Lang extends CoreLang {
         GRAY.wrap(ORANGE.wrap("▪ ") + JOB_NAME + ":   Level: " + ORANGE.wrap(JOB_DATA_LEVEL) + ", XP: " + ORANGE.wrap(JOB_DATA_XP) + "/" + ORANGE.wrap(JOB_DATA_XP_MAX))
     );
 
-
     public static final LangText COMMAND_XP_ADD_DONE = LangText.of("Command.XP.Add.Done",
         GRAY.wrap("Added " + GREEN.wrap(GENERIC_AMOUNT) + " XP to " + GREEN.wrap(PLAYER_NAME) + "'s " + GREEN.wrap(JOB_NAME) + " job.")
     );
@@ -77,8 +76,6 @@ public class Lang extends CoreLang {
     public static final LangText COMMAND_XP_SET_DONE = LangText.of("Command.XP.Set.Done",
         GRAY.wrap("Set " + YELLOW.wrap(GENERIC_AMOUNT) + " XP for " + YELLOW.wrap(PLAYER_NAME) + "'s " + YELLOW.wrap(JOB_NAME) + " job.")
     );
-
-
 
     public static final LangText COMMAND_LEVEL_ADD_DONE = LangText.of("Command.Level.Add.Done",
         GRAY.wrap("Added " + GREEN.wrap(GENERIC_AMOUNT) + " level(s) to " + GREEN.wrap(PLAYER_NAME) + "'s " + GREEN.wrap(JOB_NAME) + " job.")
@@ -92,16 +89,12 @@ public class Lang extends CoreLang {
         GRAY.wrap("Set " + YELLOW.wrap(GENERIC_AMOUNT) + " level for " + YELLOW.wrap(PLAYER_NAME) + "'s " + YELLOW.wrap(JOB_NAME) + " job.")
     );
 
-
-
     public static final LangText COMMAND_RESET_DONE = LangText.of("Command.Reset.Done",
         GRAY.wrap("Successfully reset " + YELLOW.wrap(JOB_NAME) + " progress for " + YELLOW.wrap(PLAYER_NAME) + ".")
     );
 
-
     public static final LangText COMMAND_SET_STATE_DONE = LangText.of("Command.SetState.Done",
         GRAY.wrap("Set " + YELLOW.wrap(GENERIC_STATE) + " state for " + YELLOW.wrap(PLAYER_NAME) + "'s " + YELLOW.wrap(JOB_NAME) + " job!"));
-
 
     public static final LangText COMMAND_TOP_LIST = LangText.of("Command.Top.List",
         TAG_NO_PREFIX,
@@ -142,8 +135,6 @@ public class Lang extends CoreLang {
     public static final LangText COMMAND_BOOSTER_REMOVE_ERROR_NOTHING = LangText.of("Command.Booster.Remove.Error.Nothing",
         RED.wrap("There is no booster.")
     );
-
-
 
     public static final LangText JOB_JOIN_ERROR_ALREADY_HIRED = LangText.of("Job.Join.Error.AlreadyHired",
         GRAY.wrap("You're already hired for the " + RED.wrap(JOB_NAME) + " job!"));
@@ -197,31 +188,10 @@ public class Lang extends CoreLang {
         GRAY.wrap("All " + GREEN.wrap(JOB_NAME) + " progress have been reset!")
     );
 
-
-
     public static final LangText JOB_PAYMENT_NOTIFY = LangText.of("Job.Payment.Notify",
         TAG_NO_PREFIX,
         GRAY.wrap(GREEN.wrap("[$]") + " You got paid for the " + WHITE.wrap(JOB_NAME) + "'s work: " + GREEN.wrap(GENERIC_AMOUNT))
     );
-
-//    public static final LangText JOB_PAYMENT_RECEIPT = LangText.of("Job.Payment.Receipt.General",
-//        TAG_NO_PREFIX,
-//        " ",
-//        YELLOW.wrap(BOLD.wrap("Work Payment for " + GREEN.wrap(GENERIC_TIME) + ":")),
-//        " ",
-//        GENERIC_ENTRY,
-//        " ",
-//        ORANGE.wrap(BOLD.wrap("Total: ") + GREEN.wrap(GENERIC_TOTAL)),
-//        " "
-//    );
-//
-//    public static final LangString JOB_PAYMENT_RECEIPT_ENTRY_JOB = LangString.of("Job.Payment.Receipt.Entry.Job",
-//        YELLOW.wrap(BOLD.wrap(JOB_NAME) + " " + HOVER.wrapShowText("[" + GREEN.wrap("Details") + "]", GENERIC_CURRENCY))
-//    );
-//
-//    public static final LangString JOB_PAYMENT_RECEIPT_ENTRY_CURRENCY = LangString.of("Job.Payment.Receipt.Entry.Currency",
-//        GREEN.wrap(GENERIC_AMOUNT)
-//    );
 
     public static final LangText SPECIAL_ORDER_ERROR_DISABLED_SERVER = LangText.of("SpecialOrder.Error.DisabledByServer",
         GRAY.wrap("Special Orders are " + RED.wrap("disabled") + " on the server."));
@@ -339,10 +309,6 @@ public class Lang extends CoreLang {
         GRAY.wrap("You have reached daily " + RED.wrap(CURRENCY_NAME) + " limit for " + RED.wrap(JOB_NAME) + " job. You can't get more today.")
     );
 
-
-/*    public static final LangString BOOSTER_FORMAT_POSITIVE = LangString.of("Boosters.Format.Positive", GREEN.wrap("+" + GENERIC_AMOUNT + "%"));
-    public static final LangString BOOSTER_FORMAT_NEGATIVE = LangString.of("Boosters.Format.Negative", RED.wrap(GENERIC_AMOUNT + "%"));*/
-
     public static final LangText BOOSTER_ACTIVATED_GLOBAL = LangText.of("Booster.Activated.Global",
         TAG_NO_PREFIX + SOUND.wrap(Sound.BLOCK_NOTE_BLOCK_BELL),
         " ",
@@ -398,7 +364,6 @@ public class Lang extends CoreLang {
         RED.wrap("You have no active boosters for this job.")
     );
 
-
     public static final LangText ZONE_NOT_AVAILABLE = LangText.of("Zone.Info.NotAvailable",
         OUTPUT.wrap(OutputType.ACTION_BAR),
         RED.wrap("You can't work in this zone currently!")
@@ -433,13 +398,11 @@ public class Lang extends CoreLang {
         GRAY.wrap("You must select 2 zone corners!")
     );
 
-
     public static final LangUIButton UI_JOB_LEAVE_INFO = LangUIButton.builder("UI.Job.LeaveInfo", JOB_NAME)
         .description(
             GRAY.wrap(SOFT_YELLOW.wrap("▪ ") + "XP: " + SOFT_YELLOW.wrap(JOB_DATA_XP) + "/" + SOFT_YELLOW.wrap(JOB_DATA_XP_MAX)),
             GRAY.wrap(SOFT_YELLOW.wrap("▪ ") + "Level: " + SOFT_YELLOW.wrap(JOB_DATA_LEVEL) + "/" + SOFT_YELLOW.wrap(JOB_DATA_LEVEL_MAX))
         ).build();
-
 
     public static final LangString DIALOG_LEAVE_TITLE          = LangString.of("Dialog.Leave.Title", "Confirm the action");
     public static final LangString DIALOG_LEAVE_BUTTON_CONFIRM = LangString.of("Dialog.Leave.Button.Confirm", "Confirm");
@@ -449,8 +412,6 @@ public class Lang extends CoreLang {
             GRAY.wrap("The following progress will be lost:") + BR + " " + BR +
             GRAY.wrap(SOFT_RED.wrap(JOB_DATA_LEVEL) + " Levels, " + SOFT_RED.wrap(JOB_DATA_XP) + " XP.")
     );
-
-
 
     public static final LangText ERROR_COMMAND_INVALID_ZONE_ARGUMENT = LangText.of("Error.Command.Argument.InvalidZone",
         GRAY.wrap(RED.wrap(GENERIC_VALUE) + " is not a valid zone!"));
@@ -469,7 +430,6 @@ public class Lang extends CoreLang {
 
     public static final LangText ERROR_COMMAND_INVALID_CURRENCY_ARGUMENT = LangText.of("Error.Error.Command.Argument.InvalidCurrency",
         GRAY.wrap(RED.wrap(GENERIC_VALUE) + " is not a valid currency!"));
-
 
     public static final LangString OTHER_NO_JOBS            = LangString.of("Other.NoJobs", GRAY.wrap("<No Jobs>"));
     public static final LangString OTHER_NO_INCOME          = LangString.of("Other.NoIncome", GRAY.wrap("$0"));

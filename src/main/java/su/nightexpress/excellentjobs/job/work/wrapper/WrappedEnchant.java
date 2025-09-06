@@ -37,7 +37,6 @@ public class WrappedEnchant {
             else return null;
         }
 
-        //String[] split = string.split(DELIMITER);
         Enchantment enchant = BukkitThing.getEnchantment(enchantName);
         if (enchant == null) return null;
 

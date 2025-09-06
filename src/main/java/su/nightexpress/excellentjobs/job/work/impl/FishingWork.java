@@ -10,10 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.job.work.Work;
 import su.nightexpress.excellentjobs.job.work.WorkFormatter;
-import su.nightexpress.excellentjobs.hook.HookPlugin;
-import su.nightexpress.excellentjobs.hook.work.EvenMoreFishWork;
 import su.nightexpress.excellentjobs.job.work.WorkFormatters;
-import su.nightexpress.nightcore.util.Plugins;
 
 public class FishingWork extends Work<PlayerFishEvent, Material> {
 
@@ -36,9 +33,6 @@ public class FishingWork extends Work<PlayerFishEvent, Material> {
 
         Player player = event.getPlayer();
         ItemStack itemStack = item.getItemStack();
-
-        // Do not count EMF fishes.
-        if (Plugins.isInstalled(HookPlugin.EVEN_MORE_FISH) && EvenMoreFishWork.isCustomFish(itemStack)) return false;
 
         this.doObjective(player, itemStack.getType(), itemStack.getAmount());
         return true;
