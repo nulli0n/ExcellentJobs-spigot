@@ -2,7 +2,9 @@ package su.nightexpress.excellentjobs.job.impl;
 
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import su.nightexpress.economybridge.EconomyBridge;
 import su.nightexpress.economybridge.api.Currency;
+import su.nightexpress.excellentjobs.JobsAPI;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,13 +17,21 @@ public class JobIncome {
         this.currencyMap = new ConcurrentHashMap<>();
     }
 
-    public void payAndClear(@NotNull Player player) {
-        this.pay(player);
+    public void payAndClear(@NotNull Player player, @NotNull Job job) {
+        this.pay(player, job);
         this.clear();
     }
 
-    public void pay(@NotNull Player player) {
+    public void pay(@NotNull Player player, @NotNull Job job) {
         this.currencyMap.forEach((currency, amount) -> {
+            if (currency.getInternalId().equals("vault") && !job.getDebitAccount().isEmpty()) {
+                if (EconomyBridge.getEconomyBalance(job.getDebitAccountUUID()) < amount) {
+                    // Don't pay the worker if the account has insufficient balance?
+                    JobsAPI.getPlugin().getSLF4JLogger().info("Failed to payout ${} for player {} due to insufficient balance in debit account", amount, player.getName());
+                    return;
+                }
+                currency.take(job.getDebitAccountUUID(), amount);
+            }
             currency.give(player, amount);
         });
     }

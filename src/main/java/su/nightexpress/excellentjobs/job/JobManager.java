@@ -508,7 +508,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
             );
         }
 
-        income.payAndClear(player);
+        income.payAndClear(player, job);
 
         return true;
     }

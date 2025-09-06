@@ -1,5 +1,6 @@
 package su.nightexpress.excellentjobs.job.impl;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.boss.BarColor;
@@ -52,6 +53,7 @@ public class Job extends AbstractFileData<JobsPlugin> {
     private int          initialXP;
     private double       xpFactor;
     private BarColor     progressBarColor;
+    private String   debitAccount;
 
     private List<String> joinCommands = new ArrayList<>();
     private List<String> leaveCommands = new ArrayList<>();
@@ -114,6 +116,11 @@ public class Job extends AbstractFileData<JobsPlugin> {
             BarColor.class, BarColor.GREEN,
             "Sets color for this job progress bar.",
             "Allowed values: " + Enums.inline(BarColor.class)
+        ).read(config));
+
+        this.setDebitAccount(ConfigValue.create("Debit_Account",
+                "",
+                "The account to debit when paying workers. Use an empty string (\"\") to debit no account but pay workers anyway."
         ).read(config));
 
         this.setInitialState(ConfigValue.create("Initial_State",
@@ -321,6 +328,7 @@ public class Job extends AbstractFileData<JobsPlugin> {
         config.set("Icon", this.getIcon());
         config.set("Permission_Required", this.permissionRequired);
         config.set("ProgressBar.Color", this.progressBarColor.name());
+        config.set("DebitAccount", this.getDebitAccount());
         config.set("Initial_State", this.initialState.name());
         config.set("Disabled_Worlds", this.disabledWorlds);
         config.set("General.JoinCommands", this.joinCommands);
@@ -378,6 +386,18 @@ public class Job extends AbstractFileData<JobsPlugin> {
     public boolean hasPermission(@NotNull Player player) {
         return !this.isPermissionRequired() || player.hasPermission(this.getPermission());
     }
+
+    @NotNull
+    public String getDebitAccount() {
+        return this.debitAccount;
+    }
+
+    @NotNull
+    @SuppressWarnings("deprecation")
+    public UUID getDebitAccountUUID() {
+        return Bukkit.getOfflinePlayer(this.debitAccount).getUniqueId();
+    }
+
 
     public boolean isGoodWorld(@NotNull World world) {
         return this.isGoodWorld(world.getName());
@@ -623,6 +643,10 @@ public class Job extends AbstractFileData<JobsPlugin> {
 
     public void setName(@NotNull String name) {
         this.name = name;
+    }
+
+    public void setDebitAccount(@NotNull String debitAccount) {
+        this.debitAccount = debitAccount;
     }
 
     @NotNull
