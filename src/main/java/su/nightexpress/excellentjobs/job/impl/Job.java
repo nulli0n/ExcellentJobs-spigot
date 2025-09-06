@@ -53,7 +53,7 @@ public class Job extends AbstractFileData<JobsPlugin> {
     private int          initialXP;
     private double       xpFactor;
     private BarColor     progressBarColor;
-    private String   creditAccount;
+    private String   debitAccount;
 
     private List<String> joinCommands = new ArrayList<>();
     private List<String> leaveCommands = new ArrayList<>();
@@ -118,9 +118,9 @@ public class Job extends AbstractFileData<JobsPlugin> {
             "Allowed values: " + Enums.inline(BarColor.class)
         ).read(config));
 
-        this.setCreditAccount(ConfigValue.create("Credit_Account",
+        this.setDebitAccount(ConfigValue.create("Debit_Account",
                 "",
-                "The account to credit when paying workers. Use an empty string (\"\") to credit no account but pay workers anyway."
+                "The account to debit when paying workers. Use an empty string (\"\") to debit no account but pay workers anyway."
         ).read(config));
 
         this.setInitialState(ConfigValue.create("Initial_State",
@@ -328,7 +328,7 @@ public class Job extends AbstractFileData<JobsPlugin> {
         config.set("Icon", this.getIcon());
         config.set("Permission_Required", this.permissionRequired);
         config.set("ProgressBar.Color", this.progressBarColor.name());
-        config.set("CreditAccount", this.getCreditAccount());
+        config.set("DebitAccount", this.getDebitAccount());
         config.set("Initial_State", this.initialState.name());
         config.set("Disabled_Worlds", this.disabledWorlds);
         config.set("General.JoinCommands", this.joinCommands);
@@ -388,14 +388,14 @@ public class Job extends AbstractFileData<JobsPlugin> {
     }
 
     @NotNull
-    public String getCreditAccount() {
-        return this.creditAccount;
+    public String getDebitAccount() {
+        return this.debitAccount;
     }
 
     @NotNull
     @SuppressWarnings("deprecation")
-    public UUID getCreditAccountUUID() {
-        return Bukkit.getOfflinePlayer(this.creditAccount).getUniqueId();
+    public UUID getDebitAccountUUID() {
+        return Bukkit.getOfflinePlayer(this.debitAccount).getUniqueId();
     }
 
 
@@ -645,8 +645,8 @@ public class Job extends AbstractFileData<JobsPlugin> {
         this.name = name;
     }
 
-    public void setCreditAccount(@NotNull String creditAccount) {
-        this.creditAccount = creditAccount;
+    public void setDebitAccount(@NotNull String debitAccount) {
+        this.debitAccount = debitAccount;
     }
 
     @NotNull

@@ -24,13 +24,13 @@ public class JobIncome {
 
     public void pay(@NotNull Player player, @NotNull Job job) {
         this.currencyMap.forEach((currency, amount) -> {
-            if (currency.getInternalId().equals("vault") && !job.getCreditAccount().isEmpty()) {
-                if (EconomyBridge.getEconomyBalance(job.getCreditAccountUUID()) < amount) {
+            if (currency.getInternalId().equals("vault") && !job.getDebitAccount().isEmpty()) {
+                if (EconomyBridge.getEconomyBalance(job.getDebitAccountUUID()) < amount) {
                     // Don't pay the worker if the account has insufficient balance?
-                    JobsAPI.getPlugin().getSLF4JLogger().info("Failed to payout ${} for player {} due to insufficient balance in credit account", amount, player.getName());
+                    JobsAPI.getPlugin().getSLF4JLogger().info("Failed to payout ${} for player {} due to insufficient balance in debit account", amount, player.getName());
                     return;
                 }
-                currency.take(job.getCreditAccountUUID(), amount);
+                currency.take(job.getDebitAccountUUID(), amount);
             }
             currency.give(player, amount);
         });
