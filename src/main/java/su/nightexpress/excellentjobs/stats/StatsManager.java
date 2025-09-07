@@ -6,7 +6,6 @@ import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.job.impl.JobState;
-import su.nightexpress.excellentjobs.stats.command.StatsCommands;
 import su.nightexpress.excellentjobs.stats.impl.DayStats;
 import su.nightexpress.excellentjobs.stats.impl.JobStats;
 import su.nightexpress.excellentjobs.stats.impl.TopEntry;
@@ -33,8 +32,6 @@ public class StatsManager extends AbstractManager<JobsPlugin> {
 
     @Override
     protected void onLoad() {
-        StatsCommands.load(this.plugin, this);
-
         this.loadUI();
         this.loadStats();
 
@@ -45,11 +42,11 @@ public class StatsManager extends AbstractManager<JobsPlugin> {
 
     @Override
     protected void onShutdown() {
-        StatsCommands.unload(this.plugin);
+
     }
 
     private void loadUI() {
-        this.statsMenu = new StatsMenu(this.plugin);
+        this.statsMenu = this.addMenu(new StatsMenu(this.plugin), Config.DIR_MENU, "job_stats.yml");
     }
 
     private void loadStats() {

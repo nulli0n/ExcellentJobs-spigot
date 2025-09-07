@@ -38,7 +38,7 @@ public class ZoneEditor extends LinkedMenu<JobsPlugin, Zone> {
     private final ZoneManager manager;
 
     public ZoneEditor(@NotNull JobsPlugin plugin, @NotNull ZoneManager manager) {
-        super(plugin, MenuType.GENERIC_9X6, Lang.EDITOR_TITLE_ZONE_SETTINGS.getString());
+        super(plugin, MenuType.GENERIC_9X6, Lang.EDITOR_TITLE_ZONE_SETTINGS.text());
         this.manager = manager;
 
         this.addItem(MenuItem.buildReturn(this, 49, (viewer, event) -> {
@@ -51,7 +51,7 @@ public class ZoneEditor extends LinkedMenu<JobsPlugin, Zone> {
         });
 
         this.addItem(ItemUtil.getSkinHead(SKIN_LETTER), Lang.EDITOR_ZONE_NAME, 20, (viewer, event, zone) -> {
-            this.handleInput(Dialog.builder(viewer, Lang.EDITOR_GENERIC_ENTER_NAME, input -> {
+            this.handleInput(Dialog.builder(viewer, Lang.EDITOR_GENERIC_ENTER_NAME.text(), input -> {
                 zone.setName(input.getTextRaw());
                 zone.save();
                 return true;
@@ -66,7 +66,7 @@ public class ZoneEditor extends LinkedMenu<JobsPlugin, Zone> {
             }
 
             if (event.isLeftClick()) {
-                this.handleInput(Dialog.builder(viewer, Lang.EDITOR_ZONE_ENTER_DESCRIPTION, input -> {
+                this.handleInput(Dialog.builder(viewer, Lang.EDITOR_ZONE_ENTER_DESCRIPTION.text(), input -> {
                     zone.getDescription().add(input.getTextRaw());
                     zone.save();
                     return true;
@@ -81,7 +81,7 @@ public class ZoneEditor extends LinkedMenu<JobsPlugin, Zone> {
                 return;
             }
 
-            this.handleInput(Dialog.builder(viewer, Lang.EDITOR_ZONE_ENTER_JOB_ID, input -> {
+            this.handleInput(Dialog.builder(viewer, Lang.EDITOR_ZONE_ENTER_JOB_ID.text(), input -> {
                 Job job = this.plugin.getJobManager().getJobById(input.getTextRaw());
                 if (job != null) {
                     zone.getLinkedJobs().add(job.getId());
@@ -99,7 +99,7 @@ public class ZoneEditor extends LinkedMenu<JobsPlugin, Zone> {
                 return;
             }
 
-            this.handleInput(Dialog.builder(viewer, Lang.EDITOR_GENERIC_ENTER_MIN_MAX, input -> {
+            this.handleInput(Dialog.builder(viewer, Lang.EDITOR_GENERIC_ENTER_MIN_MAX.text(), input -> {
                 String[] split = input.getTextRaw().split(" ");
                 int min = NumberUtil.getAnyInteger(split[0], -1);
                 int max = split.length >= 2 ? NumberUtil.getAnyInteger(split[1], -1) : min;
@@ -145,7 +145,7 @@ public class ZoneEditor extends LinkedMenu<JobsPlugin, Zone> {
 
         this.addItem(ItemUtil.getSkinHead(SKIN_WORKBENCH), Lang.EDITOR_ZONE_DISABLED_BLOCKS, 32, (viewer, event, zone) -> {
             if (event.isLeftClick()) {
-                this.handleInput(Dialog.builder(viewer, Lang.EDITOR_GENERIC_ENTER_MATERIAL, input -> {
+                this.handleInput(Dialog.builder(viewer, Lang.EDITOR_GENERIC_ENTER_MATERIAL.text(), input -> {
                     Material material = BukkitThing.getMaterial(input.getTextRaw());
                     if (material != null && material.isBlock()) {
                         zone.getDisabledInteractions().add(material);

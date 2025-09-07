@@ -30,7 +30,7 @@ public class BlocksEditor extends LinkedMenu<JobsPlugin, Zone> implements Filled
     private final ZoneManager manager;
 
     public BlocksEditor(@NotNull JobsPlugin plugin, @NotNull ZoneManager manager) {
-        super(plugin, MenuType.GENERIC_9X5, Lang.EDITOR_TITLE_ZONE_BLOCK_LIST.getString());
+        super(plugin, MenuType.GENERIC_9X5, Lang.EDITOR_TITLE_ZONE_BLOCK_LIST.text());
         this.manager = manager;
 
         this.addItem(MenuItem.buildNextPage(this, 44));
@@ -40,7 +40,7 @@ public class BlocksEditor extends LinkedMenu<JobsPlugin, Zone> implements Filled
         }));
 
         this.addItem(Material.ANVIL, Lang.EDITOR_ZONE_BLOCK_LIST_CREATE, 41, (viewer, event, zone) -> {
-            this.handleInput(Dialog.builder(viewer, Lang.EDITOR_GENERIC_ENTER_ID, input -> {
+            this.handleInput(Dialog.builder(viewer, Lang.EDITOR_GENERIC_ENTER_ID.text(), input -> {
                 String id = input.getTextRaw();
                 if (zone.getBlockList(id) == null) {
                     BlockList blockList = new BlockList(id, Lists.newSet(), Material.STONE, 60, true);

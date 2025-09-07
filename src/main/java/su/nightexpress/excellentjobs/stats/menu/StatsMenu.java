@@ -2,49 +2,37 @@ package su.nightexpress.excellentjobs.stats.menu;
 
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.InventoryView;
+import org.bukkit.inventory.MenuType;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.economybridge.EconomyBridge;
 import su.nightexpress.economybridge.api.Currency;
 import su.nightexpress.excellentjobs.JobsPlugin;
-import su.nightexpress.excellentjobs.config.Config;
-import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.user.JobUser;
 import su.nightexpress.excellentjobs.job.impl.Job;
-import su.nightexpress.excellentjobs.job.impl.JobObjective;
 import su.nightexpress.excellentjobs.stats.impl.DayStats;
 import su.nightexpress.excellentjobs.stats.impl.JobStats;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
-import su.nightexpress.nightcore.menu.MenuOptions;
-import su.nightexpress.nightcore.menu.MenuSize;
-import su.nightexpress.nightcore.menu.MenuViewer;
-import su.nightexpress.nightcore.menu.impl.ConfigMenu;
-import su.nightexpress.nightcore.menu.item.ItemHandler;
-import su.nightexpress.nightcore.menu.item.MenuItem;
-import su.nightexpress.nightcore.menu.link.Linked;
-import su.nightexpress.nightcore.menu.link.ViewLink;
-import su.nightexpress.nightcore.util.ItemReplacer;
-import su.nightexpress.nightcore.util.ItemUtil;
+import su.nightexpress.nightcore.config.Writeable;
+import su.nightexpress.nightcore.ui.menu.MenuViewer;
+import su.nightexpress.nightcore.ui.menu.data.ConfigBased;
+import su.nightexpress.nightcore.ui.menu.data.MenuLoader;
+import su.nightexpress.nightcore.ui.menu.item.MenuItem;
+import su.nightexpress.nightcore.ui.menu.type.LinkedMenu;
 import su.nightexpress.nightcore.util.Lists;
-import su.nightexpress.nightcore.util.NumberUtil;
+import su.nightexpress.nightcore.util.bukkit.NightItem;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import static su.nightexpress.excellentjobs.Placeholders.*;
-import static su.nightexpress.nightcore.util.text.tag.Tags.*;
+import static su.nightexpress.nightcore.util.text.night.wrapper.TagWrappers.*;
 
-public class StatsMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
-
-    private static final String FILE_NAME = "job_stats.yml";
-
-    private static final String CURRENCIES = "%currency%";
-    private static final String OBJECTIVES = "%objectives%";
-
-    private final ViewLink<Job> link;
-    private final ItemHandler returnHandler;
+public class StatsMenu extends LinkedMenu<JobsPlugin, Job> implements ConfigBased {
 
     private List<StatsEntry> entries;
 
@@ -55,25 +43,18 @@ public class StatsMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
     private String       nothingEntry;
 
     public StatsMenu(@NotNull JobsPlugin plugin) {
-        super(plugin, FileConfig.loadOrExtract(plugin, Config.DIR_MENU, FILE_NAME));
-        this.link = new ViewLink<>();
-
-        this.addHandler(this.returnHandler = ItemHandler.forReturn(this, (viewer, event) -> {
-            this.runNextTick(() -> plugin.getJobManager().openJobMenu(viewer.getPlayer(), this.getLink().get(viewer)));
-        }));
-
-        this.load();
+        super(plugin, MenuType.GENERIC_9X4, BLACK.wrap("[" + JOB_NAME + "] Stats"));
     }
 
+    @Override
     @NotNull
-    @Override
-    public ViewLink<Job> getLink() {
-        return link;
+    protected String getTitle(@NotNull MenuViewer viewer) {
+        return this.getLink(viewer).replacePlaceholders().apply(super.getTitle(viewer));
     }
 
     @Override
-    protected void onPrepare(@NotNull MenuViewer viewer, @NotNull MenuOptions options) {
-        this.displayStats(viewer, options);
+    protected void onPrepare(@NotNull MenuViewer viewer, @NotNull InventoryView view) {
+        this.displayStats(viewer);
     }
 
     @Override
@@ -81,18 +62,15 @@ public class StatsMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
 
     }
 
-    private void displayStats(@NotNull MenuViewer viewer, @NotNull MenuOptions options) {
+    private void displayStats(@NotNull MenuViewer viewer) {
         Player player = viewer.getPlayer();
         Job job = this.getLink(player);
         JobUser user = plugin.getUserManager().getOrFetch(player);
         JobStats stats = user.getStats(job);
 
-        options.editTitle(job.replacePlaceholders());
-
         this.entries.forEach(entry -> {
-            ItemStack itemStack = entry.getItemStack();
-            int minDays = entry.getMinDays();
-            int maxDays = entry.getMaxDays();
+            int minDays = entry.minDays();
+            int maxDays = entry.maxDays();
 
             DayStats dayStats = minDays < 0 && maxDays < 0 ? stats.getAllTimeStats() : stats.getStatsForDays(minDays, maxDays);
 
@@ -108,150 +86,114 @@ public class StatsMenu extends ConfigMenu<JobsPlugin> implements Linked<Job> {
             if (currencyAmounts.isEmpty()) currencyAmounts.add(this.nothingEntry);
 
 
-            for (JobObjective objective : job.getObjectives()) {
+            /*for (JobLegacyObjective objective : job.getObjectives()) {
                 int amount = dayStats.getObjectives(objective);
                 if (amount == 0) continue;
 
                 objectiveAmounts.add(this.objectiveEntry.replace(OBJECTIVE_NAME, objective.getDisplayName()).replace(GENERIC_AMOUNT, NumberUtil.format(amount)));
-            }
+            }*/
             if (objectiveAmounts.isEmpty()) objectiveAmounts.add(this.nothingEntry);
 
 
-            ItemReplacer.create(itemStack).hideFlags().trimmed()
+            NightItem item = entry.item().copy().hideAllComponents()
                 .setDisplayName(this.entryName)
                 .setLore(this.entryLore)
-                .replace(GENERIC_NAME, entry.getName())
-                .replace(CURRENCIES, currencyAmounts)
-                .replace(OBJECTIVES, objectiveAmounts)
-                .writeMeta();
+                .replacement(replacer -> replacer
+                    .replace(GENERIC_NAME, entry.name())
+                    .replace(GENERIC_CURRENCY, currencyAmounts)
+                    .replace(GENERIC_OBJECTIVES, objectiveAmounts)
+                );
 
-            this.addWeakItem(player, itemStack, entry.getSlot());
+            viewer.addItem(item.toMenuItem().setSlots(entry.slots()).setPriority(Integer.MAX_VALUE).build());
         });
     }
-
-    @Override
-    @NotNull
-    protected MenuOptions createDefaultOptions() {
-        return new MenuOptions(BLACK.enclose("Job Stats: " + JOB_NAME), MenuSize.CHEST_45);
+    
+    private void handleReturn(@NotNull MenuViewer viewer, @NotNull InventoryClickEvent event) {
+        this.runNextTick(() -> plugin.getJobManager().openLevelsMenu(viewer.getPlayer(), this.getLink(viewer)));
     }
 
     @Override
-    @NotNull
-    protected List<MenuItem> createDefaultItems() {
-        List<MenuItem> list = new ArrayList<>();
-
-        ItemStack back = ItemUtil.getSkinHead(SKIN_ARROW_DOWN);
-        ItemUtil.editMeta(back, meta -> {
-            meta.setDisplayName(Lang.EDITOR_ITEM_RETURN.getLocalizedName());
-        });
-        list.add(new MenuItem(back).setSlots(40).setPriority(10).setHandler(this.returnHandler));
-
-        return list;
-    }
-
-    @Override
-    protected void loadAdditional() {
+    public void loadConfiguration(@NotNull FileConfig config, @NotNull MenuLoader loader) {
         this.entries = new ArrayList<>();
 
-        if (!this.cfg.contains("Stats.Entries")) {
-            StatsEntry entryAll = new StatsEntry("All Time", -1, -1, 4, ItemUtil.getSkinHead("a8d5cb12219a3f5e9bb68c8914c443c2de160eff00cf3e730fbaccd8db6918fe"));
-            StatsEntry entryToday = new StatsEntry("Today", 0, 0, 19, ItemUtil.getSkinHead("58e4c42c7dc7bfd69902e76f8a2d71a98ff1781ae988ca79d13ad6566d414e49"));
-            StatsEntry entryYesterday = new StatsEntry("Yesterday", 1, 1, 21, ItemUtil.getSkinHead("bc72aff8f6c144d799f2d1a1a0c1fefc4f047f2c46abd29268c80ecbb7b2756"));
-            StatsEntry entryWeek = new StatsEntry("Week", 7, -1, 23, ItemUtil.getSkinHead("74ab9554d0c2528515a7923c95e685cea44e96664d0638d7e14dfa5ccd776ba5"));
-            StatsEntry entryMonth = new StatsEntry("Month" , 30, -1, 25, ItemUtil.getSkinHead("f5be49bbdd1db35def04ad11f06deaaf45c9666c05bc02bc8bf1444e99c7e"));
+        if (!config.contains("Stats.Entries")) {
+            StatsEntry entryToday = new StatsEntry("Today", 0, 0, new int[]{10}, NightItem.fromType(Material.PAPER));
+            StatsEntry entryWeek = new StatsEntry("Week", 7, -1, new int[]{12}, NightItem.fromType(Material.WRITABLE_BOOK));
+            StatsEntry entryMonth = new StatsEntry("Month" , 30, -1, new int[]{14}, NightItem.fromType(Material.COMPASS));
+            StatsEntry entryAll = new StatsEntry("All Time", -1, -1, new int[]{16}, NightItem.fromType(Material.RECOVERY_COMPASS));
 
-            entryToday.write(cfg, "Stats.Entries.today");
-            entryYesterday.write(cfg, "Stats.Entries.yestertoday");
-            entryWeek.write(cfg, "Stats.Entries.week");
-            entryMonth.write(cfg, "Stats.Entries.month");
-            entryAll.write(cfg, "Stats.Entries.alltime");
+            config.set("Stats.Entries.today", entryToday);
+            config.set("Stats.Entries.week", entryWeek);
+            config.set("Stats.Entries.month", entryMonth);
+            config.set("Stats.Entries.alltime", entryAll);
         }
 
-        this.cfg.getSection("Stats.Entries").forEach(sId -> {
-            this.entries.add(StatsEntry.read(this.cfg, "Stats.Entries." + sId));
+        config.getSection("Stats.Entries").forEach(sId -> {
+            this.entries.add(StatsEntry.read(config, "Stats.Entries." + sId));
         });
 
         this.entryName = ConfigValue.create("Stats.Entry.Name",
-            LIGHT_CYAN.enclose(BOLD.enclose("Stats: ")) + LIGHT_GRAY.enclose(GENERIC_NAME)
-        ).read(cfg);
+            SOFT_AQUA.wrap(BOLD.wrap("Stats: ")) + GRAY.wrap(GENERIC_NAME)
+        ).read(config);
 
         this.entryLore = ConfigValue.create("Stats.Entry.Lore", Lists.newList(
-            " ",
-            LIGHT_GRAY.enclose("[" + GREEN.enclose("$") + "]") + " " + GREEN.enclose("Earnings:"),
-            CURRENCIES,
             "",
-            LIGHT_GRAY.enclose("[" + ORANGE.enclose("⛏") + "]") + " " + ORANGE.enclose("Objectives:"),
-            OBJECTIVES
-        )).read(cfg);
+            GRAY.wrap("[" + GREEN.wrap("$") + "]") + " " + GREEN.wrap("Earnings:"),
+            GENERIC_CURRENCY,
+            "",
+            GRAY.wrap("[" + GOLD.wrap("⛏") + "]") + " " + GOLD.wrap("Objectives:"),
+            GENERIC_OBJECTIVES
+        )).read(config);
 
         this.currencyEntry = ConfigValue.create("Stats.Currency.Entry",
-            GREEN.enclose("● " + LIGHT_GRAY.enclose(CURRENCY_NAME + ": ") + GENERIC_AMOUNT)
-        ).read(cfg);
+            GREEN.wrap("● " + GRAY.wrap(CURRENCY_NAME + ": ") + GENERIC_AMOUNT)
+        ).read(config);
 
         this.objectiveEntry = ConfigValue.create("Stats.Objective.Entry",
-            ORANGE.enclose("● " + LIGHT_GRAY.enclose(OBJECTIVE_NAME + ": ") + GENERIC_AMOUNT)
-        ).read(cfg);
+            GOLD.wrap("● " + GRAY.wrap(OBJECTIVE_NAME + ": ") + GENERIC_AMOUNT)
+        ).read(config);
 
         this.nothingEntry = ConfigValue.create("Stats.Nothing",
-            LIGHT_GRAY.enclose(LIGHT_RED.enclose("✘") + " No data collected.")
-        ).read(cfg);
+            GRAY.wrap(RED.wrap("✘") + " No data collected.")
+        ).read(config);
+
+        loader.addDefaultItem(NightItem.fromType(Material.GRAY_STAINED_GLASS_PANE)
+            .setHideTooltip(true)
+            .toMenuItem()
+            .setPriority(-1)
+            .setSlots(IntStream.range(0, 27).toArray())
+        );
+
+        loader.addDefaultItem(NightItem.fromType(Material.BLACK_STAINED_GLASS_PANE)
+            .setHideTooltip(true)
+            .toMenuItem()
+            .setPriority(-1)
+            .setSlots(IntStream.range(27, 36).toArray())
+        );
+
+        loader.addDefaultItem(MenuItem.buildReturn(this, 31, this::handleReturn));
     }
 
-    static class StatsEntry {
-
-        private final int minDays;
-        private final int maxDays;
-        private final int slot;
-        private final String name;
-        private final ItemStack itemStack;
-
-        public StatsEntry(@NotNull String name, int minDays, int maxDays, int slot, ItemStack itemStack) {
-            this.minDays = minDays;
-            this.maxDays = maxDays;
-            this.slot = slot;
-            this.name = name;
-            this.itemStack = itemStack;
-        }
+    private record StatsEntry(@NotNull String name, int minDays, int maxDays, int[] slots, @NotNull NightItem item) implements Writeable {
 
         @NotNull
         public static StatsEntry read(@NotNull FileConfig config, @NotNull String path) {
             int minDays = ConfigValue.create(path + ".MinDays", -1).read(config);
             int maxDays = ConfigValue.create(path + ".MaxDays", -1).read(config);
-            int slot = ConfigValue.create(path + ".Slot", -1).read(config);
+            int[] slots = ConfigValue.create(path + ".Slot", new int[0]).read(config);
             String name = ConfigValue.create(path + ".Name", minDays + " Days").read(config);
-            ItemStack item = ConfigValue.create(path + ".Item", new ItemStack(Material.AIR)).read(config);
+            NightItem item = ConfigValue.create(path + ".Item", NightItem.fromType(Material.AIR)).read(config);
 
-            return new StatsEntry(name, minDays, maxDays, slot, item);
+            return new StatsEntry(name, minDays, maxDays, slots, item);
         }
 
+        @Override
         public void write(@NotNull FileConfig config, @NotNull String path) {
-            config.set(path + ".MinDays", this.getMinDays());
-            config.set(path + ".MaxDays", this.getMaxDays());
-            config.set(path + ".Slot", this.getSlot());
-            config.set(path + ".Name", this.getName());
-            config.setItem(path + ".Item", this.itemStack);
-        }
-
-        @NotNull
-        public String getName() {
-            return name;
-        }
-
-        public int getMinDays() {
-            return minDays;
-        }
-
-        public int getMaxDays() {
-            return maxDays;
-        }
-
-        public int getSlot() {
-            return slot;
-        }
-
-        @NotNull
-        public ItemStack getItemStack() {
-            return new ItemStack(this.itemStack);
+            config.set(path + ".MinDays", this.minDays);
+            config.set(path + ".MaxDays", this.maxDays);
+            config.setIntArray(path + ".Slot", this.slots);
+            config.set(path + ".Name", this.name);
+            config.set(path + ".Item", this.item);
         }
     }
 }

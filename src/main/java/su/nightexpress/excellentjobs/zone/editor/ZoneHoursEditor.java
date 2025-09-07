@@ -10,6 +10,7 @@ import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.util.Hours;
 import su.nightexpress.excellentjobs.zone.ZoneManager;
 import su.nightexpress.excellentjobs.zone.impl.Zone;
+import su.nightexpress.nightcore.core.config.CoreLang;
 import su.nightexpress.nightcore.ui.dialog.Dialog;
 import su.nightexpress.nightcore.ui.menu.MenuViewer;
 import su.nightexpress.nightcore.ui.menu.data.Filled;
@@ -51,7 +52,7 @@ public class ZoneHoursEditor extends LinkedMenu<JobsPlugin, Zone> implements Fil
     private final ZoneManager manager;
 
     public ZoneHoursEditor(@NotNull JobsPlugin plugin, @NotNull ZoneManager manager) {
-        super(plugin, MenuType.GENERIC_9X4, Lang.EDITOR_TITLE_ZONE_HOURS.getString());
+        super(plugin, MenuType.GENERIC_9X4, Lang.EDITOR_TITLE_ZONE_HOURS.text());
         this.manager = manager;
 
         this.addItem(MenuItem.buildReturn(this, 31, (viewer, event) -> {
@@ -88,7 +89,7 @@ public class ZoneHoursEditor extends LinkedMenu<JobsPlugin, Zone> implements Fil
                 .localized(Lang.EDITOR_ZONE_TIME_OBJECT)
                 .replacement(replacer -> replacer
                     .replace(GENERIC_NAME, StringUtil.capitalizeUnderscored(day.name()))
-                    .replace(GENERIC_VALUE, Lang.goodEntry(hours == null ? Lang.OTHER_NONE.getString() : hours.format()))
+                    .replace(GENERIC_VALUE, CoreLang.goodEntry(hours == null ? CoreLang.OTHER_NONE.text() : hours.format()))
                 );
         });
         autoFill.setItemClick(day -> (viewer1, event) -> {
@@ -100,7 +101,7 @@ public class ZoneHoursEditor extends LinkedMenu<JobsPlugin, Zone> implements Fil
             }
 
             if (event.isLeftClick()) {
-                this.handleInput(Dialog.builder(viewer1, Lang.EDITOR_GENERIC_ENTER_TIMES, input -> {
+                this.handleInput(Dialog.builder(viewer1, Lang.EDITOR_GENERIC_ENTER_TIMES.text(), input -> {
                     Hours hours = Hours.parse(input.getTextRaw());
                     if (hours != null) {
                         zone.getHoursByDayMap().put(day, hours);

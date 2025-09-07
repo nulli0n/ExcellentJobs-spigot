@@ -11,8 +11,8 @@ import su.nightexpress.excellentjobs.job.reward.LevelReward;
 import su.nightexpress.excellentjobs.util.Modifier;
 import su.nightexpress.excellentjobs.zone.impl.BlockList;
 import su.nightexpress.excellentjobs.zone.impl.Zone;
-import su.nightexpress.nightcore.core.CoreLang;
-import su.nightexpress.nightcore.language.LangAssets;
+import su.nightexpress.nightcore.core.config.CoreLang;
+import su.nightexpress.nightcore.util.LangUtil;
 import su.nightexpress.nightcore.util.Lists;
 import su.nightexpress.nightcore.util.NumberUtil;
 import su.nightexpress.nightcore.util.StringUtil;
@@ -28,7 +28,6 @@ public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
     public static final String URL_WIKI                     = "https://nightexpressdev.com/excellentjobs/";
     public static final String URL_WIKI_PLACEHOLDERS        = URL_WIKI + "placeholders";
     public static final String URL_WIKI_ECONOMY             = URL_WIKI + "hooks/eco-currencies";
-    public static final String URL_WIKI_WORK_TYPES          = URL_WIKI + "jobs/work-types";
     public static final String URL_WIKI_SPECIAL_ORDERS      = URL_WIKI + "jobs/special-orders";
     public static final String URL_WIKI_LEVELING            = URL_WIKI + "jobs/leveling";
     public static final String URL_WIKI_LEVEL_REWARDS       = URL_WIKI + "jobs/level-rewards";
@@ -62,8 +61,10 @@ public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
     public static final String GENERIC_TYPE        = "%type%";
     public static final String GENERIC_TOTAL       = "%total%";
     public static final String GENERIC_REWARD      = "%reward%";
+    public static final String GENERIC_REWARDS      = "%rewards%";
     public static final String GENERIC_INCOME      = "%income%";
     public static final String GENERIC_LEVEL       = "%level%";
+    public static final String GENERIC_OBJECTIVES = "%objectives%";
 
     public static final String GENERIC_XP_BONUS          = "%xp_bonus%";
     public static final String GENERIC_XP_BOOST          = "%xp_boost%";
@@ -175,7 +176,7 @@ public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
         .add(JOB_ID, Job::getId)
         .add(JOB_NAME, Job::getName)
         .add(JOB_DESCRIPTION, job -> String.join("\n", job.getDescription()))
-        .add(JOB_PERMISSION_REQUIRED, job -> CoreLang.getYesOrNo(job.isPermissionRequired()))
+        .add(JOB_PERMISSION_REQUIRED, job -> CoreLang.STATE_YES_NO.get(job.isPermissionRequired()))
         .add(JOB_PERMISSION_NODE, Job::getPermission)
         .add(JOB_MAX_LEVEL, job -> NumberUtil.format(job.getMaxLevel()))
         .add("%job_max_secondary_level%", job -> NumberUtil.format(job.getMaxLevel()))
@@ -199,22 +200,22 @@ public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
         .add(REWARD_DESCRIPTION, reward -> String.join("\n", reward.getDescription()))
         .add(REWARD_REQUIREMENT, reward -> String.join("\n", reward.getRequirementText()))
         .add(REWARD_LEVELS, reward -> Arrays.toString(reward.getLevels()))
-        .add(REWARD_REPEATABLE, reward -> Lang.getYesOrNo(reward.isRepeatable()))
+        .add(REWARD_REPEATABLE, reward -> CoreLang.STATE_YES_NO.get(reward.isRepeatable()))
     );
 
     public static final PlaceholderList<Zone> ZONE = PlaceholderList.create(list -> list
             .add(ZONE_ID, Zone::getId)
             .add(ZONE_NAME, Zone::getName)
             .add(ZONE_DESCRIPTION, zone -> String.join("\n", zone.getDescription()))
-            .add(ZONE_PVP_ALLOWED, zone -> Lang.getYesOrNo(zone.isPvPAllowed()))
+            .add(ZONE_PVP_ALLOWED, zone -> CoreLang.STATE_YES_NO.get(zone.isPvPAllowed()))
             .add(ZONE_JOB_IDS, zone -> String.join("\n", zone.getLinkedJobs()))
             .add(ZONE_JOB_NAMES, zone -> zone.getLinkedJobs().stream().map(id -> {
                 Job job = JobsAPI.getJobById(id);
-                return job == null ? Lang.badEntry(id) : Lang.goodEntry(job.getName());
+                return job == null ? CoreLang.badEntry(id) : CoreLang.goodEntry(job.getName());
             }).collect(Collectors.joining("\n")))
             .add(ZONE_JOB_MIN_LEVEL, zone -> NumberUtil.format(zone.getMinJobLevel()))
             .add(ZONE_JOB_MAX_LEVEL, zone -> NumberUtil.format(zone.getMaxJobLevel()))
-            .add(ZONE_HOURS_ENABLED, zone -> Lang.getEnabledOrDisabled(zone.isHoursEnabled()))
+            .add(ZONE_HOURS_ENABLED, zone -> CoreLang.STATE_ENABLED_DISALBED.get(zone.isHoursEnabled()))
 //        .add(ZONE_CLOSE_TIME, zone -> {
 //            LocalTime time = zone.getNearestCloseTime();
 //            return time == null ? "-" : JobUtils.formatTime(time);
@@ -224,30 +225,30 @@ public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
 //            return time == null ? "-" : JobUtils.formatTime(time);
 //        })
             .add(ZONE_DISABLED_BLOCK_INTERACTIONS, zone -> {
-                return String.join("\n", Lists.modify(zone.getDisabledInteractions(), type -> Lang.goodEntry(LangAssets.get(type))));
+                return String.join("\n", Lists.modify(zone.getDisabledInteractions(), type -> CoreLang.goodEntry(LangUtil.getSerializedName(type))));
             })
     );
 
     public static final PlaceholderList<Zone> ZONE_EDITOR = PlaceholderList.create(list -> list
         .add(ZONE)
         .add(ZONE_PERMISSION, Zone::getPermission)
-        .add(ZONE_PERMISSION_REQUIRED, zone -> Lang.getYesOrNo(zone.isPermissionRequired()))
+        .add(ZONE_PERMISSION_REQUIRED, zone -> CoreLang.STATE_YES_NO.get(zone.isPermissionRequired()))
         .add(ZONE_INSPECT_SELECTION, zone -> {
-            if (zone.getCuboid().isEmpty()) return Lang.badEntry("Invalid cuboid selection.");
-            return Lang.goodEntry("Selection is valid.");
+            if (zone.getCuboid().isEmpty()) return CoreLang.badEntry("Invalid cuboid selection.");
+            return CoreLang.goodEntry("Selection is valid.");
         })
     );
 
     public static final PlaceholderList<BlockList> ZONE_BLOCK_LIST = PlaceholderList.create(list -> list
         .add(BLOCK_LIST_ID, BlockList::getId)
         .add(BLOCK_LIST_MATERIALS, blockList -> {
-            return String.join("\n", blockList.getMaterials().stream().map(mat -> Lang.goodEntry(LangAssets.get(mat))).toList());
+            return String.join("\n", blockList.getMaterials().stream().map(mat -> CoreLang.goodEntry(LangUtil.getSerializedName(mat))).toList());
         })
-        .add(BLOCK_LIST_FALLBACK_MATERIAL, blockList -> Lang.goodEntry(LangAssets.get(blockList.getFallbackMaterial())))
-        .add(BLOCK_LIST_RESET_TIME, blockList -> Lang.goodEntry(TimeFormats.toLiteral(blockList.getResetTime() * 1000L)))
+        .add(BLOCK_LIST_FALLBACK_MATERIAL, blockList -> CoreLang.goodEntry(LangUtil.getSerializedName(blockList.getFallbackMaterial())))
+        .add(BLOCK_LIST_RESET_TIME, blockList -> CoreLang.goodEntry(TimeFormats.toLiteral(blockList.getResetTime() * 1000L)))
         .add(BLOCK_LIST_DROP_ITEMS, blockList -> {
-            String yesNo = Lang.getYesOrNo(blockList.isDropItems());
-            return blockList.isDropItems() ? Lang.goodEntry(yesNo) : Lang.badEntry(yesNo);
+            String yesNo = CoreLang.STATE_YES_NO.get(blockList.isDropItems());
+            return blockList.isDropItems() ? CoreLang.goodEntry(yesNo) : CoreLang.badEntry(yesNo);
         })
     );
 }

@@ -33,7 +33,7 @@ public class ModifierListEditor extends LinkedMenu<JobsPlugin, Zone> implements 
     private final ZoneManager manager;
 
     public ModifierListEditor(@NotNull JobsPlugin plugin, @NotNull ZoneManager manager) {
-        super(plugin, MenuType.GENERIC_9X5, Lang.EDITOR_TITLE_ZONE_MODIFIER_LIST.getString());
+        super(plugin, MenuType.GENERIC_9X5, Lang.EDITOR_TITLE_ZONE_MODIFIER_LIST.text());
         this.manager = manager;
 
         this.addItem(MenuItem.buildNextPage(this, 44));
@@ -43,7 +43,7 @@ public class ModifierListEditor extends LinkedMenu<JobsPlugin, Zone> implements 
         }));
 
         this.addItem(Material.ANVIL, Lang.EDITOR_ZONE_MODIFIER_CURRENCY_CREATE, 41, (viewer, event, zone) -> {
-            this.handleInput(Dialog.builder(viewer, Lang.EDITOR_GENERIC_ENTER_CURRENCY, input -> {
+            this.handleInput(Dialog.builder(viewer, Lang.EDITOR_GENERIC_ENTER_CURRENCY.text(), input -> {
                 Currency currency = EconomyBridge.getCurrency(input.getTextRaw());
                 if (currency != null && zone.getPaymentModifier(currency) == null) {
                     zone.getPaymentModifierMap().put(currency.getInternalId(), Modifier.add(0.5, 0, 0));

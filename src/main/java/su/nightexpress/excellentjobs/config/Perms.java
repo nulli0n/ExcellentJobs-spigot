@@ -31,7 +31,6 @@ public class Perms {
     public static final UniPermission COMMAND_XP           = new UniPermission(PREFIX_COMMAND + "xp");
     public static final UniPermission COMMAND_LEVEL        = new UniPermission(PREFIX_COMMAND + "level");
     public static final UniPermission COMMAND_LEVELS       = new UniPermission(PREFIX_COMMAND + "levels");
-    public static final UniPermission COMMAND_OBJECTIVES   = new UniPermission(PREFIX_COMMAND + "objectives");
     public static final UniPermission COMMAND_RESET        = new UniPermission(PREFIX_COMMAND + "reset");
     public static final UniPermission COMMAND_RESET_OTHERS = new UniPermission(PREFIX_COMMAND + "reset.others");
     public static final UniPermission COMMAND_SET_STATE    = new UniPermission(PREFIX_COMMAND + "setstate");
@@ -57,7 +56,6 @@ public class Perms {
             COMMAND_LEAVE,
             COMMAND_MENU,
             COMMAND_LEVELS,
-            COMMAND_OBJECTIVES,
             COMMAND_LEVEL,
             COMMAND_XP,
             COMMAND_RESET,

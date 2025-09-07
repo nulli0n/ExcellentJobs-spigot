@@ -24,7 +24,7 @@ public class BlockListEditor extends LinkedMenu<JobsPlugin, BlockListEditor.Data
     public record Data(Zone zone, BlockList blockList){}
 
     public BlockListEditor(@NotNull JobsPlugin plugin, @NotNull ZoneManager zoneManager) {
-        super(plugin, MenuType.GENERIC_9X4, Lang.EDITOR_TITLE_ZONE_BLOCK_SETTINGS.getString());
+        super(plugin, MenuType.GENERIC_9X4, Lang.EDITOR_TITLE_ZONE_BLOCK_SETTINGS.text());
 
         this.addItem(MenuItem.buildReturn(this, 31, (viewer, event) -> {
             this.runNextTick(() -> zoneManager.openBlocksEditor(viewer.getPlayer(), this.getLink(viewer).zone));
@@ -37,7 +37,7 @@ public class BlockListEditor extends LinkedMenu<JobsPlugin, BlockListEditor.Data
                 return;
             }
 
-            this.handleInput(Dialog.builder(viewer, Lang.EDITOR_GENERIC_ENTER_MATERIAL, input -> {
+            this.handleInput(Dialog.builder(viewer, Lang.EDITOR_GENERIC_ENTER_MATERIAL.text(), input -> {
                 Material material = BukkitThing.getMaterial(input.getTextRaw());
                 if (material != null) {
                     data.blockList.getMaterials().add(material);
@@ -48,7 +48,7 @@ public class BlockListEditor extends LinkedMenu<JobsPlugin, BlockListEditor.Data
         });
 
         this.addItem(Material.STONE, Lang.EDITOR_ZONE_BLOCK_LIST_FALLBACK_MATERIAL, 12, (viewer, event, data) -> {
-            this.handleInput(Dialog.builder(viewer, Lang.EDITOR_GENERIC_ENTER_MATERIAL, input -> {
+            this.handleInput(Dialog.builder(viewer, Lang.EDITOR_GENERIC_ENTER_MATERIAL.text(), input -> {
                 Material material = BukkitThing.getMaterial(input.getTextRaw());
                 if (material != null) {
                     data.blockList.setFallbackMaterial(material);
@@ -59,7 +59,7 @@ public class BlockListEditor extends LinkedMenu<JobsPlugin, BlockListEditor.Data
         });
 
         this.addItem(Material.CLOCK, Lang.EDITOR_ZONE_BLOCK_LIST_RESET_TIME, 14, (viewer, event, data) -> {
-            this.handleInput(Dialog.builder(viewer, Lang.EDITOR_GENERIC_ENTER_NUMBER, input -> {
+            this.handleInput(Dialog.builder(viewer, Lang.EDITOR_GENERIC_ENTER_NUMBER.text(), input -> {
                 data.blockList.setResetTime(input.asInt(1));
                 data.zone.save();
                 return true;
