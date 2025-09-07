@@ -211,6 +211,8 @@ public class JobsMenu extends NormalMenu<JobsPlugin> implements Filled<Job>, Con
                 .replace(GENERIC_INCOME_BOOST, NumberUtil.format(payBoost))
                 .replace(DAILY_LIMITS, finalDailyLimits)
                 .replace(PLACEHOLDER_STATE, stateInfo)
+                .replace("%order%", Collections.emptyList())
+                .replace("%status%", Collections.emptyList())
                 .replace(jobData.replacePlaceholders())
                 .replace(job.replacePlaceholders())
             );

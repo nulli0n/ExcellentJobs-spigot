@@ -34,6 +34,7 @@ import su.nightexpress.nightcore.ui.menu.type.LinkedMenu;
 import su.nightexpress.nightcore.util.Lists;
 import su.nightexpress.nightcore.util.LowerCase;
 import su.nightexpress.nightcore.util.NumberUtil;
+import su.nightexpress.nightcore.util.Version;
 import su.nightexpress.nightcore.util.bukkit.NightItem;
 import su.nightexpress.nightcore.util.placeholder.Replacer;
 
@@ -48,7 +49,6 @@ import static su.nightexpress.nightcore.util.text.night.wrapper.TagWrappers.*;
 public class LevelsMenu extends LinkedMenu<JobsPlugin, Job> implements ConfigBased, Filled<Integer> {
 
     private NightItem lockedReward;
-    private NightItem emptyReward;
     private NightItem claimedReward;
     private NightItem unclaimedReward;
     private NightItem upcomingReward;
@@ -97,10 +97,13 @@ public class LevelsMenu extends LinkedMenu<JobsPlugin, Job> implements ConfigBas
             .setItemCreator(level -> {
                 List<LevelReward> rewards = job.getRewards().getRewards(level);
 
-                NightItem item = (rewards.isEmpty() ? this.emptyReward : this.lockedReward).copy();
+                NightItem item = this.lockedReward.copy();
                 boolean hasRewards = rewards.stream().anyMatch(reward -> reward.isAvailable(player) && reward.isGoodState(state));
 
-                if (hasRewards) {
+                if (rewards.isEmpty() && jobLevel >= level) {
+                    item = this.claimedReward.copy();
+                }
+                else if (hasRewards) {
                     if (data.isLevelRewardObtained(level)) {
                         item = this.claimedReward.copy();
                     }
@@ -179,7 +182,7 @@ public class LevelsMenu extends LinkedMenu<JobsPlugin, Job> implements ConfigBas
 
     }
 
-    /*@Deprecated
+    @Deprecated
     private void handleJoin(@NotNull MenuViewer viewer, @NotNull InventoryClickEvent event) {
         Player player = viewer.getPlayer();
         Job job = this.getLink(player);
@@ -202,8 +205,9 @@ public class LevelsMenu extends LinkedMenu<JobsPlugin, Job> implements ConfigBas
         JobData data = plugin.getUserManager().getOrFetch(player).getData(job);
         if (!data.isActive()) return;
 
-        this.runNextTick(() -> this.plugin.getJobManager().openLeaveConfirmMenu(player, job));
-    }*/
+        this.plugin.getJobManager().leaveJob(player, job);
+        this.runNextTick(() -> this.flush(player));
+    }
 
     private void handleStats(@NotNull MenuViewer viewer, @NotNull InventoryClickEvent event) {
         StatsManager statsManager = plugin.getStatsManager();
@@ -236,19 +240,21 @@ public class LevelsMenu extends LinkedMenu<JobsPlugin, Job> implements ConfigBas
             .setSlots(0,1,2,3,4,5,6,7,8,45,46,47,48,49,50,51,52,53)
         );
 
-        for (JobState state : JobState.values()) {
-            Material material = switch (state) {
-                case INACTIVE -> Material.RED_STAINED_GLASS_PANE;
-                case PRIMARY -> Material.LIME_STAINED_GLASS_PANE;
-                case SECONDARY -> Material.LIGHT_BLUE_STAINED_GLASS_PANE;
-            };
+        if (Version.isAtLeast(Version.MC_1_21_7)) {
+            for (JobState state : JobState.values()) {
+                Material material = switch (state) {
+                    case INACTIVE -> Material.RED_STAINED_GLASS_PANE;
+                    case PRIMARY -> Material.LIME_STAINED_GLASS_PANE;
+                    case SECONDARY -> Material.LIGHT_BLUE_STAINED_GLASS_PANE;
+                };
 
-            loader.addDefaultItem(NightItem.fromType(material).setHideTooltip(true)
-                .toMenuItem()
-                .setPriority(1)
-                .setSlots(1,2,3,5,6,7,46,47,48,50,51,52)
-                .setHandler(this.createDecorativeHandler(state))
-            );
+                loader.addDefaultItem(NightItem.fromType(material).setHideTooltip(true)
+                    .toMenuItem()
+                    .setPriority(1)
+                    .setSlots(1, 2, 3, 5, 6, 7, 46, 47, 48, 50, 51, 52)
+                    .setHandler(this.createDecorativeHandler(state))
+                );
+            }
         }
 
         loader.addDefaultItem(MenuItem.buildNextPage(this, 53).setPriority(10));
@@ -292,63 +298,46 @@ public class LevelsMenu extends LinkedMenu<JobsPlugin, Job> implements ConfigBas
             .setPriority(9)
         );
 
-        /*loader.addDefaultItem(NightItem.fromType(Material.ENDER_CHEST)
-            .setDisplayName(GRADIENT.with("#B033FF", "#D28AFF").and(BOLD).wrap("Missions"))
-            .setLore(Lists.newList(PLACEHOLDER_ORDER))
-            .toMenuItem()
-            .setSlots(23)
-            .setPriority(10)
-            .setHandler(this.createHandler("special_order", this::handleMissions, true, viewer -> Config.isSpecialOrdersEnabled()))
-        );
+        if (Version.isAtLeast(Version.MC_1_21_7)) {
+            loader.addDefaultItem(NightItem.fromType(Material.LIME_DYE)
+                .setDisplayName(SOFT_GREEN.and(BOLD).wrap("Status:") + " " + WHITE.wrap(JOB_DATA_STATE))
+                .setLore(Lists.newList(
+                    GRAY.wrap("Your job status."),
+                    " ",
+                    SOFT_GREEN.wrap("→ " + UNDERLINED.wrap("Click to change"))
+                ))
+                .toMenuItem()
+                .setSlots(4)
+                .setPriority(10)
+                .setHandler(this.createStatusHandler(JobState.PRIMARY))
+            );
 
-        loader.addDefaultItem(NightItem.fromType(Material.BARRIER)
-            .setDisplayName(RED.and(BOLD).wrap("Missions") + " " + GRAY.wrap("(Locked)"))
-            .setLore(Lists.newList(
-                GRAY.wrap("Get the job to unlock missions!")
-            ))
-            .toMenuItem()
-            .setSlots(23)
-            .setPriority(9)
-        );*/
+            loader.addDefaultItem(NightItem.fromType(Material.LIGHT_BLUE_DYE)
+                .setDisplayName(SOFT_BLUE.and(BOLD).wrap("Status:") + " " + WHITE.wrap(JOB_DATA_STATE))
+                .setLore(Lists.newList(
+                    GRAY.wrap("Your job status."),
+                    " ",
+                    SOFT_BLUE.wrap("→ " + UNDERLINED.wrap("Click to change"))
+                ))
+                .toMenuItem()
+                .setSlots(4)
+                .setPriority(10)
+                .setHandler(this.createStatusHandler(JobState.SECONDARY))
+            );
 
-        loader.addDefaultItem(NightItem.fromType(Material.LIME_DYE)
-            .setDisplayName(SOFT_GREEN.and(BOLD).wrap("Status:") + " " + WHITE.wrap(JOB_DATA_STATE))
-            .setLore(Lists.newList(
-                GRAY.wrap("Your job status."),
-                " ",
-                SOFT_GREEN.wrap("→ " + UNDERLINED.wrap("Click to change"))
-            ))
-            .toMenuItem()
-            .setSlots(4)
-            .setPriority(10)
-            .setHandler(this.createStatusHandler(JobState.PRIMARY))
-        );
-
-        loader.addDefaultItem(NightItem.fromType(Material.LIGHT_BLUE_DYE)
-            .setDisplayName(SOFT_BLUE.and(BOLD).wrap("Status:") + " " + WHITE.wrap(JOB_DATA_STATE))
-            .setLore(Lists.newList(
-                GRAY.wrap("Your job status."),
-                " ",
-                SOFT_BLUE.wrap("→ " + UNDERLINED.wrap("Click to change"))
-            ))
-            .toMenuItem()
-            .setSlots(4)
-            .setPriority(10)
-            .setHandler(this.createStatusHandler(JobState.SECONDARY))
-        );
-
-        loader.addDefaultItem(NightItem.fromType(Material.GRAY_DYE)
-            .setDisplayName(RED.and(BOLD).wrap("Status:") + " " + WHITE.wrap(JOB_DATA_STATE))
-            .setLore(Lists.newList(
-                GRAY.wrap("Your job status."),
-                " ",
-                RED.wrap("→ " + UNDERLINED.wrap("Click to change"))
-            ))
-            .toMenuItem()
-            .setSlots(4)
-            .setPriority(10)
-            .setHandler(this.createStatusHandler(JobState.INACTIVE))
-        );
+            loader.addDefaultItem(NightItem.fromType(Material.GRAY_DYE)
+                .setDisplayName(RED.and(BOLD).wrap("Status:") + " " + WHITE.wrap(JOB_DATA_STATE))
+                .setLore(Lists.newList(
+                    GRAY.wrap("Your job status."),
+                    " ",
+                    RED.wrap("→ " + UNDERLINED.wrap("Click to change"))
+                ))
+                .toMenuItem()
+                .setSlots(4)
+                .setPriority(10)
+                .setHandler(this.createStatusHandler(JobState.INACTIVE))
+            );
+        }
 
         this.lockedReward = ConfigValue.create("Reward.Locked", NightItem.fromType(Material.RED_CONCRETE)
             .setDisplayName(RED.wrap(BOLD.wrap("Level " + GENERIC_LEVEL)) + GRAY.wrap(" • ") + WHITE.wrap("Locked"))
@@ -380,10 +369,6 @@ public class LevelsMenu extends LinkedMenu<JobsPlugin, Job> implements ConfigBas
             ))
         ).read(config);
 
-        this.emptyReward = ConfigValue.create("Reward.Empty", NightItem.fromType(Material.WHITE_CONCRETE)
-            .setDisplayName(GRAY.wrap(BOLD.wrap("Level " + GENERIC_LEVEL)) + GRAY.wrap(" • ") + WHITE.wrap("No Rewards"))
-        ).read(config);
-
         this.upcomingReward = ConfigValue.create("Reward.Upcoming", NightItem.fromType(Material.YELLOW_CONCRETE)
             .setDisplayName(YELLOW.wrap(BOLD.wrap("Level " + GENERIC_LEVEL)) + GRAY.wrap(" • ") + WHITE.wrap("In Progress"))
             .setLore(Lists.newList(
@@ -400,10 +385,77 @@ public class LevelsMenu extends LinkedMenu<JobsPlugin, Job> implements ConfigBas
         this.rewardSlots = ConfigValue.create("Reward.Slots", IntStream.range(9, 45).toArray()).read(config);
 
         // Legacy
-        /*loader.addHandler(this.createJoinLeaveHandler(true, Job::isJoinable));
-        loader.addHandler(this.createJoinLeaveHandler(false, Job::isLeaveable));
-        loader.addHandler(this.createPriorityHandler(JobState.SECONDARY));
-        loader.addHandler(this.createPriorityHandler(JobState.PRIMARY));*/
+        if (Version.isBehind(Version.MC_1_21_7)) {
+            loader.addHandler(this.createJoinLeaveHandler(true, Job::isJoinable));
+            loader.addHandler(this.createJoinLeaveHandler(false, Job::isLeaveable));
+            loader.addHandler(this.createPriorityHandler(JobState.SECONDARY));
+            loader.addHandler(this.createPriorityHandler(JobState.PRIMARY));
+
+            loader.addDefaultItem(NightItem.fromType(Material.LIME_DYE)
+                .setDisplayName(SOFT_GREEN.wrap(BOLD.wrap("Join Job")))
+                .setLore(Lists.newList(
+                    GRAY.wrap("Are you intertesed in"),
+                    GRAY.wrap("getting the " + WHITE.wrap(JOB_NAME) + " job?"),
+                    " ",
+                    SOFT_GREEN.and(BOLD).wrap("YOUR LIMITS"),
+                    GRAY.wrap("Primary Jobs: " + SOFT_GREEN.wrap(GENERIC_PRIMARY_COUNT) + "/" + SOFT_GREEN.wrap(GENERIC_PRIMARY_LIMIT)),
+                    GRAY.wrap("Secondary Jobs: " + SOFT_GREEN.wrap(GENERIC_SECONDARY_COUNT) + "/" + SOFT_GREEN.wrap(GENERIC_SECONDARY_LIMIT)),
+                    " ",
+                    SOFT_GREEN.wrap("→ " + UNDERLINED.wrap("Click to join"))
+                ))
+                .toMenuItem()
+                .setSlots(4)
+                .setPriority(10)
+                .setHandler(this.createJoinLeaveHandler(true, Job::isJoinable))
+            );
+
+            loader.addDefaultItem(NightItem.fromType(Material.BARRIER)
+                .setDisplayName(SOFT_RED.wrap(BOLD.wrap("Leave")))
+                .setLore(Lists.newList(
+                    GRAY.wrap("Leave the job losing all"),
+                    GRAY.wrap("the XP and levels."),
+                    " ",
+                    SOFT_RED.wrap("→ " + UNDERLINED.wrap("Click to continue"))
+                ))
+                .toMenuItem()
+                .setSlots(51)
+                .setPriority(10)
+                .setHandler(this.createJoinLeaveHandler(false, Job::isLeaveable))
+            );
+
+            loader.addDefaultItem(NightItem.fromType(Material.STRUCTURE_VOID)
+                .setDisplayName(SOFT_BLUE.wrap(BOLD.wrap("Set Primary")))
+                .setLore(Lists.newList(
+                    GRAY.wrap("Sets this job as " + SOFT_BLUE.wrap("primary") + " to"),
+                    GRAY.wrap("gain more " + SOFT_GREEN.wrap("XP") + ", " + SOFT_GREEN.wrap("money") + " and " + SOFT_GREEN.wrap("rewards") + "."),
+                    " ",
+                    GRAY.wrap("You have " + SOFT_BLUE.wrap(GENERIC_PRIMARY_COUNT) + "/" + SOFT_BLUE.wrap(GENERIC_PRIMARY_LIMIT) + " primary jobs."),
+                    " ",
+                    SOFT_BLUE.wrap("→ " + UNDERLINED.wrap("Click to toggle"))
+                ))
+                .toMenuItem()
+                .setSlots(47)
+                .setPriority(10)
+                .setHandler(this.createPriorityHandler(JobState.PRIMARY))
+            );
+
+            loader.addDefaultItem(NightItem.fromType(Material.STRUCTURE_VOID)
+                .setDisplayName(SOFT_BLUE.wrap(BOLD.wrap("Set Secondary")))
+                .setLore(Lists.newList(
+                    GRAY.wrap("Sets this job as " + SOFT_BLUE.wrap("secondary") + " to"),
+                    GRAY.wrap("unlock slot for a primary job at"),
+                    GRAY.wrap("a cost of " + SOFT_RED.wrap("less XP") + ", " + SOFT_RED.wrap("money") + " and " + SOFT_RED.wrap("rewards") + "."),
+                    " ",
+                    GRAY.wrap("You have " + SOFT_BLUE.wrap(GENERIC_SECONDARY_COUNT) + "/" + SOFT_BLUE.wrap(GENERIC_SECONDARY_LIMIT) + " secondary jobs."),
+                    " ",
+                    SOFT_BLUE.wrap("→ " + UNDERLINED.wrap("Click to toggle"))
+                ))
+                .toMenuItem()
+                .setSlots(47)
+                .setPriority(10)
+                .setHandler(this.createPriorityHandler(JobState.SECONDARY))
+            );
+        }
     }
 
     @NotNull
@@ -441,7 +493,7 @@ public class LevelsMenu extends LinkedMenu<JobsPlugin, Job> implements ConfigBas
         }).build());
     }
 
-    /*@NotNull
+    @NotNull
     @Deprecated
     private ItemHandler createJoinLeaveHandler(boolean join, @NotNull Predicate<Job> predicate) {
         String name = join ? "join_job" : "leave_job";
@@ -457,5 +509,5 @@ public class LevelsMenu extends LinkedMenu<JobsPlugin, Job> implements ConfigBas
     private ItemHandler createPriorityHandler(@NotNull JobState state) {
         String name = "set_" + state.name().toLowerCase();
         return this.createHandler(name, (viewer, event) -> this.handlePriority(viewer, state), true, data -> data.getState() == state.getOpposite() && data.getJob().isAllowedState(state));
-    }*/
+    }
 }
