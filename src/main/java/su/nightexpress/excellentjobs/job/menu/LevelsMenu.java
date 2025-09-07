@@ -98,20 +98,19 @@ public class LevelsMenu extends LinkedMenu<JobsPlugin, Job> implements ConfigBas
                 List<LevelReward> rewards = job.getRewards().getRewards(level);
 
                 NightItem item = this.lockedReward.copy();
-                boolean hasRewards = rewards.stream().anyMatch(reward -> reward.isAvailable(player) && reward.isGoodState(state));
+                //boolean hasRewards = rewards.stream().anyMatch(reward -> reward.isAvailable(player) && reward.isGoodState(state));
 
-                if (rewards.isEmpty() && jobLevel >= level) {
-                    item = this.claimedReward.copy();
-                }
-                else if (hasRewards) {
-                    if (data.isLevelRewardObtained(level)) {
-                        item = this.claimedReward.copy();
-                    }
-                    else if (level <= jobLevel) {
-                        item = (claimRequired ? this.unclaimedReward : this.claimedReward).copy();
-                    }
-                    else if (level - jobLevel == 1) {
+                if (data.isActive()) {
+                    if (level - jobLevel == 1) {
                         item = this.upcomingReward.copy();
+                    }
+                    else if (jobLevel >= level) {
+                        if (claimRequired && !data.isLevelRewardObtained(level)) {
+                            item = this.unclaimedReward.copy();
+                        }
+                        else {
+                            item = this.claimedReward.copy();
+                        }
                     }
                 }
 
@@ -119,6 +118,9 @@ public class LevelsMenu extends LinkedMenu<JobsPlugin, Job> implements ConfigBas
                 rewards.forEach(reward -> {
                     rewardFormats.addAll(Replacer.create().replace(reward.replacePlaceholders()).apply(this.rewardFormat));
                 });
+                if (rewards.isEmpty()) {
+                    rewardFormats.add(CoreLang.OTHER_NONE.text());
+                }
 
                 return item
                     .hideAllComponents()

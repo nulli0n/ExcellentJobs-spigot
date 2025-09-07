@@ -146,7 +146,7 @@ public class JobDefaults {
             .addTypeAvg(Material.CARROT, GrindAdapters.VANILLA_ITEM, 15)
             .addTypeAvg(Material.BEETROOT, GrindAdapters.VANILLA_ITEM, 15)
             .addTypeAvg(Material.COCOA_BEANS, GrindAdapters.VANILLA_ITEM, 15)
-            .addTypeAvg(Material.MELON_SLICE, GrindAdapters.VANILLA_ITEM, 15)
+            .addTypeAvg(Material.MELON_SLICE, GrindAdapters.VANILLA_ITEM, 4)
             .addTypeAvg(Material.NETHER_WART, GrindAdapters.VANILLA_ITEM, 15)
             .addTypeAvg(Material.NETHER_SPROUTS, GrindAdapters.VANILLA_ITEM, 15)
             .addTypeAvg(Material.SWEET_BERRIES, GrindAdapters.VANILLA_ITEM, 16)
