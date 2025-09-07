@@ -14,6 +14,7 @@ import su.nightexpress.excellentjobs.stats.StatsManager;
 import su.nightexpress.excellentjobs.stats.impl.TopEntry;
 import su.nightexpress.excellentjobs.user.JobUser;
 import su.nightexpress.excellentjobs.util.JobUtils;
+import su.nightexpress.nightcore.core.config.CoreLang;
 import su.nightexpress.nightcore.util.NumberUtil;
 import su.nightexpress.nightcore.util.text.night.NightMessage;
 
@@ -91,11 +92,11 @@ public class PlaceholderHook {
             }
             if (params.equalsIgnoreCase("jobs_max_joinable") || params.equalsIgnoreCase("jobs_available_primary")) {
                 int count = plugin.getJobManager().countAvailableJobs(player, JobState.PRIMARY);
-                return count < 0 ? Lang.OTHER_INFINITY.getString() : NumberUtil.format(count);
+                return count < 0 ? CoreLang.OTHER_INFINITY.text() : NumberUtil.format(count);
             }
             if (params.equalsIgnoreCase("jobs_available_secondary")) {
                 int count = plugin.getJobManager().countAvailableJobs(player, JobState.SECONDARY);
-                return count < 0 ? Lang.OTHER_INFINITY.getString() : NumberUtil.format(count);
+                return count < 0 ? CoreLang.OTHER_INFINITY.text() : NumberUtil.format(count);
             }
 
             String key = params.split("_")[0];
@@ -179,14 +180,14 @@ public class PlaceholderHook {
 
         @NotNull
         private static String listJobs(@NotNull JobUser user, @NotNull JobState state) {
-            String delimiter = Lang.OTHER_JOB_DELIMITER.getString();
+            String delimiter = Lang.OTHER_JOB_DELIMITER.text();
             List<String> jobNames = user.getDatas().stream()
                 .filter(data -> data.getState() == state)
                 .map(data -> data.getJob().getName())
                 .sorted(String::compareTo)
                 .toList();
 
-            return NightMessage.asLegacy(jobNames.isEmpty() ? Lang.OTHER_NO_JOBS.getString() : String.join(delimiter, jobNames));
+            return NightMessage.asLegacy(jobNames.isEmpty() ? Lang.OTHER_NO_JOBS.text() : String.join(delimiter, jobNames));
         }
     }
 }

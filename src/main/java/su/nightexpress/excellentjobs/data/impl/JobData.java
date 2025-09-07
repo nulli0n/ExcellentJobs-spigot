@@ -1,7 +1,6 @@
 package su.nightexpress.excellentjobs.data.impl;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import su.nightexpress.economybridge.api.Currency;
 import su.nightexpress.excellentjobs.Placeholders;
 import su.nightexpress.excellentjobs.job.impl.Job;
@@ -27,20 +26,15 @@ public class JobData  {
     private int      xp;
     private long     cooldown;
 
-    private JobOrderData orderData;
-    private long         nextOrderDate;
-
     @NotNull
     public static JobData create(@NotNull Job job) {
         JobState state = job.getInitialState();
         JobLimitData limitData = JobLimitData.create(job);
-        JobOrderData orderData = JobOrderData.empty();
-        long nextOrderDate = 0L;
         long cooldown = 0L;
 
         Set<Integer> obtainedLevelRewards = new HashSet<>();
 
-        return new JobData(job, state, JobUtils.START_LEVEL, JobUtils.START_XP, cooldown, limitData, orderData, nextOrderDate, obtainedLevelRewards);
+        return new JobData(job, state, JobUtils.START_LEVEL, JobUtils.START_XP, cooldown, limitData, obtainedLevelRewards);
     }
 
     public JobData(@NotNull Job job,
@@ -49,23 +43,15 @@ public class JobData  {
                    int xp,
                    long cooldown,
                    @NotNull JobLimitData limitData,
-                   @NotNull JobOrderData orderData,
-                   long nextOrderDate,
                    @NotNull Set<Integer> claimedLevelRewards) {
         this.job = job;
         this.income = new JobIncome();
         this.setState(state);
         this.setCooldown(cooldown);
         this.limitData = limitData;
-        this.setOrderData(orderData);
-        this.setNextOrderDate(nextOrderDate);
         this.claimedLevelRewards = new HashSet<>(claimedLevelRewards);
         this.setLevel(level);
         this.setXP(xp);
-
-        if (!this.getOrderData().isEmpty()) {
-            this.getOrderData().validateObjectives(job);
-        }
     }
 
     @NotNull
@@ -86,12 +72,10 @@ public class JobData  {
         this.income.clear();
         this.setLevel(JobUtils.START_LEVEL);
         this.setXP(JobUtils.START_XP);
-        this.setOrderData(null); // Do not reset nextOrderDate and LimitData to prevent abuse
 
         if (full) {
             this.setCooldown(0L);
             this.claimedLevelRewards.clear();
-            this.setNextOrderDate(0L);
             this.limitData.getCurrencyEarned().clear();
             this.limitData.setXPEarned(0);
         }
@@ -130,27 +114,16 @@ public class JobData  {
         return limit > 0 && this.getLimitData().getXPEarned() >= limit;
     }
 
+    public boolean isState(@NotNull JobState other) {
+        return this.state == other;
+    }
+
     public boolean isActive() {
-        return this.state != JobState.INACTIVE;
+        return !this.isState(JobState.INACTIVE);
     }
 
     public boolean isInactive() {
-        return !this.isActive();
-    }
-
-    public boolean hasOrder() {
-        return !this.getOrderData().isEmpty() && !this.getOrderData().isExpired();
-    }
-
-    public boolean isOrderCompleted() {
-        return this.getOrderData().isCompleted();
-    }
-
-    public boolean isReadyForNextOrder() {
-        if (this.orderData.isExpired() || !this.hasOrder() || this.orderData.isCompleted()) {
-            return System.currentTimeMillis() >= this.getNextOrderDate();
-        }
-        return false;
+        return this.isState(JobState.INACTIVE);
     }
 
     public void removeXP(int amount) {
@@ -288,23 +261,6 @@ public class JobData  {
     public JobLimitData getLimitDataUpdated() {
         this.limitData.checkExpiration();
         return this.limitData;
-    }
-
-    @NotNull
-    public JobOrderData getOrderData() {
-        return orderData;
-    }
-
-    public void setOrderData(@Nullable JobOrderData orderData) {
-        this.orderData = orderData == null ? JobOrderData.empty() : orderData;
-    }
-
-    public long getNextOrderDate() {
-        return nextOrderDate;
-    }
-
-    public void setNextOrderDate(long nextOrderDate) {
-        this.nextOrderDate = nextOrderDate;
     }
 
     @NotNull

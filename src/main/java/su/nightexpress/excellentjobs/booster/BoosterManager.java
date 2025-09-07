@@ -5,18 +5,18 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.Placeholders;
-import su.nightexpress.excellentjobs.booster.command.BoosterCommands;
+import su.nightexpress.excellentjobs.api.booster.MultiplierType;
 import su.nightexpress.excellentjobs.booster.config.BoosterConfig;
 import su.nightexpress.excellentjobs.booster.impl.Booster;
 import su.nightexpress.excellentjobs.booster.impl.BoosterSchedule;
 import su.nightexpress.excellentjobs.booster.impl.BoosterType;
-import su.nightexpress.excellentjobs.api.booster.MultiplierType;
 import su.nightexpress.excellentjobs.booster.listener.BoosterListener;
 import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.user.JobUser;
 import su.nightexpress.excellentjobs.util.JobUtils;
 import su.nightexpress.nightcore.config.FileConfig;
+import su.nightexpress.nightcore.core.config.CoreLang;
 import su.nightexpress.nightcore.manager.AbstractManager;
 import su.nightexpress.nightcore.util.Players;
 import su.nightexpress.nightcore.util.placeholder.Replacer;
@@ -40,8 +40,6 @@ public class BoosterManager extends AbstractManager<JobsPlugin> {
     protected void onLoad() {
         this.loadConfig();
 
-        BoosterCommands.load(this.plugin, this);
-
         this.addListener(new BoosterListener(this.plugin, this));
 
         this.addAsyncTask(this::tickBoosters, BoosterConfig.TICK_INTERVAL.get());
@@ -50,8 +48,6 @@ public class BoosterManager extends AbstractManager<JobsPlugin> {
     @Override
     protected void onShutdown() {
         this.globalBooster = null;
-
-        BoosterCommands.unload(this.plugin);
     }
 
     private void loadConfig() {
@@ -69,7 +65,7 @@ public class BoosterManager extends AbstractManager<JobsPlugin> {
     private void tickGlobal() {
         if (this.globalBooster == null) return;
         if (this.globalBooster.isExpired()) {
-            Lang.BOOSTER_EXPIRED_GLOBAL.getMessage().broadcast(replacer -> replacer.replace(this.globalBooster.replacePlaceholers()));
+            Lang.BOOSTER_EXPIRED_GLOBAL.message().broadcast(replacer -> replacer.replace(this.globalBooster.replacePlaceholers()));
             this.globalBooster = null;
         }
     }
@@ -92,7 +88,7 @@ public class BoosterManager extends AbstractManager<JobsPlugin> {
 
                 Job job = plugin.getJobManager().getJobById(jobId);
                 if (job != null) {
-                    Lang.BOOSTER_EXPIRED_PERSONAL.getMessage().send(player, replacer -> replacer
+                    Lang.BOOSTER_EXPIRED_PERSONAL.message().send(player, replacer -> replacer
                         .replace(job.replacePlaceholders())
                         .replace(booster.replacePlaceholers()));
                 }
@@ -200,14 +196,14 @@ public class BoosterManager extends AbstractManager<JobsPlugin> {
     }
 
     public void notifyGlobalBooster(@NotNull Booster booster) {
-        Lang.BOOSTER_ACTIVATED_GLOBAL.getMessage().broadcast(replacer -> replacer
+        Lang.BOOSTER_ACTIVATED_GLOBAL.message().broadcast(replacer -> replacer
             .replace(Placeholders.GENERIC_TIME, TimeFormats.formatDuration(booster.getExpireDate(), TimeFormatType.LITERAL))
             .replace(booster.replacePlaceholers())
         );
     }
 
     public void notifyPersonalBooster(@NotNull Player player, @NotNull Job job, @NotNull Booster booster) {
-        Lang.BOOSTER_ACTIVATED_PERSONAL.getMessage().send(player, replacer -> replacer
+        Lang.BOOSTER_ACTIVATED_PERSONAL.message().send(player, replacer -> replacer
             .replace(Placeholders.GENERIC_TIME, TimeFormats.formatDuration(booster.getExpireDate(), TimeFormatType.LITERAL))
             .replace(job.replacePlaceholders())
             .replace(booster.replacePlaceholers())
@@ -218,11 +214,11 @@ public class BoosterManager extends AbstractManager<JobsPlugin> {
         double totalXPPercent = this.getTotalBoostPercent(player, job, MultiplierType.XP);
         double totalPayPercent = this.getTotalBoostPercent(player, job, MultiplierType.INCOME);
         if (totalXPPercent == 0D && totalPayPercent == 0D) {
-            Lang.BOOSTER_LIST_NOTHING.getMessage().send(player);
+            Lang.BOOSTER_LIST_NOTHING.message().send(player);
             return;
         }
 
-        Lang.BOOSTER_LIST_INFO.getMessage().send(player, replacer -> replacer
+        Lang.BOOSTER_LIST_INFO.message().send(player, replacer -> replacer
             .replace(job.replacePlaceholders())
             .replace(Placeholders.GENERIC_XP_BONUS, JobUtils.formatBonus(totalXPPercent))
             .replace(Placeholders.GENERIC_INCOME_BONUS, JobUtils.formatBonus(totalPayPercent))
@@ -238,9 +234,9 @@ public class BoosterManager extends AbstractManager<JobsPlugin> {
                         .replace(Placeholders.GENERIC_INCOME_BOOST, () -> BoosterUtils.formatMultiplier(payMult))
                         .replace(Placeholders.GENERIC_TIME, () -> {
                             long expireDate = this.getBoosterExpireDate(player, job, type);
-                            return expireDate < 0L ? Lang.OTHER_INFINITY.getString() : TimeFormats.formatDuration(expireDate, TimeFormatType.LITERAL);
+                            return expireDate < 0L ? CoreLang.OTHER_INFINITY.text() : TimeFormats.formatDuration(expireDate, TimeFormatType.LITERAL);
                         })
-                        .apply(Lang.BOOSTER_LIST_ENTRY.getString())
+                        .apply(Lang.BOOSTER_LIST_ENTRY.text())
                     );
                 }
             })

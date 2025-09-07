@@ -28,7 +28,7 @@ import java.util.stream.IntStream;
 public class ZoneListEditor extends LinkedMenu<JobsPlugin, ZoneManager> implements Filled<Zone> {
 
     public ZoneListEditor(@NotNull JobsPlugin plugin) {
-        super(plugin, MenuType.GENERIC_9X5, Lang.EDITOR_TITLE_ZONES.getString());
+        super(plugin, MenuType.GENERIC_9X5, Lang.EDITOR_TITLE_ZONES.text());
 
         this.addItem(MenuItem.buildNextPage(this, 44));
         this.addItem(MenuItem.buildPreviousPage(this, 36));

@@ -136,19 +136,19 @@ public class ZoneManager extends AbstractManager<JobsPlugin> {
         String id = StringUtil.lowerCaseUnderscoreStrict(name);
 
         if (this.getZoneById(id) != null) {
-            Lang.ZONE_ERROR_EXISTS.getMessage().send(player, replacer -> replacer.replace(Placeholders.GENERIC_NAME, id));
+            Lang.ZONE_ERROR_EXISTS.message().send(player, replacer -> replacer.replace(Placeholders.GENERIC_NAME, id));
             return false;
         }
 
         Selection selection = this.getSelection(player);
         if (selection == null) {
-            Lang.ZONE_ERROR_NO_SELECTION.getMessage().send(player);
+            Lang.ZONE_ERROR_NO_SELECTION.message().send(player);
             return false;
         }
 
         Cuboid cuboid = selection.toCuboid();
         if (cuboid == null) {
-            Lang.ZONE_ERROR_INCOMPLETE_SELECTION.getMessage().send(player);
+            Lang.ZONE_ERROR_INCOMPLETE_SELECTION.message().send(player);
             return false;
         }
 
@@ -158,7 +158,7 @@ public class ZoneManager extends AbstractManager<JobsPlugin> {
         this.exitSelection(player);
         this.openEditor(player, zone);
 
-        Lang.ZONE_CREATE_SUCCESS.getMessage().send(player, replacer -> replacer.replace(zone.replacePlaceholders()));
+        Lang.ZONE_CREATE_SUCCESS.message().send(player, replacer -> replacer.replace(zone.replacePlaceholders()));
         return true;
     }
 
@@ -327,7 +327,7 @@ public class ZoneManager extends AbstractManager<JobsPlugin> {
             this.highlightCuboid(player, zone.getCuboid());
         }
         if (zone == null) {
-            Lang.ZONE_CREATE_INFO.getMessage().send(player);
+            Lang.ZONE_CREATE_INFO.message().send(player);
         }
 
         return selection;
@@ -354,7 +354,7 @@ public class ZoneManager extends AbstractManager<JobsPlugin> {
         else selection.setSecond(blockPos);
 
         int position = action == Action.LEFT_CLICK_BLOCK ? 1 : 2;
-        Lang.ZONE_SELECTION_INFO.getMessage().send(player, replacer -> replacer.replace(Placeholders.GENERIC_VALUE, position));
+        Lang.ZONE_SELECTION_INFO.message().send(player, replacer -> replacer.replace(Placeholders.GENERIC_VALUE, position));
 
         Cuboid cuboid = selection.toCuboid();
         Zone zone = this.getZoneByWandItem(itemStack);

@@ -5,6 +5,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import su.nightexpress.excellentjobs.booster.BoosterManager;
 import su.nightexpress.excellentjobs.api.booster.MultiplierType;
+import su.nightexpress.excellentjobs.grind.GrindManager;
+import su.nightexpress.excellentjobs.grind.GrindRegistry;
 import su.nightexpress.excellentjobs.job.JobManager;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.user.JobUser;
@@ -26,28 +28,50 @@ public class JobsAPI {
     }
 
     @NotNull
+    @Deprecated
     public static JobsPlugin getPlugin() {
+        return instance();
+    }
+
+    public static boolean isLoaded() {
+        return instance != null;
+    }
+
+    @NotNull
+    public static JobsPlugin instance() {
+        if (!isLoaded()) throw new IllegalStateException("API is not yet loaded!");
+
         return instance;
     }
 
     @NotNull
+    public static GrindManager getGrindManager() {
+        return instance().getGrindManager();
+    }
+
+    @NotNull
+    public static GrindRegistry getGrindRegistry() {
+        return instance().getGrindRegistry();
+    }
+
+    @NotNull
     public static JobManager getJobManager() {
-        return instance.getJobManager();
+        return instance().getJobManager();
     }
 
     @Nullable
     public static ZoneManager getZoneManager() {
-        return instance.getZoneManager();
+        return instance().getZoneManager();
     }
 
     @Nullable
     public static BoosterManager getBoosterManager() {
-        return instance.getBoosterManager();
+        return instance().getBoosterManager();
     }
 
     @NotNull
     public static UserManager getUserManager() {
-        return instance.getUserManager();
+        return instance().getUserManager();
     }
 
     @NotNull

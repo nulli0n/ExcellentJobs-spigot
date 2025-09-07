@@ -14,11 +14,9 @@ public class DayStatsSerializer implements JsonSerializer<DayStats>, JsonDeseria
         JsonObject object = element.getAsJsonObject();
 
         Map<String, Double> currencyEarned = context.deserialize(object.get("currencyAmount"), new TypeToken<Map<String, Double>>(){}.getType());
-        Map<String, Map<String, Integer>> objectivesCompleted = context.deserialize(object.get("objectivesAmount"), new TypeToken<Map<String, Map<String, Integer>>>(){}.getType());;
         long timestamp = object.get("timestamp").getAsLong();
-        int ordersCompleted = object.get("ordersAmount").getAsInt();
 
-        return new DayStats(currencyEarned, objectivesCompleted, timestamp, ordersCompleted);
+        return new DayStats(currencyEarned, timestamp);
     }
 
     @Override
@@ -26,9 +24,7 @@ public class DayStatsSerializer implements JsonSerializer<DayStats>, JsonDeseria
         JsonObject object = new JsonObject();
 
         object.add("currencyAmount", context.serialize(stats.getCurrencyEarned()));
-        object.add("objectivesAmount", context.serialize(stats.getObjectivesCompleted()));
         object.addProperty("timestamp", stats.getTimestamp());
-        object.addProperty("ordersAmount", stats.getOrdersCompleted());
 
         return object;
     }

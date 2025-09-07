@@ -21,8 +21,8 @@ import org.bukkit.event.world.WorldUnloadEvent;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.economybridge.api.Currency;
 import su.nightexpress.excellentjobs.JobsPlugin;
-import su.nightexpress.excellentjobs.api.event.JobObjectiveIncomeEvent;
-import su.nightexpress.excellentjobs.api.event.JobObjectiveXPEvent;
+import su.nightexpress.excellentjobs.api.event.JobIncomeEvent;
+import su.nightexpress.excellentjobs.api.event.JobXPGainEvent;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.config.Perms;
@@ -54,7 +54,7 @@ public class GenericZoneListener extends AbstractListener<JobsPlugin> {
     }
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
-    public void onZoneJobIncome(JobObjectiveIncomeEvent event) {
+    public void onZoneJobIncome(JobIncomeEvent event) {
         Player player = event.getPlayer();
         Zone zone = this.manager.getZone(player);
         if (zone == null && Config.ZONES_STRICT_MODE.get()) {
@@ -65,7 +65,7 @@ public class GenericZoneListener extends AbstractListener<JobsPlugin> {
         if (zone == null) return;
 
         if (!zone.isAvailable(player)) {
-            Lang.ZONE_NOT_AVAILABLE.getMessage().send(player);
+            Lang.ZONE_NOT_AVAILABLE.message().send(player);
             event.setCancelled(true);
             return;
         }
@@ -77,11 +77,11 @@ public class GenericZoneListener extends AbstractListener<JobsPlugin> {
         int jobLevel = event.getJobData().getLevel();
         double multiplier = modifier.getValue(jobLevel);
 
-        event.setPaymentMultiplier(event.getPaymentMultiplier() + multiplier);
+        event.setMultiplier(event.getMultiplier() + multiplier);
     }
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
-    public void onZoneJobIncome(JobObjectiveXPEvent event) {
+    public void onZoneJobIncome(JobXPGainEvent event) {
         Player player = event.getPlayer();
         Zone zone = this.manager.getZone(player);
         if ((zone == null && Config.ZONES_STRICT_MODE.get()) || (zone != null && !zone.isAvailable(player))) {
@@ -94,7 +94,7 @@ public class GenericZoneListener extends AbstractListener<JobsPlugin> {
         int jobLevel = event.getJobData().getLevel();
         double multiplier = modifier.getValue(jobLevel);
 
-        event.setXPMultiplier(event.getXPMultiplier() + multiplier);
+        event.setMultiplier(event.getMultiplier() + multiplier);
     }
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
@@ -127,13 +127,13 @@ public class GenericZoneListener extends AbstractListener<JobsPlugin> {
         if (!(source.getCausingEntity() instanceof Player damager)) return;
 
         if (!zone.isAvailable(damager)) {
-            Lang.ZONE_NOT_AVAILABLE.getMessage().send(damager);
+            Lang.ZONE_NOT_AVAILABLE.message().send(damager);
             event.setCancelled(true);
             return;
         }
 
         if (victim instanceof Player) {
-            Lang.ZONE_NO_PVP.getMessage().send(damager);
+            Lang.ZONE_NO_PVP.message().send(damager);
             event.setCancelled(!zone.isPvPAllowed());
         }
     }
@@ -172,7 +172,7 @@ public class GenericZoneListener extends AbstractListener<JobsPlugin> {
             return;
         }
         if (!zone.isAvailable(player)) {
-            Lang.ZONE_NOT_AVAILABLE.getMessage().send(player);
+            Lang.ZONE_NOT_AVAILABLE.message().send(player);
             event.setCancelled(true);
         }
     }

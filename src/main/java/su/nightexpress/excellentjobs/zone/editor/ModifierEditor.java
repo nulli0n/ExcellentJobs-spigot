@@ -26,7 +26,7 @@ public class ModifierEditor extends LinkedMenu<JobsPlugin, ModifierEditor.Data> 
     public record Data(Zone zone, Modifier modifier){}
 
     public ModifierEditor(@NotNull JobsPlugin plugin, @NotNull ZoneManager manager) {
-        super(plugin, MenuType.GENERIC_9X4, Lang.EDITOR_TITLE_ZONE_MODIFIER_SETTINGS.getString());
+        super(plugin, MenuType.GENERIC_9X4, Lang.EDITOR_TITLE_ZONE_MODIFIER_SETTINGS.text());
 
         this.addItem(MenuItem.buildReturn(this, 31, (viewer, event) -> {
             this.runNextTick(() -> manager.openModifiersEditor(viewer.getPlayer(), this.getLink(viewer).zone()));
@@ -74,7 +74,7 @@ public class ModifierEditor extends LinkedMenu<JobsPlugin, ModifierEditor.Data> 
     }
 
     private void modifyValue(@NotNull MenuViewer viewer, @NotNull Data pair, @NotNull BiConsumer<Modifier, Double> consumer) {
-        this.handleInput(Dialog.builder(viewer, Lang.EDITOR_GENERIC_ENTER_NUMBER, input -> {
+        this.handleInput(Dialog.builder(viewer, Lang.EDITOR_GENERIC_ENTER_NUMBER.text(), input -> {
             consumer.accept(pair.modifier(), input.asDouble(0D));
             pair.zone().save();
             return true;
