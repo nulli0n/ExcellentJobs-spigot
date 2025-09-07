@@ -29,7 +29,7 @@ public class JobUtils {
 
     @NotNull
     public static String formatBonus(double value) {
-        return (value >= 0 ? Lang.OTHER_BONUS_POSITIVE : Lang.OTHER_BONUS_NEGATIVE).getString().replace(Placeholders.GENERIC_VALUE, NumberUtil.format(value));
+        return (value >= 0 ? Lang.OTHER_BONUS_POSITIVE : Lang.OTHER_BONUS_NEGATIVE).text().replace(Placeholders.GENERIC_VALUE, NumberUtil.format(value));
     }
 
     @NotNull
@@ -63,14 +63,14 @@ public class JobUtils {
 
     @NotNull
     public static String formatIncome(@NotNull JobIncome income) {
-        if (income.isEmpty()) return Lang.OTHER_NO_INCOME.getString();
+        if (income.isEmpty()) return Lang.OTHER_NO_INCOME.text();
 
         return formatIncome(income.getCurrencyMap());
     }
 
     @NotNull
     public static String formatIncome(@NotNull Map<Currency, Double> map) {
-        return map.entrySet().stream().map(entry -> entry.getKey().format(entry.getValue())).collect(Collectors.joining(Lang.OTHER_CURRENCY_DELIMITER.getString()));
+        return map.entrySet().stream().map(entry -> entry.getKey().format(entry.getValue())).collect(Collectors.joining(Lang.OTHER_CURRENCY_DELIMITER.text()));
     }
 
     public static int getJobCooldown(@NotNull Player player) {

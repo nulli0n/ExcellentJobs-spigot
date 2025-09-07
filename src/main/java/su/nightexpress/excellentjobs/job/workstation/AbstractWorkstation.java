@@ -29,9 +29,4 @@ public abstract class AbstractWorkstation <B extends TileState> implements Works
     public B getBackend() {
         return this.backend;
     }
-
-    /*@Override
-    public boolean isCrafting() {
-        return this.getRemainingTime() > 0;
-    }*/
 }

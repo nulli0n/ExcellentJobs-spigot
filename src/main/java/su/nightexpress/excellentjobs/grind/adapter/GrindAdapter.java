@@ -5,21 +5,15 @@ import org.jetbrains.annotations.Nullable;
 
 public interface GrindAdapter<I, O> {
 
-    //String KEY_DELIMITER = ":";
-
     boolean canHandle(@NotNull O entity);
 
     @NotNull String getName();
-
-    //@NotNull String getKey();
 
     @Nullable I getTypeByName(@NotNull String name);
 
     @Nullable I getType(@NotNull O entity);
 
     @NotNull String getName(@NotNull I type);
-
-
 
     @Nullable String toFullNameOfEntity(@NotNull O entity);
 

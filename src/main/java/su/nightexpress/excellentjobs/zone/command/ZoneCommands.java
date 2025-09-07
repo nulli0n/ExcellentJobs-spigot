@@ -8,13 +8,17 @@ import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.config.Perms;
 import su.nightexpress.excellentjobs.zone.ZoneManager;
 import su.nightexpress.excellentjobs.zone.impl.Zone;
-import su.nightexpress.nightcore.command.experimental.CommandContext;
-import su.nightexpress.nightcore.command.experimental.RootCommand;
-import su.nightexpress.nightcore.command.experimental.ServerCommand;
-import su.nightexpress.nightcore.command.experimental.argument.ArgumentTypes;
-import su.nightexpress.nightcore.command.experimental.argument.CommandArgument;
-import su.nightexpress.nightcore.command.experimental.argument.ParsedArguments;
-import su.nightexpress.nightcore.command.experimental.builder.ArgumentBuilder;
+import su.nightexpress.nightcore.commands.Arguments;
+import su.nightexpress.nightcore.commands.Commands;
+import su.nightexpress.nightcore.commands.builder.ArgumentNodeBuilder;
+import su.nightexpress.nightcore.commands.command.HubCommand;
+import su.nightexpress.nightcore.commands.command.NightCommand;
+import su.nightexpress.nightcore.commands.context.CommandContext;
+import su.nightexpress.nightcore.commands.context.ParsedArguments;
+import su.nightexpress.nightcore.commands.exceptions.CommandSyntaxException;
+import su.nightexpress.nightcore.core.config.CoreLang;
+
+import java.util.Optional;
 
 public class ZoneCommands {
 
@@ -22,58 +26,52 @@ public class ZoneCommands {
     public static final String DEF_WAND_NAME   = "wand";
     public static final String DEF_CREATE_NAME = "create";
 
-    private static ServerCommand command;
+    private static HubCommand command;
 
     public static void load(@NotNull JobsPlugin plugin, @NotNull ZoneManager manager) {
-        command = RootCommand.chained(plugin, DEF_ROOT_NAME, builder -> builder
-            .description(Lang.COMMAND_ZONE_DESC)
+        command = NightCommand.hub(plugin, DEF_ROOT_NAME, builder -> builder
+            .description(Lang.COMMAND_ZONE_DESC.text())
             .permission(Perms.COMMAND_ZONE)
-            .addDirect(DEF_WAND_NAME, child -> child
+            .branch(Commands.literal(DEF_WAND_NAME)
                 .playerOnly()
-                .description(Lang.COMMAND_ZONE_WAND_DESC)
+                .description(Lang.COMMAND_ZONE_WAND_DESC.text())
                 .permission(Perms.COMMAND_ZONE_WAND)
-                .withArgument(zoneArgument(manager))
+                .withArguments(zoneArgument(manager))
                 .executes((context, arguments) -> giveWand(manager, context, arguments))
             )
-            .addDirect(DEF_CREATE_NAME, child -> child
+            .branch(Commands.literal(DEF_CREATE_NAME)
                 .playerOnly()
-                .description(Lang.COMMAND_ZONE_CREATE_DESC)
+                .description(Lang.COMMAND_ZONE_CREATE_DESC.text())
                 .permission(Perms.COMMAND_ZONE_CREATE)
-                .withArgument(ArgumentTypes.string(CommandArguments.NAME).localized(Lang.COMMAND_ARGUMENT_NAME_NAME).required())
+                .withArguments(Arguments.string(CommandArguments.NAME).localized(CoreLang.COMMAND_ARGUMENT_NAME_NAME.text()))
                 .executes((context, arguments) -> createZone(manager, context, arguments))
             )
-            .addDirect("editor", child -> child
+            .branch(Commands.literal("editor")
                 .playerOnly()
-                .description(Lang.COMMAND_ZONE_EDITOR_DESC)
+                .description(Lang.COMMAND_ZONE_EDITOR_DESC.text())
                 .permission(Perms.COMMAND_ZONE_EDITOR)
                 .executes((context, arguments) -> openEditor(manager, context))
             )
         );
-
-        plugin.getCommandManager().registerCommand(command);
+        command.register();
     }
 
     public static void unload(@NotNull JobsPlugin plugin) {
         if (command != null) {
-            plugin.getCommandManager().unregisterCommand(command);
+            command.unregister();
             command = null;
         }
     }
 
     @NotNull
-    private static ArgumentBuilder<Zone> zoneArgument(@NotNull ZoneManager manager) {
-        return CommandArgument.builder(CommandArguments.ZONE, (string, context) -> manager.getZoneById(string))
-            .localized(Lang.COMMAND_ARGUMENT_NAME_ZONE)
-            .customFailure(Lang.ERROR_COMMAND_INVALID_ZONE_ARGUMENT)
-            .withSamples(context -> manager.getZoneIds());
+    private static ArgumentNodeBuilder<Zone> zoneArgument(@NotNull ZoneManager manager) {
+        return Commands.argument(CommandArguments.ZONE, (context, string) -> Optional.ofNullable(manager.getZoneById(string)).orElseThrow(() -> CommandSyntaxException.custom(Lang.ERROR_COMMAND_INVALID_ZONE_ARGUMENT)))
+            .localized(Lang.COMMAND_ARGUMENT_NAME_ZONE.text())
+            .suggestions((reader, context) -> manager.getZoneIds());
     }
 
     private static boolean giveWand(@NotNull ZoneManager manager, @NotNull CommandContext context, @NotNull ParsedArguments arguments) {
-        Zone zone = null;
-        if (arguments.hasArgument(CommandArguments.ZONE)) {
-            zone = arguments.getArgument(CommandArguments.ZONE, Zone.class);
-        }
-
+        Zone zone = arguments.getOrNull(CommandArguments.ZONE, Zone.class);
         Player player = context.getPlayerOrThrow();
         manager.startSelection(player, zone);
         return true;
@@ -81,7 +79,7 @@ public class ZoneCommands {
 
     private static boolean createZone(@NotNull ZoneManager manager, @NotNull CommandContext context, @NotNull ParsedArguments arguments) {
         Player player = context.getPlayerOrThrow();
-        manager.defineZone(player, arguments.getStringArgument(CommandArguments.NAME));
+        manager.defineZone(player, arguments.getString(CommandArguments.NAME));
         return true;
     }
 

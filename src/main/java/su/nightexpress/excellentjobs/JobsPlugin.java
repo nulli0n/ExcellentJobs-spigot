@@ -4,30 +4,34 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import su.nightexpress.economybridge.EconomyBridge;
 import su.nightexpress.excellentjobs.booster.BoosterManager;
+import su.nightexpress.excellentjobs.booster.command.BoosterCommands;
 import su.nightexpress.excellentjobs.command.impl.BaseCommands;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Keys;
 import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.config.Perms;
 import su.nightexpress.excellentjobs.data.DataHandler;
+import su.nightexpress.excellentjobs.grind.GrindManager;
+import su.nightexpress.excellentjobs.grind.GrindRegistry;
 import su.nightexpress.excellentjobs.hook.impl.PlaceholderHook;
 import su.nightexpress.excellentjobs.job.JobManager;
-import su.nightexpress.excellentjobs.job.work.WorkRegistry;
 import su.nightexpress.excellentjobs.stats.StatsManager;
+import su.nightexpress.excellentjobs.stats.command.StatsCommands;
 import su.nightexpress.excellentjobs.user.UserManager;
 import su.nightexpress.excellentjobs.zone.ZoneManager;
 import su.nightexpress.nightcore.NightPlugin;
-import su.nightexpress.nightcore.command.experimental.ImprovedCommands;
+import su.nightexpress.nightcore.commands.command.NightCommand;
 import su.nightexpress.nightcore.config.PluginDetails;
 import su.nightexpress.nightcore.util.Plugins;
 import su.nightexpress.nightcore.util.blocktracker.PlayerBlockTracker;
 
-public class JobsPlugin extends NightPlugin implements ImprovedCommands {
+public class JobsPlugin extends NightPlugin {
 
     private DataHandler dataHandler;
     private UserManager userManager;
 
     private BoosterManager  boosterManager;
+    private GrindManager grindManager;
     private JobManager      jobManager;
     private ZoneManager     zoneManager;
     private StatsManager    statsManager;
@@ -37,8 +41,17 @@ public class JobsPlugin extends NightPlugin implements ImprovedCommands {
     protected PluginDetails getDefaultDetails() {
         return PluginDetails.create("Jobs", new String[]{BaseCommands.JOBS_ALIAS, "job", "excellentjobs"})
             .setConfigClass(Config.class)
-            .setLangClass(Lang.class)
             .setPermissionsClass(Perms.class);
+    }
+
+    @Override
+    protected void addRegistries() {
+        this.registerLang(Lang.class);
+    }
+
+    @Override
+    protected boolean disableCommandManager() {
+        return true;
     }
 
     @Override
@@ -56,6 +69,9 @@ public class JobsPlugin extends NightPlugin implements ImprovedCommands {
 
         this.userManager = new UserManager(this, this.dataHandler);
         this.userManager.setup();
+
+        this.grindManager = new GrindManager(this);
+        this.grindManager.setup();
 
         this.jobManager = new JobManager(this);
         this.jobManager.setup();
@@ -83,6 +99,8 @@ public class JobsPlugin extends NightPlugin implements ImprovedCommands {
         if (Plugins.hasPlaceholderAPI()) {
             PlaceholderHook.setup(this);
         }
+
+        this.loadCommands();
     }
 
     @Override
@@ -95,11 +113,11 @@ public class JobsPlugin extends NightPlugin implements ImprovedCommands {
         if (this.zoneManager != null) this.zoneManager.shutdown();
         if (this.statsManager != null) this.statsManager.shutdown();
         if (this.jobManager != null) this.jobManager.shutdown();
+        if (this.grindManager != null) this.grindManager.shutdown();
 
         this.userManager.shutdown();
         this.dataHandler.shutdown();
 
-        WorkRegistry.clear();
         JobsAPI.clear();
         Keys.clear();
     }
@@ -107,8 +125,19 @@ public class JobsPlugin extends NightPlugin implements ImprovedCommands {
     private void loadEngine() {
         JobsAPI.load(this);
         Keys.load(this);
-        WorkRegistry.load(this);
-        BaseCommands.load(this);
+    }
+
+    private void loadCommands() {
+        this.rootCommand = NightCommand.forPlugin(this, builder -> {
+            BaseCommands.load(this, builder);
+
+            if (this.boosterManager != null) {
+                BoosterCommands.load(this, this.boosterManager, builder);
+            }
+            if (this.statsManager != null) {
+                StatsCommands.load(this, this.statsManager, builder);
+            }
+        });
     }
 
     @NotNull
@@ -124,6 +153,16 @@ public class JobsPlugin extends NightPlugin implements ImprovedCommands {
     @Nullable
     public BoosterManager getBoosterManager() {
         return this.boosterManager;
+    }
+
+    @NotNull
+    public GrindManager getGrindManager() {
+        return this.grindManager;
+    }
+
+    @NotNull
+    public GrindRegistry getGrindRegistry() {
+        return this.grindManager.getGrindRegistry();
     }
 
     @NotNull

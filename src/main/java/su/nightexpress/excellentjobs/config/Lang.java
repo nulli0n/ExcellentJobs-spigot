@@ -5,55 +5,55 @@ import su.nightexpress.excellentjobs.booster.impl.BoosterType;
 import su.nightexpress.excellentjobs.command.impl.BaseCommands;
 import su.nightexpress.excellentjobs.job.impl.JobState;
 import su.nightexpress.excellentjobs.zone.command.ZoneCommands;
-import su.nightexpress.nightcore.core.CoreLang;
 import su.nightexpress.nightcore.language.entry.*;
-import su.nightexpress.nightcore.language.message.OutputType;
+import su.nightexpress.nightcore.locale.LangContainer;
+import su.nightexpress.nightcore.locale.LangEntry;
+import su.nightexpress.nightcore.locale.entry.*;
+import su.nightexpress.nightcore.locale.message.MessageData;
 
 import static su.nightexpress.excellentjobs.Placeholders.*;
-import static su.nightexpress.nightcore.language.tag.MessageTags.*;
 import static su.nightexpress.nightcore.util.text.night.wrapper.TagWrappers.*;
 
-public class Lang extends CoreLang {
+public class Lang implements LangContainer {
 
-    public static final LangEnum<JobState>    JOB_STATE    = LangEnum.of("Job.State", JobState.class);
-    public static final LangEnum<BoosterType> BOOSTER_TYPE = LangEnum.of("BoosterType", BoosterType.class);
+    public static final EnumLocale<JobState>    JOB_STATE    = LangEntry.builder("Job.State").enumeration(JobState.class);
+    public static final EnumLocale<BoosterType> BOOSTER_TYPE = LangEntry.builder("BoosterType").enumeration(BoosterType.class);
 
-    public static final LangString COMMAND_ARGUMENT_NAME_ZONE           = LangString.of("Command.Argument.Name.Zone", "zone");
-    public static final LangString COMMAND_ARGUMENT_NAME_CURRENCY       = LangString.of("Command.Argument.Name.Currency", "currency");
-    public static final LangString COMMAND_ARGUMENT_NAME_JOB            = LangString.of("Command.Argument.Name.Job", "job");
-    public static final LangString COMMAND_ARGUMENT_NAME_JOB_STATE      = LangString.of("Command.Argument.Name.JobState", "job state");
-    public static final LangString COMMAND_ARGUMENT_NAME_XP_MULTIPLIER  = LangString.of("Command.Argument.Name.XPMultiplier", "xp mult");
-    public static final LangString COMMAND_ARGUMENT_NAME_PAY_MULTIPLIER = LangString.of("Command.Argument.Name.PayMultiplier", "pay mult");
-    public static final LangString COMMAND_ARGUMENT_NAME_DURATION       = LangString.of("Command.Argument.Name.Duration", "duration");
-    public static final LangString COMMAND_ARGUMENT_NAME_PAGE           = LangString.of("Command.Argument.Name.Page", "page");
-    public static final LangString COMMAND_ARGUMENT_NAME_ACTION         = LangString.of("Command.Argument.Name.Action", "action");
+    public static final TextLocale COMMAND_ARGUMENT_NAME_ZONE           = LangEntry.builder("Command.Argument.Name.Zone").text("zone");
+    public static final TextLocale COMMAND_ARGUMENT_NAME_CURRENCY       = LangEntry.builder("Command.Argument.Name.Currency").text("currency");
+    public static final TextLocale COMMAND_ARGUMENT_NAME_JOB            = LangEntry.builder("Command.Argument.Name.Job").text("job");
+    public static final TextLocale COMMAND_ARGUMENT_NAME_JOB_STATE      = LangEntry.builder("Command.Argument.Name.JobState").text("job state");
+    public static final TextLocale COMMAND_ARGUMENT_NAME_XP_MULTIPLIER  = LangEntry.builder("Command.Argument.Name.XPMultiplier").text("xp mult");
+    public static final TextLocale COMMAND_ARGUMENT_NAME_PAY_MULTIPLIER = LangEntry.builder("Command.Argument.Name.PayMultiplier").text("pay mult");
+    public static final TextLocale COMMAND_ARGUMENT_NAME_DURATION       = LangEntry.builder("Command.Argument.Name.Duration").text("duration");
+    public static final TextLocale COMMAND_ARGUMENT_NAME_PAGE           = LangEntry.builder("Command.Argument.Name.Page").text("page");
+    public static final TextLocale COMMAND_ARGUMENT_NAME_ACTION         = LangEntry.builder("Command.Argument.Name.Action").text("action");
 
-    public static final LangString COMMAND_ZONE_DESC        = LangString.of("Command.Zone.Desc", "Zone commands.");
-    public static final LangString COMMAND_ZONE_CREATE_DESC = LangString.of("Command.Zone.Create.Desc", "Create a new zone from selection.");
-    public static final LangString COMMAND_ZONE_WAND_DESC   = LangString.of("Command.Zone.Wand.Desc", "Get zone selection tool.");
-    public static final LangString COMMAND_ZONE_EDITOR_DESC = LangString.of("Command.Zone.Editor.Desc", "Open zones editor.");
+    public static final TextLocale COMMAND_ZONE_DESC        = LangEntry.builder("Command.Zone.Desc").text("Zone commands.");
+    public static final TextLocale COMMAND_ZONE_CREATE_DESC = LangEntry.builder("Command.Zone.Create.Desc").text("Create a new zone from selection.");
+    public static final TextLocale COMMAND_ZONE_WAND_DESC   = LangEntry.builder("Command.Zone.Wand.Desc").text("Get zone selection tool.");
+    public static final TextLocale COMMAND_ZONE_EDITOR_DESC = LangEntry.builder("Command.Zone.Editor.Desc").text("Open zones editor.");
 
-    public static final LangString COMMAND_LEVEL_DESC      = LangString.of("Command.Level.Desc", "Level management.");
-    public static final LangString COMMAND_XP_DESC         = LangString.of("Command.XP.Desc", "XP management.");
-    public static final LangString COMMAND_RESET_DESC      = LangString.of("Command.Reset.Desc", "Reset job progress.");
-    public static final LangString COMMAND_MENU_DESC       = LangString.of("Command.Menu.Desc", "Open Jobs GUI.");
-    public static final LangString COMMAND_LEVELS_DESC     = LangString.of("Command.Levels.Desc", "Browse job levels.");
-    public static final LangString COMMAND_OBJECTIVES_DESC = LangString.of("Command.Objectives.Desc", "Browse job objectives.");
-    public static final LangString COMMAND_JOIN_DESC       = LangString.of("Command.Join.Desc", "Join a job.");
-    public static final LangString COMMAND_LEAVE_DESC      = LangString.of("Command.Leave.Desc", "Leave a job.");
-    public static final LangString COMMAND_SET_STATE_DESC  = LangString.of("Command.SetState.Desc", "Set player's job state.");
-    public static final LangString COMMAND_TOP_DESC        = LangString.of("Command.Top.Desc", "List most levelled players.");
-    public static final LangString COMMAND_STATS_DESC      = LangString.of("Command.Stats.Desc", "View job stats.");
+    public static final TextLocale COMMAND_LEVEL_DESC      = LangEntry.builder("Command.Level.Desc").text("Level management.");
+    public static final TextLocale COMMAND_XP_DESC         = LangEntry.builder("Command.XP.Desc").text("XP management.");
+    public static final TextLocale COMMAND_RESET_DESC      = LangEntry.builder("Command.Reset.Desc").text("Reset job progress.");
+    public static final TextLocale COMMAND_MENU_DESC       = LangEntry.builder("Command.Menu.Desc").text("Open Jobs GUI.");
+    public static final TextLocale COMMAND_LEVELS_DESC     = LangEntry.builder("Command.Levels.Desc").text("Browse job levels.");
+    public static final TextLocale COMMAND_JOIN_DESC       = LangEntry.builder("Command.Join.Desc").text("Join a job.");
+    public static final TextLocale COMMAND_LEAVE_DESC      = LangEntry.builder("Command.Leave.Desc").text("Leave a job.");
+    public static final TextLocale COMMAND_SET_STATE_DESC  = LangEntry.builder("Command.SetState.Desc").text("Set player's job state.");
+    public static final TextLocale COMMAND_TOP_DESC        = LangEntry.builder("Command.Top.Desc").text("List most levelled players.");
+    public static final TextLocale COMMAND_STATS_DESC      = LangEntry.builder("Command.Stats.Desc").text("View job stats.");
 
-    public static final LangString COMMAND_BOOSTS_DESC           = LangString.of("Command.Boosters.Desc", "View all current boosters.");
-    public static final LangString COMMAND_BOOSTER_DESC          = LangString.of("Command.Booster.Desc", "Booster management.");
-    public static final LangString COMMAND_BOOSTER_ACTIVATE_DESC = LangString.of("Command.Booster.Activate.Desc", "Activate global scheduled booster.");
-    public static final LangString COMMAND_BOOSTER_CREATE_DESC   = LangString.of("Command.Booster.Create.Desc", "Create global or player booster.");
-    public static final LangString COMMAND_BOOSTER_INFO_DESC     = LangString.of("Command.Booster.Info.Desc", "View active booster names.");
-    public static final LangString COMMAND_BOOSTER_REMOVE_DESC   = LangString.of("Command.Booster.Removal.Desc", "Remove global or personal booster.");
+    public static final TextLocale COMMAND_BOOSTS_DESC           = LangEntry.builder("Command.Boosters.Desc").text("View all current boosters.");
+    public static final TextLocale COMMAND_BOOSTER_DESC          = LangEntry.builder("Command.Booster.Desc").text("Booster management.");
+    public static final TextLocale COMMAND_BOOSTER_ACTIVATE_DESC = LangEntry.builder("Command.Booster.Activate.Desc").text("Activate global scheduled booster.");
+    public static final TextLocale COMMAND_BOOSTER_CREATE_DESC   = LangEntry.builder("Command.Booster.Create.Desc").text("Create global or player booster.");
+    public static final TextLocale COMMAND_BOOSTER_INFO_DESC     = LangEntry.builder("Command.Booster.Info.Desc").text("View active booster names.");
+    public static final TextLocale COMMAND_BOOSTER_REMOVE_DESC   = LangEntry.builder("Command.Booster.Removal.Desc").text("Remove global or personal booster.");
 
-    public static final LangText COMMAND_STATS_DISPLAY = LangText.of("Command.Stats.Display.Info",
-        TAG_NO_PREFIX,
+    public static final MessageLocale COMMAND_STATS_DISPLAY = LangEntry.builder("Command.Stats.Display.Info").message(
+        MessageData.CHAT_NO_PREFIX,
         " ",
         YELLOW.wrap(ORANGE.wrap(PLAYER_NAME) + "'s Job Stats:"),
         " ",
@@ -61,43 +61,44 @@ public class Lang extends CoreLang {
         " "
     );
 
-    public static final LangString COMMAND_STATS_ENTRY = LangString.of("Command.Stats.Display.Job",
+    public static final TextLocale COMMAND_STATS_ENTRY = LangEntry.builder("Command.Stats.Display.Job").text(
         GRAY.wrap(ORANGE.wrap("▪ ") + JOB_NAME + ":   Level: " + ORANGE.wrap(JOB_DATA_LEVEL) + ", XP: " + ORANGE.wrap(JOB_DATA_XP) + "/" + ORANGE.wrap(JOB_DATA_XP_MAX))
     );
 
-    public static final LangText COMMAND_XP_ADD_DONE = LangText.of("Command.XP.Add.Done",
+
+    public static final MessageLocale COMMAND_XP_ADD_DONE = LangEntry.builder("Command.XP.Add.Done").chatMessage(
         GRAY.wrap("Added " + GREEN.wrap(GENERIC_AMOUNT) + " XP to " + GREEN.wrap(PLAYER_NAME) + "'s " + GREEN.wrap(JOB_NAME) + " job.")
     );
 
-    public static final LangText COMMAND_XP_REMOVE_DONE = LangText.of("Command.XP.Remove.Done",
+    public static final MessageLocale COMMAND_XP_REMOVE_DONE = LangEntry.builder("Command.XP.Remove.Done").chatMessage(
         GRAY.wrap("Removed " + RED.wrap(GENERIC_AMOUNT) + " XP from " + RED.wrap(PLAYER_NAME) + "'s " + RED.wrap(JOB_NAME) + " job.")
     );
 
-    public static final LangText COMMAND_XP_SET_DONE = LangText.of("Command.XP.Set.Done",
+    public static final MessageLocale COMMAND_XP_SET_DONE = LangEntry.builder("Command.XP.Set.Done").chatMessage(
         GRAY.wrap("Set " + YELLOW.wrap(GENERIC_AMOUNT) + " XP for " + YELLOW.wrap(PLAYER_NAME) + "'s " + YELLOW.wrap(JOB_NAME) + " job.")
     );
 
-    public static final LangText COMMAND_LEVEL_ADD_DONE = LangText.of("Command.Level.Add.Done",
+    public static final MessageLocale COMMAND_LEVEL_ADD_DONE = LangEntry.builder("Command.Level.Add.Done").chatMessage(
         GRAY.wrap("Added " + GREEN.wrap(GENERIC_AMOUNT) + " level(s) to " + GREEN.wrap(PLAYER_NAME) + "'s " + GREEN.wrap(JOB_NAME) + " job.")
     );
 
-    public static final LangText COMMAND_LEVEL_REMOVE_DONE = LangText.of("Command.Level.Remove.Done",
+    public static final MessageLocale COMMAND_LEVEL_REMOVE_DONE = LangEntry.builder("Command.Level.Remove.Done").chatMessage(
         GRAY.wrap("Removed " + RED.wrap(GENERIC_AMOUNT) + " level(s) from " + RED.wrap(PLAYER_NAME) + "'s " + RED.wrap(JOB_NAME) + " job.")
     );
 
-    public static final LangText COMMAND_LEVEL_SET_DONE = LangText.of("Command.Level.Set.Done",
+    public static final MessageLocale COMMAND_LEVEL_SET_DONE = LangEntry.builder("Command.Level.Set.Done").chatMessage(
         GRAY.wrap("Set " + YELLOW.wrap(GENERIC_AMOUNT) + " level for " + YELLOW.wrap(PLAYER_NAME) + "'s " + YELLOW.wrap(JOB_NAME) + " job.")
     );
 
-    public static final LangText COMMAND_RESET_DONE = LangText.of("Command.Reset.Done",
+    public static final MessageLocale COMMAND_RESET_DONE = LangEntry.builder("Command.Reset.Done").chatMessage(
         GRAY.wrap("Successfully reset " + YELLOW.wrap(JOB_NAME) + " progress for " + YELLOW.wrap(PLAYER_NAME) + ".")
     );
 
-    public static final LangText COMMAND_SET_STATE_DONE = LangText.of("Command.SetState.Done",
+    public static final MessageLocale COMMAND_SET_STATE_DONE = LangEntry.builder("Command.SetState.Done").chatMessage(
         GRAY.wrap("Set " + YELLOW.wrap(GENERIC_STATE) + " state for " + YELLOW.wrap(PLAYER_NAME) + "'s " + YELLOW.wrap(JOB_NAME) + " job!"));
 
-    public static final LangText COMMAND_TOP_LIST = LangText.of("Command.Top.List",
-        TAG_NO_PREFIX,
+    public static final MessageLocale COMMAND_TOP_LIST = LangEntry.builder("Command.Top.List").message(
+        MessageData.CHAT_NO_PREFIX,
         " ",
         YELLOW.wrap(BOLD.wrap(JOB_NAME + " Level Top:")),
         " ",
@@ -107,178 +108,111 @@ public class Lang extends CoreLang {
         " "
     );
 
-    public static final LangString COMMAND_TOP_ENTRY = LangString.of("Command.Top.Entry",
+    public static final TextLocale COMMAND_TOP_ENTRY = LangEntry.builder("Command.Top.Entry").text(
         GRAY.wrap(YELLOW.wrap(GENERIC_POS + ". ") + PLAYER_NAME + ": " + YELLOW.wrap(GENERIC_AMOUNT) + " Levels")
     );
 
 
-    public static final LangText COMMAND_BOOSTER_ACTIVATE_DONE = LangText.of("Command.Booster.Activate.Done",
+    public static final MessageLocale COMMAND_BOOSTER_ACTIVATE_DONE = LangEntry.builder("Command.Booster.Activate.Done").chatMessage(
         GRAY.wrap("Booster activated!")
     );
 
-    public static final LangText COMMAND_BOOSTER_CREATE_DONE_GLOBAL = LangText.of("Command.Booster.Create.Done.Global",
+    public static final MessageLocale COMMAND_BOOSTER_CREATE_DONE_GLOBAL = LangEntry.builder("Command.Booster.Create.Done.Global").chatMessage(
         GRAY.wrap("Added global " + YELLOW.wrap(BOOSTER_XP_PERCENT + " XP") + " " + YELLOW.wrap(BOOSTER_INCOME_PERCENT + " Payment") + " job booster " + GRAY.wrap("(" + WHITE.wrap(GENERIC_TIME) + ")"))
     );
 
-    public static final LangText COMMAND_BOOSTER_CREATE_DONE_PERSONAL = LangText.of("Command.Booster.Create.Done.Personal",
+    public static final MessageLocale COMMAND_BOOSTER_CREATE_DONE_PERSONAL = LangEntry.builder("Command.Booster.Create.Done.Personal").chatMessage(
         GRAY.wrap("Added personal " + YELLOW.wrap(BOOSTER_XP_PERCENT + " XP") + " " + YELLOW.wrap(BOOSTER_INCOME_PERCENT + " Payment") + " job booster " + GRAY.wrap("(" + WHITE.wrap(GENERIC_TIME) + ")") + " for " + YELLOW.wrap(PLAYER_NAME) + "'s " + YELLOW.wrap(JOB_NAME) + " job.")
     );
 
-    public static final LangText COMMAND_BOOSTER_REMOVE_DONE_PERSONAL = LangText.of("Command.Booster.Remove.Done.Personal",
+    public static final MessageLocale COMMAND_BOOSTER_REMOVE_DONE_PERSONAL = LangEntry.builder("Command.Booster.Remove.Done.Personal").chatMessage(
         GRAY.wrap("Disabled " + YELLOW.wrap(PLAYER_NAME) + "'s " + YELLOW.wrap(JOB_NAME) + " job booster.")
     );
 
-    public static final LangText COMMAND_BOOSTER_REMOVE_DONE_GLOBAL = LangText.of("Command.Booster.Remove.Done.Global",
+    public static final MessageLocale COMMAND_BOOSTER_REMOVE_DONE_GLOBAL = LangEntry.builder("Command.Booster.Remove.Done.Global").chatMessage(
         GRAY.wrap("Disabled global job booster.")
     );
 
-    public static final LangText COMMAND_BOOSTER_REMOVE_ERROR_NOTHING = LangText.of("Command.Booster.Remove.Error.Nothing",
+    public static final MessageLocale COMMAND_BOOSTER_REMOVE_ERROR_NOTHING = LangEntry.builder("Command.Booster.Remove.Error.Nothing").chatMessage(
         RED.wrap("There is no booster.")
     );
 
-    public static final LangText JOB_JOIN_ERROR_ALREADY_HIRED = LangText.of("Job.Join.Error.AlreadyHired",
+    public static final MessageLocale JOB_JOIN_ERROR_ALREADY_HIRED = LangEntry.builder("Job.Join.Error.AlreadyHired").chatMessage(
         GRAY.wrap("You're already hired for the " + RED.wrap(JOB_NAME) + " job!"));
 
-    public static final LangText JOB_JOIN_ERROR_COOLDOWN = LangText.of("Job.Join.Error.Cooldown",
+    public static final MessageLocale JOB_JOIN_ERROR_COOLDOWN = LangEntry.builder("Job.Join.Error.Cooldown").chatMessage(
         GRAY.wrap("You can join the " + RED.wrap(JOB_NAME) + " job again in " + RED.wrap(GENERIC_TIME)));
 
-    public static final LangText JOB_JOIN_ERROR_LIMIT_STATE = LangText.of("Job.Join.Error.StateLimit",
+    public static final MessageLocale JOB_JOIN_ERROR_LIMIT_STATE = LangEntry.builder("Job.Join.Error.StateLimit").chatMessage(
         GRAY.wrap("You can't get more than " + RED.wrap(GENERIC_AMOUNT + " " + GENERIC_STATE) + " jobs!"));
 
-    public static final LangText JOB_JOIN_ERROR_LIMIT_GENERAL = LangText.of("Job.Join.Error.GeneralLimit",
+    public static final MessageLocale JOB_JOIN_ERROR_LIMIT_GENERAL = LangEntry.builder("Job.Join.Error.GeneralLimit").chatMessage(
         GRAY.wrap("You can't get more jobs!"));
 
-    public static final LangText JOB_JOIN_NOT_JOINABLE = LangText.of("Job.Join.NotJoinable",
+    public static final MessageLocale JOB_JOIN_NOT_JOINABLE = LangEntry.builder("Job.Join.NotJoinable").chatMessage(
         GRAY.wrap("The " + SOFT_YELLOW.wrap(JOB_NAME) + " job does not accept new members currently.")
     );
 
-    public static final LangText JOB_PRIORITY_CHANGED = LangText.of("Job.Priority.Changed",
-        SOUND.wrap(Sound.ENTITY_PLAYER_LEVELUP) +
+    public static final MessageLocale JOB_PRIORITY_CHANGED = LangEntry.builder("Job.Priority.Changed").chatMessage(
+        Sound.ENTITY_PLAYER_LEVELUP,
         GRAY.wrap("You changed " + YELLOW.wrap(JOB_NAME) + "'s job priority to " + YELLOW.wrap(JOB_DATA_STATE) + ".")
     );
 
-    public static final LangText JOB_JOIN_SUCCESS = LangText.of("Job.Join.Success",
-        TAG_NO_PREFIX + SOUND.wrap(Sound.ENTITY_PLAYER_LEVELUP),
+    public static final MessageLocale JOB_JOIN_SUCCESS = LangEntry.builder("Job.Join.Success").message(
+        MessageData.chat().usePrefix(false).sound(Sound.ENTITY_PLAYER_LEVELUP).build(),
         " ",
         GRAY.wrap("You joined the " + YELLOW.wrap(JOB_NAME) + " job!"),
-        GRAY.wrap("→ Click " + RUN_COMMAND.with("/" + BaseCommands.JOBS_ALIAS + " " + BaseCommands.MENU_ALIAS + " " + JOB_ID).wrap(SOFT_GREEN.wrap("[Menu]")) + " to open job menu."),
-        GRAY.wrap("→ Click " + RUN_COMMAND.with("/" + BaseCommands.JOBS_ALIAS + " " + BaseCommands.OBJECTIVES_ALIAS + " " + JOB_ID).wrap(SOFT_AQUA.wrap("[Objectives]")) + " to view objectives."),
-        GRAY.wrap("→ Click " + RUN_COMMAND.with("/" + BaseCommands.JOBS_ALIAS + " " + BaseCommands.LEVELS_ALIAS + " " + JOB_ID).wrap(SOFT_YELLOW.wrap("[Levels]")) + " to view levels."),
         " "
     );
 
-    public static final LangText JOB_LEAVE_SUCCESS = LangText.of("Job.Leave.Success",
-        OUTPUT.wrap(20, 60) + SOUND.wrap(Sound.BLOCK_WOODEN_DOOR_CLOSE) +
-            GREEN.wrap(BOLD.wrap("Job Quit")),
-        GRAY.wrap("You quit the " + GREEN.wrap(JOB_NAME) + " job!")
+    public static final MessageLocale JOB_LEAVE_SUCCESS = LangEntry.builder("Job.Leave.Success").titleMessage(
+        GREEN.wrap(BOLD.wrap("Job Quit")),
+        GRAY.wrap("You quit the " + GREEN.wrap(JOB_NAME) + " job!"),
+        20, 60, Sound.BLOCK_WOODEN_DOOR_CLOSE
     );
 
-    public static final LangText JOB_LEAVE_ERROR_NOT_JOINED = LangText.of("Job.Leave.Error.NotJoined",
+    public static final MessageLocale JOB_LEAVE_ERROR_NOT_JOINED = LangEntry.builder("Job.Leave.Error.NotJoined").chatMessage(
         GRAY.wrap("You're not employed for the " + RED.wrap(JOB_NAME) + " job!"));
 
-    public static final LangText JOB_LEAVE_ERROR_COOLDOWN = LangText.of("Job.Leave.Error.Cooldown",
+    public static final MessageLocale JOB_LEAVE_ERROR_COOLDOWN = LangEntry.builder("Job.Leave.Error.Cooldown").chatMessage(
         GRAY.wrap("You can leave the " + RED.wrap(JOB_NAME) + " job in " + RED.wrap(GENERIC_TIME)));
 
-    public static final LangText JOB_LEAVE_ERROR_NOT_ALLOWED = LangText.of("Job.Leave.Error.NotAllowed",
+    public static final MessageLocale JOB_LEAVE_ERROR_NOT_ALLOWED = LangEntry.builder("Job.Leave.Error.NotAllowed").chatMessage(
         GRAY.wrap("You can't leave the " + RED.wrap(JOB_NAME) + " job!"));
 
-    public static final LangText JOB_RESET_NOTIFY = LangText.of("Job.Reset.Notify",
-        OUTPUT.wrap(20, 60) + SOUND.wrap(Sound.ENTITY_ZOMBIE_BREAK_WOODEN_DOOR) +
-            GREEN.wrap(BOLD.wrap("Job Reset!")),
-        GRAY.wrap("All " + GREEN.wrap(JOB_NAME) + " progress have been reset!")
+    public static final MessageLocale JOB_RESET_NOTIFY = LangEntry.builder("Job.Reset.Notify").titleMessage(
+        GREEN.wrap(BOLD.wrap("Job Reset!")),
+        GRAY.wrap("All " + GREEN.wrap(JOB_NAME) + " progress have been reset!"),
+        Sound.ENTITY_ZOMBIE_BREAK_WOODEN_DOOR
     );
 
-    public static final LangText JOB_PAYMENT_NOTIFY = LangText.of("Job.Payment.Notify",
-        TAG_NO_PREFIX,
+    public static final MessageLocale JOB_PAYMENT_NOTIFY = LangEntry.builder("Job.Payment.Notify").message(
+        MessageData.CHAT_NO_PREFIX,
         GRAY.wrap(GREEN.wrap("[$]") + " You got paid for the " + WHITE.wrap(JOB_NAME) + "'s work: " + GREEN.wrap(GENERIC_AMOUNT))
     );
 
-    public static final LangText SPECIAL_ORDER_ERROR_DISABLED_SERVER = LangText.of("SpecialOrder.Error.DisabledByServer",
-        GRAY.wrap("Special Orders are " + RED.wrap("disabled") + " on the server."));
-
-    public static final LangText SPECIAL_ORDER_ERROR_DISABLED_JOB = LangText.of("SpecialOrder.Error.DisabledByJob",
-        GRAY.wrap("Special Orders are " + RED.wrap("disabled") + " for this job."));
-
-    public static final LangText SPECIAL_ORDER_ERROR_ALREADY_HAVE = LangText.of("SpecialOrder.Error.AlreadyHave",
-        GRAY.wrap("You " + RED.wrap("already have") + " a Special Order of this job."));
-
-    public static final LangText SPECIAL_ORDER_ERROR_MAX_AMOUNT = LangText.of("SpecialOrder.Error.MaxAmount",
-        GRAY.wrap("You can not have more than " + RED.wrap(GENERIC_AMOUNT) + " active Special Orders."));
-
-    public static final LangText SPECIAL_ORDER_ERROR_COOLDOWN = LangText.of("SpecialOrder.Error.Cooldown",
-        GRAY.wrap("You can take next Special Order in " + RED.wrap(GENERIC_TIME)));
-
-    public static final LangText SPECIAL_ORDER_ERROR_NOT_ENOUGH_FUNDS_INFO = LangText.of("SpecialOrder.Error.NotEnoughMoney.Info",
-        RED.wrap("You can't afford Special Order! You need:"),
-        GENERIC_ENTRY
-    );
-
-    public static final LangString SPECIAL_ORDER_ERROR_NOT_ENOUGH_FUNDS_ENTRY = LangString.of("SpecialOrder.Error.NotEnoughMoney.Entry",
-        YELLOW.wrap("- " + GENERIC_AMOUNT)
-    );
-
-    public static final LangText SPECIAL_ORDER_ERROR_GENERATION = LangText.of("SpecialOrder.Error.Generation",
-        GRAY.wrap(RED.wrap("Whoops!") + " Unable to create Special Order."));
-
-    public static final LangText SPECIAL_ORDER_TAKEN_INFO = LangText.of("SpecialOrder.Taken.Info",
-        TAG_NO_PREFIX,
-        " ",
-        YELLOW.wrap("You took a " + ORANGE.wrap("Special Order") + " for " + ORANGE.wrap(JOB_NAME) + " job!"),
-        " ",
-        ORANGE.wrap(BOLD.wrap("Objectives:")),
-        GENERIC_ENTRY,
-        " ",
-        ORANGE.wrap(BOLD.wrap("Rewards:")),
-        GENERIC_REWARD,
-        " ",
-        YELLOW.wrap("Complete it in: " + ORANGE.wrap(GENERIC_TIME)),
-        " "
-    );
-
-    public static final LangString SPECIAL_ORDER_TAKEN_REWARD = LangString.of("SpecialOrder.Taken.Reward",
-        YELLOW.wrap(ORANGE.wrap("▪ ") + GENERIC_NAME));
-
-    public static final LangString SPECIAL_ORDER_TAKEN_ENTRY = LangString.of("SpecialOrder.Taken.Entry",
-        YELLOW.wrap(ORANGE.wrap("▪ ") + GENERIC_NAME + ": " + ORANGE.wrap("x" + GENERIC_AMOUNT) + " " + GREEN.wrap(SHOW_TEXT.with(GENERIC_ENTRY).wrap("[Details]")))
-    );
-
-    public static final LangString SPECIAL_ORDER_TAKEN_DETAIL = LangString.of("SpecialOrder.Taken.Detail",
-        WHITE.wrap(GENERIC_NAME + ": ") + GRAY.wrap("x" + GENERIC_AMOUNT)
-    );
-
-    public static final LangText SPECIAL_ORDER_PROGRESS = LangText.of("SpecialOrder.Progress",
-        OUTPUT.wrap(OutputType.ACTION_BAR) +
-            YELLOW.wrap("(Special Order) " + ORANGE.wrap(GENERIC_NAME + ": ") + WHITE.wrap(GENERIC_CURRENT) + GRAY.wrap("/") + WHITE.wrap(GENERIC_MAX))
-    );
-
-    public static final LangText SPECIAL_ORDER_COMPLETED = LangText.of("SpecialOrder.Completed",
-        OUTPUT.wrap(20, 80) + SOUND.wrap(Sound.ENTITY_PLAYER_LEVELUP) +
-            GREEN.wrap(BOLD.wrap("Order Completed!")),
-        GRAY.wrap("You have completed a Special Order in " + GREEN.wrap(JOB_NAME) + " job!")
-    );
-
-    public static final LangText JOB_XP_GAIN = LangText.of("Job.XP.Gain",
+    public static final MessageLocale JOB_XP_GAIN = LangEntry.builder("Job.XP.Gain").chatMessage(
         GRAY.wrap("You gain " + YELLOW.wrap(GENERIC_AMOUNT + " XP") + " for " + YELLOW.wrap(JOB_NAME) + " job.")
     );
 
-    public static final LangText JOB_XP_LOSE = LangText.of("Job.XP.Lose",
+    public static final MessageLocale JOB_XP_LOSE = LangEntry.builder("Job.XP.Lose").chatMessage(
         GRAY.wrap("You lost " + RED.wrap(GENERIC_AMOUNT + " XP") + " from " + RED.wrap(JOB_NAME) + " job.")
     );
 
-    public static final LangText JOB_LEVEL_UP = LangText.of("Job.Level.Up",
-        OUTPUT.wrap(20, 60) + SOUND.wrap(Sound.ENTITY_PLAYER_LEVELUP) +
-            GREEN.wrap(BOLD.wrap("Job Level Up!")),
-        GRAY.wrap(GREEN.wrap(JOB_NAME) + " is now level " + GREEN.wrap(JOB_DATA_LEVEL) + "!")
+    public static final MessageLocale JOB_LEVEL_UP = LangEntry.builder("Job.Level.Up").titleMessage(
+        GREEN.wrap(BOLD.wrap("Job Level Up!")),
+        GRAY.wrap(GREEN.wrap(JOB_NAME) + " is now level " + GREEN.wrap(JOB_DATA_LEVEL) + "!"),
+        Sound.ENTITY_PLAYER_LEVELUP
     );
 
-    public static final LangText JOB_LEVEL_DOWN = LangText.of("Job.Level.Down",
-        OUTPUT.wrap(20, 60) + SOUND.wrap(Sound.ENTITY_IRON_GOLEM_DEATH) +
-            RED.wrap(BOLD.wrap("Job Level Down!")),
-        GRAY.wrap(RED.wrap(JOB_NAME) + " is now level " + RED.wrap(JOB_DATA_LEVEL) + "!")
+    public static final MessageLocale JOB_LEVEL_DOWN = LangEntry.builder("Job.Level.Down").titleMessage(
+        RED.wrap(BOLD.wrap("Job Level Down!")),
+        GRAY.wrap(RED.wrap(JOB_NAME) + " is now level " + RED.wrap(JOB_DATA_LEVEL) + "!"),
+        Sound.ENTITY_IRON_GOLEM_DEATH
     );
 
-    public static final LangText JOB_REWARDS_NOTIFY = LangText.of("Job.Rewards.Notify",
-        TAG_NO_PREFIX,
+    public static final MessageLocale JOB_REWARDS_NOTIFY = LangEntry.builder("Job.Rewards.Notify").message(
+        MessageData.CHAT_NO_PREFIX,
         " ",
         SOFT_YELLOW.and(BOLD).and(UNDERLINED).wrap("Job Notification"),
         " ",
@@ -287,8 +221,8 @@ public class Lang extends CoreLang {
         " "
     );
 
-    public static final LangText JOB_LEVEL_REWARDS_LIST = LangText.of("Job.Level.Rewards.List",
-        TAG_NO_PREFIX,
+    public static final MessageLocale JOB_LEVEL_REWARDS_LIST = LangEntry.builder("Job.Level.Rewards.List").message(
+        MessageData.CHAT_NO_PREFIX,
         " ",
         YELLOW.wrap(BOLD.wrap("Level Rewards:")),
         DARK_GRAY.wrap("Hover over reward name for details."),
@@ -297,20 +231,20 @@ public class Lang extends CoreLang {
         " "
     );
 
-    public static final LangString JOB_LEVEL_REWARDS_ENTRY = LangString.of("Job.Level.Rewards.Entry",
+    public static final TextLocale JOB_LEVEL_REWARDS_ENTRY = LangEntry.builder("Job.Level.Rewards.Entry").text(
         YELLOW.wrap("✔ " + SHOW_TEXT.with(GRAY.wrap(REWARD_DESCRIPTION)).wrap(GRAY.wrap(REWARD_NAME)))
     );
 
-    public static final LangText JOB_LIMIT_XP_NOTIFY = LangText.of("Job.Limit.XP.Notify",
+    public static final MessageLocale JOB_LIMIT_XP_NOTIFY = LangEntry.builder("Job.Limit.XP.Notify").chatMessage(
         GRAY.wrap("You have reached daily " + RED.wrap("XP") + " limit for " + RED.wrap(JOB_NAME) + " job. You can't get more today.")
     );
 
-    public static final LangText JOB_LIMIT_CURRENCY_NOTIFY = LangText.of("Job.Limit.Currency.Notify",
+    public static final MessageLocale JOB_LIMIT_CURRENCY_NOTIFY = LangEntry.builder("Job.Limit.Currency.Notify").chatMessage(
         GRAY.wrap("You have reached daily " + RED.wrap(CURRENCY_NAME) + " limit for " + RED.wrap(JOB_NAME) + " job. You can't get more today.")
     );
 
-    public static final LangText BOOSTER_ACTIVATED_GLOBAL = LangText.of("Booster.Activated.Global",
-        TAG_NO_PREFIX + SOUND.wrap(Sound.BLOCK_NOTE_BLOCK_BELL),
+    public static final MessageLocale BOOSTER_ACTIVATED_GLOBAL = LangEntry.builder("Booster.Activated.Global").message(
+        MessageData.chat().usePrefix(false).sound(Sound.BLOCK_NOTE_BLOCK_BELL).build(),
         " ",
         YELLOW.wrap(BOLD.wrap("Job Booster Activated!")),
         " ",
@@ -322,8 +256,8 @@ public class Lang extends CoreLang {
         " "
     );
 
-    public static final LangText BOOSTER_ACTIVATED_PERSONAL = LangText.of("Booster.Activated.Personal",
-        TAG_NO_PREFIX + SOUND.wrap(Sound.BLOCK_NOTE_BLOCK_BELL),
+    public static final MessageLocale BOOSTER_ACTIVATED_PERSONAL = LangEntry.builder("Booster.Activated.Personal").message(
+        MessageData.chat().usePrefix(false).sound(Sound.BLOCK_NOTE_BLOCK_BELL).build(),
         " ",
         YELLOW.wrap(BOLD.wrap("Job Booster Received!")),
         " ",
@@ -335,16 +269,16 @@ public class Lang extends CoreLang {
         " "
     );
 
-    public static final LangText BOOSTER_EXPIRED_GLOBAL = LangText.of("Booster.Expired.Global",
+    public static final MessageLocale BOOSTER_EXPIRED_GLOBAL = LangEntry.builder("Booster.Expired.Global").chatMessage(
         GRAY.wrap("Global job booster has been expired.")
     );
 
-    public static final LangText BOOSTER_EXPIRED_PERSONAL = LangText.of("Booster.Expired.Personal",
+    public static final MessageLocale BOOSTER_EXPIRED_PERSONAL = LangEntry.builder("Booster.Expired.Personal").chatMessage(
         GRAY.wrap("Your " + YELLOW.wrap(JOB_NAME) + " job booster has been expired.")
     );
 
-    public static final LangText BOOSTER_LIST_INFO = LangText.of("Booster.List.Info",
-        TAG_NO_PREFIX,
+    public static final MessageLocale BOOSTER_LIST_INFO = LangEntry.builder("Booster.List.Info").message(
+        MessageData.CHAT_NO_PREFIX,
         " ",
         YELLOW.wrap(BOLD.wrap(JOB_NAME + " Job Boosters:")),
         " ",
@@ -356,122 +290,109 @@ public class Lang extends CoreLang {
         " "
     );
 
-    public static final LangString BOOSTER_LIST_ENTRY = LangString.of("Booster.List.Entry",
+    public static final TextLocale BOOSTER_LIST_ENTRY = LangEntry.builder("Booster.List.Entry").text(
         YELLOW.wrap("✔ " + GRAY.wrap(GENERIC_TYPE + " Booster: ") + GENERIC_XP_BOOST + GRAY.wrap(" | ") + GENERIC_INCOME_BOOST + " " + GRAY.wrap("(" + WHITE.wrap(GENERIC_TIME) + ")"))
     );
 
-    public static final LangText BOOSTER_LIST_NOTHING = LangText.of("Booster.List.Nothing",
+    public static final MessageLocale BOOSTER_LIST_NOTHING = LangEntry.builder("Booster.List.Nothing").chatMessage(
         RED.wrap("You have no active boosters for this job.")
     );
 
-    public static final LangText ZONE_NOT_AVAILABLE = LangText.of("Zone.Info.NotAvailable",
-        OUTPUT.wrap(OutputType.ACTION_BAR),
+
+    public static final MessageLocale ZONE_NOT_AVAILABLE = LangEntry.builder("Zone.Info.NotAvailable").actionBarMessage(
         RED.wrap("You can't work in this zone currently!")
     );
 
-    public static final LangText ZONE_NO_PVP = LangText.of("Zone.Info.NoPvP",
-        OUTPUT.wrap(OutputType.ACTION_BAR),
+    public static final MessageLocale ZONE_NO_PVP = LangEntry.builder("Zone.Info.NoPvP").actionBarMessage(
         RED.wrap("PvP is disabled in this zone!")
     );
 
-    public static final LangText ZONE_CREATE_SUCCESS = LangText.of("Zone.Creation.Success",
+    public static final MessageLocale ZONE_CREATE_SUCCESS = LangEntry.builder("Zone.Creation.Success").chatMessage(
         GRAY.wrap("Successfully created job zone: " + GREEN.wrap(ZONE_NAME) + "!")
     );
 
-    public static final LangText ZONE_CREATE_INFO = LangText.of("Zone.Creation.Info",
+    public static final MessageLocale ZONE_CREATE_INFO = LangEntry.builder("Zone.Creation.Info").chatMessage(
         GRAY.wrap("Select two corners and use " + GREEN.wrap("/" + ZoneCommands.DEF_ROOT_NAME + " " + ZoneCommands.DEF_CREATE_NAME) + " to create a new zone.")
     );
 
-    public static final LangText ZONE_SELECTION_INFO = LangText.of("Zone.Selection.Info",
+    public static final MessageLocale ZONE_SELECTION_INFO = LangEntry.builder("Zone.Selection.Info").chatMessage(
         GRAY.wrap("Selected " + YELLOW.wrap("#" + GENERIC_VALUE) + " zone position.")
     );
 
-    public static final LangText ZONE_ERROR_EXISTS = LangText.of("Zone.Error.AlreadyExists",
+    public static final MessageLocale ZONE_ERROR_EXISTS = LangEntry.builder("Zone.Error.AlreadyExists").chatMessage(
         GRAY.wrap("Zone with name " + RED.wrap(GENERIC_NAME) + " is already created!")
     );
 
-    public static final LangText ZONE_ERROR_NO_SELECTION = LangText.of("Zone.Error.NoSelection",
+    public static final MessageLocale ZONE_ERROR_NO_SELECTION = LangEntry.builder("Zone.Error.NoSelection").chatMessage(
         GRAY.wrap("You must select zone corners first: " + RED.wrap("/" + ZoneCommands.DEF_ROOT_NAME + " " + ZoneCommands.DEF_WAND_NAME))
     );
 
-    public static final LangText ZONE_ERROR_INCOMPLETE_SELECTION = LangText.of("Zone.Error.IncompleteSelection",
+    public static final MessageLocale ZONE_ERROR_INCOMPLETE_SELECTION = LangEntry.builder("Zone.Error.IncompleteSelection").chatMessage(
         GRAY.wrap("You must select 2 zone corners!")
     );
 
-    public static final LangUIButton UI_JOB_LEAVE_INFO = LangUIButton.builder("UI.Job.LeaveInfo", JOB_NAME)
-        .description(
-            GRAY.wrap(SOFT_YELLOW.wrap("▪ ") + "XP: " + SOFT_YELLOW.wrap(JOB_DATA_XP) + "/" + SOFT_YELLOW.wrap(JOB_DATA_XP_MAX)),
-            GRAY.wrap(SOFT_YELLOW.wrap("▪ ") + "Level: " + SOFT_YELLOW.wrap(JOB_DATA_LEVEL) + "/" + SOFT_YELLOW.wrap(JOB_DATA_LEVEL_MAX))
-        ).build();
+    public static final ButtonLocale DIALOG_BUTTON_BACK = LangEntry.builder("Dialog.Generic.Button.Back").button(SOFT_YELLOW.wrap("←") + " Back");
 
-    public static final LangString DIALOG_LEAVE_TITLE          = LangString.of("Dialog.Leave.Title", "Confirm the action");
-    public static final LangString DIALOG_LEAVE_BUTTON_CONFIRM = LangString.of("Dialog.Leave.Button.Confirm", "Confirm");
-    public static final LangString DIALOG_LEAVE_BUTTON_CANCEL  = LangString.of("Dialog.Leave.Button.Cancel", "Cancel");
-    public static final LangString DIALOG_LEAVE_BODY           = LangString.of("Dialog.Leave.Body",
-        SOFT_RED.and(UNDERLINED).wrap("You're about to leave the " + JOB_NAME + " job.") + BR + " " + BR +
-            GRAY.wrap("The following progress will be lost:") + BR + " " + BR +
-            GRAY.wrap(SOFT_RED.wrap(JOB_DATA_LEVEL) + " Levels, " + SOFT_RED.wrap(JOB_DATA_XP) + " XP.")
+    public static final TextLocale DIALOG_JOB_STATUS_TITLE = LangEntry.builder("Dialog.JobStatus.Title").text(SOFT_YELLOW.wrap(BOLD.and(UNDERLINED).wrap("Job Status")));
+
+    public static final DialogElementLocale DIALOG_JOB_STATUS_BODY = LangEntry.builder("Dialog.JobStatus.Body").dialogElement(
+        400,
+        "Select a new status for the " + SOFT_YELLOW.wrap(JOB_NAME) + " job.",
+        "",
+        "Current Status: " + SOFT_YELLOW.wrap(JOB_DATA_STATE),
+        "",
+        GREEN.wrap("Primary") + " jobs give extra, but " + GREEN.wrap("smaller") + ", income and level rewards.",
+        "",
+        SOFT_BLUE.wrap("Secondary") + " jobs give the " + SOFT_BLUE.wrap("highest") + " income and level rewards.",
+        ""
     );
 
-    public static final LangText ERROR_COMMAND_INVALID_ZONE_ARGUMENT = LangText.of("Error.Command.Argument.InvalidZone",
+    public static final ButtonLocale DIALOG_JOB_STATUS_BUTTON_GET_PRIMARY   = LangEntry.builder("Dialog.JobStatus.Button.GetPrimary").button(GREEN.wrap("✔") + " Get as Primary");
+    public static final ButtonLocale DIALOG_JOB_STATUS_BUTTON_GET_SECONDARY = LangEntry.builder("Dialog.JobStatus.Button.GetSecondary").button(BLUE.wrap("✔") + " Get as Secondary");
+    public static final ButtonLocale DIALOG_JOB_STATUS_BUTTON_LEAVE         = LangEntry.builder("Dialog.JobStatus.Button.Leave").button(RED.wrap("✘") + " Leave Job");
+
+    public static final MessageLocale ERROR_COMMAND_INVALID_ZONE_ARGUMENT = LangEntry.builder("Error.Command.Argument.InvalidZone").chatMessage(
         GRAY.wrap(RED.wrap(GENERIC_VALUE) + " is not a valid zone!"));
 
-    public static final LangText ERROR_COMMAND_INVALID_JOB_ARGUMENT = LangText.of("Error.Command.Argument.InvalidJob",
+    public static final MessageLocale ERROR_COMMAND_INVALID_JOB_ARGUMENT = LangEntry.builder("Error.Command.Argument.InvalidJob").chatMessage(
         GRAY.wrap(RED.wrap(GENERIC_VALUE) + " is not a valid job!"));
 
-    public static final LangText ERROR_COMMAND_INVALID_JOB_STATE_ARGUMENT = LangText.of("Error.Command.Argument.InvalidJobState",
+    public static final MessageLocale ERROR_COMMAND_INVALID_JOB_STATE_ARGUMENT = LangEntry.builder("Error.Command.Argument.InvalidJobState").chatMessage(
         GRAY.wrap(RED.wrap(GENERIC_VALUE) + " is not a valid job state!"));
 
-    public static final LangText ERROR_COMMAND_INVALID_ACTION_ARGUMENT = LangText.of("Error.Command.Argument.InvalidAction",
+    public static final MessageLocale ERROR_COMMAND_INVALID_ACTION_ARGUMENT = LangEntry.builder("Error.Command.Argument.InvalidAction").chatMessage(
         GRAY.wrap(RED.wrap(GENERIC_VALUE) + " is not a valid action!"));
 
-    public static final LangText ERROR_INVALID_BOOSTER = LangText.of("Error.InvalidBooster",
+    public static final MessageLocale ERROR_INVALID_BOOSTER = LangEntry.builder("Error.InvalidBooster").chatMessage(
         RED.wrap("Invalid booster!"));
 
-    public static final LangText ERROR_COMMAND_INVALID_CURRENCY_ARGUMENT = LangText.of("Error.Error.Command.Argument.InvalidCurrency",
+    public static final MessageLocale ERROR_COMMAND_INVALID_CURRENCY_ARGUMENT = LangEntry.builder("Error.Error.Command.Argument.InvalidCurrency").chatMessage(
         GRAY.wrap(RED.wrap(GENERIC_VALUE) + " is not a valid currency!"));
 
-    public static final LangString OTHER_NO_JOBS            = LangString.of("Other.NoJobs", GRAY.wrap("<No Jobs>"));
-    public static final LangString OTHER_NO_INCOME          = LangString.of("Other.NoIncome", GRAY.wrap("$0"));
-    public static final LangString OTHER_JOB_DELIMITER      = LangString.of("Other.JobDelimiter", ", ");
-    public static final LangString OTHER_CURRENCY_DELIMITER = LangString.of("Other.CurrencyDelimiter", ", ");
-    public static final LangString OTHER_BONUS_POSITIVE = LangString.of("Other.BonusPlus", GREEN.wrap("+" + GENERIC_VALUE + "%"));
-    public static final LangString OTHER_BONUS_NEGATIVE = LangString.of("Other.BonusMinus", RED.wrap(GENERIC_VALUE + "%"));
+    public static final TextLocale OTHER_NO_JOBS            = LangEntry.builder("Other.NoJobs").text(GRAY.wrap("<No Jobs>"));
+    public static final TextLocale OTHER_NO_INCOME          = LangEntry.builder("Other.NoIncome").text(GRAY.wrap("$0"));
+    public static final TextLocale OTHER_JOB_DELIMITER      = LangEntry.builder("Other.JobDelimiter").text(", ");
+    public static final TextLocale OTHER_CURRENCY_DELIMITER = LangEntry.builder("Other.CurrencyDelimiter").text(", ");
+    public static final TextLocale OTHER_BONUS_POSITIVE = LangEntry.builder("Other.BonusPlus").text(GREEN.wrap("+" + GENERIC_VALUE + "%"));
+    public static final TextLocale OTHER_BONUS_NEGATIVE = LangEntry.builder("Other.BonusMinus").text(RED.wrap(GENERIC_VALUE + "%"));
 
-    public static final LangString EDITOR_TITLE_ZONES                  = LangString.of("Editor.Title.Zone.List", BLACK.wrap("Job Zones"));
-    public static final LangString EDITOR_TITLE_ZONE_SETTINGS          = LangString.of("Editor.Title.Zone.Settings", BLACK.wrap("Zone Settings"));
-    public static final LangString EDITOR_TITLE_ZONE_BLOCK_LIST        = LangString.of("Editor.Title.Zone.BlockList", BLACK.wrap("Zone Block Lists"));
-    public static final LangString EDITOR_TITLE_ZONE_BLOCK_SETTINGS    = LangString.of("Editor.Title.Zone.BlockSettings", BLACK.wrap("Block List Settings"));
-    public static final LangString EDITOR_TITLE_ZONE_MODIFIER_LIST     = LangString.of("Editor.Title.Zone.ModifierList", BLACK.wrap("Zone Modifiers"));
-    public static final LangString EDITOR_TITLE_ZONE_MODIFIER_SETTINGS = LangString.of("Editor.Title.Zone.ModifierSettings", BLACK.wrap("Modifier Settings"));
-    public static final LangString EDITOR_TITLE_ZONE_HOURS             = LangString.of("Editor.Title.Zone.Hours", BLACK.wrap("Zone Hours"));
+    public static final TextLocale EDITOR_TITLE_ZONES                  = LangEntry.builder("Editor.Title.Zone.List").text(BLACK.wrap("Job Zones"));
+    public static final TextLocale EDITOR_TITLE_ZONE_SETTINGS          = LangEntry.builder("Editor.Title.Zone.Settings").text(BLACK.wrap("Zone Settings"));
+    public static final TextLocale EDITOR_TITLE_ZONE_BLOCK_LIST        = LangEntry.builder("Editor.Title.Zone.BlockList").text(BLACK.wrap("Zone Block Lists"));
+    public static final TextLocale EDITOR_TITLE_ZONE_BLOCK_SETTINGS    = LangEntry.builder("Editor.Title.Zone.BlockSettings").text(BLACK.wrap("Block List Settings"));
+    public static final TextLocale EDITOR_TITLE_ZONE_MODIFIER_LIST     = LangEntry.builder("Editor.Title.Zone.ModifierList").text(BLACK.wrap("Zone Modifiers"));
+    public static final TextLocale EDITOR_TITLE_ZONE_MODIFIER_SETTINGS = LangEntry.builder("Editor.Title.Zone.ModifierSettings").text(BLACK.wrap("Modifier Settings"));
+    public static final TextLocale EDITOR_TITLE_ZONE_HOURS             = LangEntry.builder("Editor.Title.Zone.Hours").text(BLACK.wrap("Zone Hours"));
 
-    public static final LangString EDITOR_GENERIC_ENTER_ID = LangString.of("Editor.Generic.Enter.Id",
-        GRAY.wrap("Enter " + GREEN.wrap("[Unique Identifier]")));
-
-    public static final LangString EDITOR_GENERIC_ENTER_NAME = LangString.of("Editor.Generic.Enter.Name",
-        GRAY.wrap("Enter " + GREEN.wrap("[Display Name]")));
-
-    public static final LangString EDITOR_GENERIC_ENTER_NUMBER = LangString.of("Editor.Generic.Enter.Number",
-        GRAY.wrap("Enter " + GREEN.wrap("[Number]")));
-
-    public static final LangString EDITOR_GENERIC_ENTER_MIN_MAX = LangString.of("Editor.Generic.Enter.MinMax",
-        GRAY.wrap("Enter " + GREEN.wrap("[Min] [Max]")));
-
-    public static final LangString EDITOR_GENERIC_ENTER_TIMES = LangString.of("Editor.Generic.Enter.Times",
-        GRAY.wrap("Enter " + GREEN.wrap("[Hours] [12:00 17:00]")));
-
-    public static final LangString EDITOR_GENERIC_ENTER_CURRENCY = LangString.of("Editor.Generic.Enter.Currency",
-        GRAY.wrap("Enter " + GREEN.wrap("[Currency Identifier]")));
-
-    public static final LangString EDITOR_GENERIC_ENTER_MATERIAL = LangString.of("Editor.Generic.Enter.Material",
-        GRAY.wrap("Enter " + GREEN.wrap("[Material Name]")));
-
-    public static final LangString EDITOR_ZONE_ENTER_DESCRIPTION = LangString.of("Editor.Zone.Enter.Description",
-        GRAY.wrap("Enter " + GREEN.wrap("[Description Line]")));
-
-    public static final LangString EDITOR_ZONE_ENTER_JOB_ID = LangString.of("Editor.Zone.Enter.JobId",
-        GRAY.wrap("Enter " + GREEN.wrap("[Job Identifier]")));
+    public static final TextLocale EDITOR_GENERIC_ENTER_ID = LangEntry.builder("Editor.Generic.Enter.Id").text(GRAY.wrap("Enter " + GREEN.wrap("[Unique Identifier]")));
+    public static final TextLocale EDITOR_GENERIC_ENTER_NAME = LangEntry.builder("Editor.Generic.Enter.Name").text(GRAY.wrap("Enter " + GREEN.wrap("[Display Name]")));
+    public static final TextLocale EDITOR_GENERIC_ENTER_NUMBER = LangEntry.builder("Editor.Generic.Enter.Number").text(GRAY.wrap("Enter " + GREEN.wrap("[Number]")));
+    public static final TextLocale EDITOR_GENERIC_ENTER_MIN_MAX = LangEntry.builder("Editor.Generic.Enter.MinMax").text(GRAY.wrap("Enter " + GREEN.wrap("[Min] [Max]")));
+    public static final TextLocale EDITOR_GENERIC_ENTER_TIMES = LangEntry.builder("Editor.Generic.Enter.Times").text(GRAY.wrap("Enter " + GREEN.wrap("[Hours] [12:00 17:00]")));
+    public static final TextLocale EDITOR_GENERIC_ENTER_CURRENCY = LangEntry.builder("Editor.Generic.Enter.Currency").text(GRAY.wrap("Enter " + GREEN.wrap("[Currency Identifier]")));
+    public static final TextLocale EDITOR_GENERIC_ENTER_MATERIAL = LangEntry.builder("Editor.Generic.Enter.Material").text(GRAY.wrap("Enter " + GREEN.wrap("[Material Name]")));
+    public static final TextLocale EDITOR_ZONE_ENTER_DESCRIPTION = LangEntry.builder("Editor.Zone.Enter.Description").text(GRAY.wrap("Enter " + GREEN.wrap("[Description Line]")));
+    public static final TextLocale EDITOR_ZONE_ENTER_JOB_ID = LangEntry.builder("Editor.Zone.Enter.JobId").text(GRAY.wrap("Enter " + GREEN.wrap("[Job Identifier]")));
 
     public static final LangItem EDITOR_ZONE_OBJECT = LangItem.builder("Editor.Zone.Objectv180")
         .name(ZONE_NAME + RESET.opening() + GRAY.wrap(" (ID: " + WHITE.wrap(ZONE_ID) + ")"))

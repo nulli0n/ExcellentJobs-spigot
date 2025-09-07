@@ -4,21 +4,22 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.Placeholders;
+import su.nightexpress.excellentjobs.api.ModifyAction;
 import su.nightexpress.excellentjobs.command.CommandArguments;
 import su.nightexpress.excellentjobs.command.CommandFlags;
-import su.nightexpress.excellentjobs.api.ModifyAction;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Lang;
 import su.nightexpress.excellentjobs.config.Perms;
 import su.nightexpress.excellentjobs.data.impl.JobData;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.job.impl.JobState;
-import su.nightexpress.nightcore.command.experimental.CommandContext;
-import su.nightexpress.nightcore.command.experimental.argument.ArgumentTypes;
-import su.nightexpress.nightcore.command.experimental.argument.ParsedArguments;
-import su.nightexpress.nightcore.command.experimental.impl.ReloadCommand;
-import su.nightexpress.nightcore.command.experimental.node.DirectNode;
-import su.nightexpress.nightcore.language.entry.LangText;
+import su.nightexpress.nightcore.commands.Arguments;
+import su.nightexpress.nightcore.commands.Commands;
+import su.nightexpress.nightcore.commands.builder.HubNodeBuilder;
+import su.nightexpress.nightcore.commands.context.CommandContext;
+import su.nightexpress.nightcore.commands.context.ParsedArguments;
+import su.nightexpress.nightcore.core.config.CoreLang;
+import su.nightexpress.nightcore.locale.entry.MessageLocale;
 import su.nightexpress.nightcore.util.Lists;
 
 public class BaseCommands {
@@ -27,118 +28,112 @@ public class BaseCommands {
 
     public static final String MENU_ALIAS       = "menu";
     public static final String LEVELS_ALIAS     = "levels";
-    public static final String OBJECTIVES_ALIAS = "objectives";
 
-    public static void load(@NotNull JobsPlugin plugin) {
-        var root = plugin.getRootNode();
-
-        root.addChildren(ReloadCommand.builder(plugin, Perms.COMMAND_RELOAD));
-
-        var menuNode = DirectNode.builder(plugin, MENU_ALIAS)
-            .playerOnly()
-            .description(Lang.COMMAND_MENU_DESC)
-            .permission(Perms.COMMAND_MENU)
-            .executes((context, arguments) -> openMenu(plugin, context)).build();
-
-        root.addChildren(menuNode);
+    public static void load(@NotNull JobsPlugin plugin, @NotNull HubNodeBuilder builder) {
+        builder
+            .branch(Commands.literal("reload")
+                .description(CoreLang.COMMAND_RELOAD_DESC)
+                .permission(Perms.COMMAND_RELOAD)
+                .executes((context, arguments) -> {
+                    plugin.doReload(context.getSender());
+                    return true;
+                }))
+            .branch(Commands.literal(MENU_ALIAS)
+                .playerOnly()
+                .description(Lang.COMMAND_MENU_DESC.text())
+                .permission(Perms.COMMAND_MENU)
+                .executes((context, arguments) -> openMenu(plugin, context))
+            )
+            .branch(Commands.literal("join")
+                .playerOnly()
+                .description(Lang.COMMAND_JOIN_DESC.text())
+                .permission(Perms.COMMAND_JOIN)
+                .withArguments(CommandArguments.forJob(plugin))
+                .executes((context, arguments) -> joinJob(plugin, context, arguments))
+            )
+            .branch(Commands.literal("leave")
+                .playerOnly()
+                .description(Lang.COMMAND_LEAVE_DESC.text())
+                .permission(Perms.COMMAND_LEAVE)
+                .withArguments(CommandArguments.forJob(plugin))
+                .executes((context, arguments) -> leaveJob(plugin, context, arguments))
+            )
+            .branch(Commands.literal(LEVELS_ALIAS)
+                .playerOnly()
+                .description(Lang.COMMAND_LEVELS_DESC.text())
+                .permission(Perms.COMMAND_LEVELS)
+                .withArguments(CommandArguments.forJob(plugin))
+                .executes((context, arguments) -> viewLevels(plugin, context, arguments))
+            )
+            .branch(Commands.literal("reset")
+                .description(Lang.COMMAND_RESET_DESC.text())
+                .permission(Perms.COMMAND_RESET)
+                .withArguments(
+                    CommandArguments.forJob(plugin),
+                    Arguments.playerName(CommandArguments.PLAYER).permission(Perms.COMMAND_RESET_OTHERS)
+                )
+                .withFlags(CommandFlags.SILENT)
+                .executes((context, arguments) -> resetProgress(plugin, context, arguments))
+            )
+            .branch(Commands.literal("setstate")
+                .description(Lang.COMMAND_SET_STATE_DESC.text())
+                .permission(Perms.COMMAND_SET_STATE)
+                .withArguments(
+                    Arguments.playerName(CommandArguments.PLAYER),
+                    CommandArguments.forJob(plugin),
+                    CommandArguments.forJobState(plugin)
+                )
+                .executes((context, arguments) -> setState(plugin, context, arguments))
+            )
+            .branch(Commands.literal("stats")
+                .description(Lang.COMMAND_STATS_DESC.text())
+                .permission(Perms.COMMAND_STATS)
+                .withArguments(Arguments.playerName(CommandArguments.PLAYER).permission(Perms.COMMAND_STATS_OTHERS))
+                .executes((context, arguments) -> viewStats(plugin, context, arguments))
+            )
+            .branch(Commands.literal("level")
+                .description(Lang.COMMAND_LEVEL_DESC.text())
+                .permission(Perms.COMMAND_LEVEL)
+                .withArguments(
+                    CommandArguments.forAction(plugin),
+                    CommandArguments.forJob(plugin),
+                    Arguments.integer(CommandArguments.AMOUNT, 1)
+                        .localized(CoreLang.COMMAND_ARGUMENT_NAME_AMOUNT.text())
+                        .suggestions((reader, context) -> Lists.newList("1", "2", "3", "4", "5")),
+                    Arguments.playerName(CommandArguments.PLAYER).optional()
+                )
+                .withFlags(CommandFlags.SILENT)
+                .executes((context, arguments) -> manageLevel(plugin, context, arguments))
+            )
+            .branch(Commands.literal("xp")
+                .description(Lang.COMMAND_XP_DESC.text())
+                .permission(Perms.COMMAND_XP)
+                .withArguments(
+                    CommandArguments.forAction(plugin),
+                    CommandArguments.forJob(plugin),
+                    Arguments.integer(CommandArguments.AMOUNT, 1)
+                        .localized(CoreLang.COMMAND_ARGUMENT_NAME_AMOUNT.text())
+                        .suggestions((reader, context) -> Lists.newList("10", "20", "30", "40", "50")),
+                    Arguments.playerName(CommandArguments.PLAYER).optional()
+                )
+                .withFlags(CommandFlags.SILENT)
+                .executes((context, arguments) -> manageXP(plugin, context, arguments))
+            );
 
         if (Config.GENERAL_DEFAULT_MENU_COMMAND_ENABLED.get()) {
-            root.setFallback(menuNode);
+            builder.executes((context, arguments) -> openMenu(plugin, context));
         }
-
-        root.addChildren(DirectNode.builder(plugin, "join")
-            .playerOnly()
-            .description(Lang.COMMAND_JOIN_DESC)
-            .permission(Perms.COMMAND_JOIN)
-            .withArgument(CommandArguments.forJob(plugin).required())
-            .executes((context, arguments) -> joinJob(plugin, context, arguments))
-        );
-
-        root.addChildren(DirectNode.builder(plugin, "leave")
-            .playerOnly()
-            .description(Lang.COMMAND_LEAVE_DESC)
-            .permission(Perms.COMMAND_LEAVE)
-            .withArgument(CommandArguments.forJob(plugin).required())
-            .executes((context, arguments) -> leaveJob(plugin, context, arguments))
-        );
-
-        root.addChildren(DirectNode.builder(plugin, LEVELS_ALIAS)
-            .playerOnly()
-            .description(Lang.COMMAND_LEVELS_DESC)
-            .permission(Perms.COMMAND_LEVELS)
-            .withArgument(CommandArguments.forJob(plugin).required())
-            .executes((context, arguments) -> viewLevels(plugin, context, arguments))
-        );
-
-        root.addChildren(DirectNode.builder(plugin, OBJECTIVES_ALIAS)
-            .playerOnly()
-            .description(Lang.COMMAND_OBJECTIVES_DESC)
-            .permission(Perms.COMMAND_OBJECTIVES)
-            .withArgument(CommandArguments.forJob(plugin).required())
-            .executes((context, arguments) -> viewObjectives(plugin, context, arguments))
-        );
-
-        root.addChildren(DirectNode.builder(plugin, "reset")
-            .description(Lang.COMMAND_RESET_DESC)
-            .permission(Perms.COMMAND_RESET)
-            .withArgument(CommandArguments.forJob(plugin).required())
-            .withArgument(ArgumentTypes.playerName(CommandArguments.PLAYER).permission(Perms.COMMAND_RESET_OTHERS))
-            .withFlag(CommandFlags.silent().permission(Perms.COMMAND_RESET_OTHERS))
-            .executes((context, arguments) -> resetProgress(plugin, context, arguments))
-        );
-
-        root.addChildren(DirectNode.builder(plugin, "setstate")
-            .description(Lang.COMMAND_SET_STATE_DESC)
-            .permission(Perms.COMMAND_SET_STATE)
-            .withArgument(ArgumentTypes.playerName(CommandArguments.PLAYER).required())
-            .withArgument(CommandArguments.forJob(plugin).required())
-            .withArgument(CommandArguments.forJobState(plugin).required())
-            .executes((context, arguments) -> setState(plugin, context, arguments))
-        );
-
-        root.addChildren(DirectNode.builder(plugin, "stats")
-            .description(Lang.COMMAND_STATS_DESC)
-            .permission(Perms.COMMAND_STATS)
-            .withArgument(ArgumentTypes.playerName(CommandArguments.PLAYER).permission(Perms.COMMAND_STATS_OTHERS))
-            .executes((context, arguments) -> viewStats(plugin, context, arguments))
-        );
-
-        root.addChildren(DirectNode.builder(plugin, "level")
-            .description(Lang.COMMAND_LEVEL_DESC)
-            .permission(Perms.COMMAND_LEVEL)
-            .withArgument(CommandArguments.forAction(plugin).required())
-            .withArgument(CommandArguments.forJob(plugin).required())
-            .withArgument(ArgumentTypes.integerAbs(CommandArguments.AMOUNT)
-                .localized(Lang.COMMAND_ARGUMENT_NAME_AMOUNT)
-                .withSamples(context -> Lists.newList("1", "2", "3", "4", "5")))
-            .withArgument(ArgumentTypes.playerName(CommandArguments.PLAYER))
-            .withFlag(CommandFlags.silent())
-            .executes((context, arguments) -> manageLevel(plugin, context, arguments))
-        );
-
-        root.addChildren(DirectNode.builder(plugin, "xp")
-            .description(Lang.COMMAND_XP_DESC)
-            .permission(Perms.COMMAND_XP)
-            .withArgument(CommandArguments.forAction(plugin).required())
-            .withArgument(CommandArguments.forJob(plugin).required())
-            .withArgument(ArgumentTypes.integerAbs(CommandArguments.AMOUNT)
-                .localized(Lang.COMMAND_ARGUMENT_NAME_AMOUNT)
-                .withSamples(context -> Lists.newList("10", "20", "30", "40", "50")))
-            .withArgument(ArgumentTypes.playerName(CommandArguments.PLAYER))
-            .withFlag(CommandFlags.silent())
-            .executes((context, arguments) -> manageXP(plugin, context, arguments))
-        );
     }
 
     private static boolean joinJob(@NotNull JobsPlugin plugin, @NotNull CommandContext context, @NotNull ParsedArguments arguments) {
-        Job job = arguments.getArgument(CommandArguments.JOB, Job.class);
+        Job job = arguments.get(CommandArguments.JOB, Job.class);
         Player player = context.getPlayerOrThrow();
         plugin.getJobManager().joinJob(player, job);
         return true;
     }
 
     private static boolean leaveJob(@NotNull JobsPlugin plugin, @NotNull CommandContext context, @NotNull ParsedArguments arguments) {
-        Job job = arguments.getArgument(CommandArguments.JOB, Job.class);
+        Job job = arguments.get(CommandArguments.JOB, Job.class);
         Player player = context.getPlayerOrThrow();
         plugin.getJobManager().leaveJob(player, job);
         return true;
@@ -151,33 +146,21 @@ public class BaseCommands {
     }
 
     private static boolean viewLevels(@NotNull JobsPlugin plugin, @NotNull CommandContext context, @NotNull ParsedArguments arguments) {
-        Job job = arguments.getArgument(CommandArguments.JOB, Job.class);
+        Job job = arguments.get(CommandArguments.JOB, Job.class);
         Player player = context.getPlayerOrThrow();
         if (!job.hasPermission(player)) {
             context.errorPermission();
             return false;
         }
 
-        plugin.getJobManager().openRewardsMenu(player, job);
-        return true;
-    }
-
-    private static boolean viewObjectives(@NotNull JobsPlugin plugin, @NotNull CommandContext context, @NotNull ParsedArguments arguments) {
-        Job job = arguments.getArgument(CommandArguments.JOB, Job.class);
-        Player player = context.getPlayerOrThrow();
-        if (!job.hasPermission(player)) {
-            context.errorPermission();
-            return false;
-        }
-
-        plugin.getJobManager().openObjectivesMenu(player, job);
+        plugin.getJobManager().openLevelsMenu(player, job);
         return true;
     }
 
     private static boolean resetProgress(@NotNull JobsPlugin plugin, @NotNull CommandContext context, @NotNull ParsedArguments arguments) {
-        Job job = arguments.getArgument(CommandArguments.JOB, Job.class);
-        String playerName = arguments.getStringArgument(CommandArguments.PLAYER, context.getSender().getName());
-        boolean isAdmin = arguments.hasArgument(CommandArguments.PLAYER);
+        Job job = arguments.get(CommandArguments.JOB, Job.class);
+        String playerName = arguments.getString(CommandArguments.PLAYER, context.getSender().getName());
+        boolean isAdmin = arguments.contains(CommandArguments.PLAYER);
 
         plugin.getUserManager().manageUser(playerName, user -> {
             if (user == null) {
@@ -186,10 +169,10 @@ public class BaseCommands {
             }
 
             Player target = user.getPlayer();
-            plugin.getJobManager().handleJobReset(user, job, target, isAdmin, arguments.hasFlag(CommandFlags.SILENT));
+            plugin.getJobManager().handleJobReset(user, job, target, isAdmin, context.hasFlag(CommandFlags.SILENT));
 
             if (!context.getSender().getName().equalsIgnoreCase(user.getName())) {
-                context.send(Lang.COMMAND_RESET_DONE, replacer -> replacer
+                Lang.COMMAND_RESET_DONE.message().send(context.getSender(), replacer -> replacer
                     .replace(job.replacePlaceholders())
                     .replace(Placeholders.PLAYER_NAME, user.getName()));
             }
@@ -198,9 +181,9 @@ public class BaseCommands {
     }
 
     private static boolean setState(@NotNull JobsPlugin plugin, @NotNull CommandContext context, @NotNull ParsedArguments arguments) {
-        Job job = arguments.getArgument(CommandArguments.JOB, Job.class);
-        JobState state = arguments.getArgument(CommandArguments.STATE, JobState.class);
-        String playerName = arguments.getStringArgument(CommandArguments.PLAYER);
+        Job job = arguments.get(CommandArguments.JOB, Job.class);
+        JobState state = arguments.get(CommandArguments.STATE, JobState.class);
+        String playerName = arguments.getString(CommandArguments.PLAYER);
 
         plugin.getUserManager().manageUser(playerName, user -> {
             if (user == null) {
@@ -213,7 +196,7 @@ public class BaseCommands {
             jobData.update();
             plugin.getUserManager().save(user);
 
-            context.send(Lang.COMMAND_SET_STATE_DONE, replacer -> replacer
+            Lang.COMMAND_SET_STATE_DONE.message().send(context.getSender(),  replacer -> replacer
                 .replace(Placeholders.GENERIC_STATE, Lang.JOB_STATE.getLocalized(state))
                 .replace(Placeholders.PLAYER_NAME, user.getName())
                 .replace(job.replacePlaceholders()));
@@ -222,7 +205,7 @@ public class BaseCommands {
     }
 
     private static boolean viewStats(@NotNull JobsPlugin plugin, @NotNull CommandContext context, @NotNull ParsedArguments arguments) {
-        String playerName = arguments.getStringArgument(CommandArguments.PLAYER, context.getSender().getName());
+        String playerName = arguments.getString(CommandArguments.PLAYER, context.getSender().getName());
 
         plugin.getUserManager().getUserDataAsync(playerName).thenAccept(user -> {
             if (user == null) {
@@ -230,22 +213,18 @@ public class BaseCommands {
                 return;
             }
 
-            context.send(Lang.COMMAND_STATS_DISPLAY, replacer -> replacer
+            Lang.COMMAND_STATS_DISPLAY.message().send(context.getSender(), replacer -> replacer
                 .replace(Placeholders.PLAYER_NAME, user.getName())
-                .replace(Placeholders.GENERIC_ENTRY, list -> {
-                    user.getDatas().forEach(jobData -> {
-                        list.add(jobData.replaceAllPlaceholders().apply(Lang.COMMAND_STATS_ENTRY.getString()));
-                    });
-                }));
+                .replace(Placeholders.GENERIC_ENTRY, list -> user.getDatas().forEach(jobData -> list.add(jobData.replaceAllPlaceholders().apply(Lang.COMMAND_STATS_ENTRY.text())))));
         });
         return true;
     }
 
     private static boolean manageLevel(@NotNull JobsPlugin plugin, @NotNull CommandContext context, @NotNull ParsedArguments arguments) {
-        ModifyAction mode = arguments.getArgument(CommandArguments.ACTION, ModifyAction.class);
-        Job job = arguments.getArgument(CommandArguments.JOB, Job.class);
-        int amount = arguments.getIntArgument(CommandArguments.AMOUNT);
-        String playerName = arguments.getStringArgument(CommandArguments.PLAYER, context.getSender().getName());
+        ModifyAction mode = arguments.get(CommandArguments.ACTION, ModifyAction.class);
+        Job job = arguments.get(CommandArguments.JOB, Job.class);
+        int amount = arguments.getInt(CommandArguments.AMOUNT);
+        String playerName = arguments.getString(CommandArguments.PLAYER, context.getSender().getName());
 
         if (amount == 0) return false;
 
@@ -256,9 +235,9 @@ public class BaseCommands {
             }
 
             Player target = user.getPlayer();
-            boolean silent = arguments.hasFlag(CommandFlags.SILENT);
+            boolean silent = context.hasFlag(CommandFlags.SILENT);
 
-            LangText doneMsg;
+            MessageLocale doneMsg;
 
             switch (mode) {
                 case ADD -> {
@@ -278,7 +257,7 @@ public class BaseCommands {
                 }
             }
 
-            context.send(doneMsg, replacer -> replacer
+            doneMsg.message().send(context.getSender(), replacer -> replacer
                 .replace(job.replacePlaceholders())
                 .replace(Placeholders.PLAYER_NAME, user.getName())
                 .replace(Placeholders.GENERIC_AMOUNT, amount));
@@ -288,10 +267,10 @@ public class BaseCommands {
     }
 
     private static boolean manageXP(@NotNull JobsPlugin plugin, @NotNull CommandContext context, @NotNull ParsedArguments arguments) {
-        ModifyAction mode = arguments.getArgument(CommandArguments.ACTION, ModifyAction.class);
-        Job job = arguments.getArgument(CommandArguments.JOB, Job.class);
-        int amount = arguments.getIntArgument(CommandArguments.AMOUNT);
-        String playerName = arguments.getStringArgument(CommandArguments.PLAYER, context.getSender().getName());
+        ModifyAction mode = arguments.get(CommandArguments.ACTION, ModifyAction.class);
+        Job job = arguments.get(CommandArguments.JOB, Job.class);
+        int amount = arguments.getInt(CommandArguments.AMOUNT);
+        String playerName = arguments.getString(CommandArguments.PLAYER, context.getSender().getName());
 
         if (amount == 0 && mode != ModifyAction.SET) {
             return false;
@@ -304,9 +283,9 @@ public class BaseCommands {
             }
 
             Player target = user.getPlayer();
-            boolean silent = arguments.hasFlag(CommandFlags.SILENT);
+            boolean silent = context.hasFlag(CommandFlags.SILENT);
 
-            LangText doneMsg;
+            MessageLocale doneMsg;
 
             switch (mode) {
                 case ADD -> {
@@ -326,7 +305,7 @@ public class BaseCommands {
                 }
             }
 
-            context.send(doneMsg, replacer -> replacer
+            doneMsg.message().send(context.getSender(), replacer -> replacer
                 .replace(job.replacePlaceholders())
                 .replace(Placeholders.PLAYER_NAME, user.getName())
                 .replace(Placeholders.GENERIC_AMOUNT, amount));
