@@ -142,6 +142,7 @@ public class JobManager extends AbstractManager<JobsPlugin> {
             if (!oldFile.exists()) return;
 
             File oldObjectsFile = new File(jobDir.getAbsolutePath(), "objectives.yml");
+            if (!oldObjectsFile.exists()) return;
 
             FileConfig jobConfig = new FileConfig(oldFile);
             FileConfig objectivesConfig = new FileConfig(oldObjectsFile);

@@ -103,6 +103,7 @@ public class DataHandler extends AbstractUserDataManager<JobsPlugin, JobUser> {
         this.dropColumn(this.tableUsers, "boosters");
         this.addColumn(this.tableUsers, COLUMN_STATS, "{}");
         this.addColumn(this.tableUsers, COLUMN_BOOSTS, "{}");
+        this.dropColumn(this.tableUsers, "settings");
     }
 
     @Override
