@@ -30,14 +30,6 @@ public class KillingGrindListener extends GrindListener<KillingGrindTable, Killi
         boolean isSpawner = this.grindManager.isSpawnerMob(entity);
 
         if (JobManager.isAbusingPetKilling(player, entity)) return;
-        /*
-
-        // LevelledMobs integration.
-        if (Config.LEVELLED_MOBS_KILL_ENTITY_ENABLED.get()) {
-            int level = JobUtils.getMobLevel(entity);
-            double amount = Config.LEVELLED_MOBS_KILL_ENTITY_MULTIPLIER.get();
-            multiplier = level * amount;
-        }*/
 
         this.giveXP(player, tool, (skill, table) -> table.getKillXP(entity, tool, isSpawner));
     }

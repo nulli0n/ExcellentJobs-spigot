@@ -30,8 +30,6 @@ public class FertilizingGrindListener extends GrindListener<BasicBlockGrindTable
         blocks.add(event.getBlock().getState());
         blocks.addAll(event.getBlocks());
 
-        blocks.forEach(blockState -> {
-            this.giveXP(player, (job, table) -> table.getBlockXP(blockState));
-        });
+        blocks.forEach(blockState -> this.giveXP(player, (job, table) -> table.getBlockXP(blockState)));
     }
 }

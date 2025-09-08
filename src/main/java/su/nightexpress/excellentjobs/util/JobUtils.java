@@ -2,7 +2,6 @@ package su.nightexpress.excellentjobs.util;
 
 import org.bukkit.*;
 import org.bukkit.entity.Firework;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.jetbrains.annotations.NotNull;
@@ -12,8 +11,6 @@ import su.nightexpress.excellentjobs.booster.BoosterUtils;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.config.Keys;
 import su.nightexpress.excellentjobs.config.Lang;
-import su.nightexpress.excellentjobs.hook.HookPlugin;
-import su.nightexpress.excellentjobs.hook.impl.LevelledMobsHook;
 import su.nightexpress.excellentjobs.job.impl.Bonus;
 import su.nightexpress.excellentjobs.job.impl.JobIncome;
 import su.nightexpress.nightcore.util.*;
@@ -110,13 +107,5 @@ public class JobUtils {
 
     public static boolean canBeBoosted(@NotNull Currency currency) {
         return Config.isBoostersEnabled() && BoosterUtils.isBoostable(currency);
-    }
-
-    public static boolean hasLevelledMobs() {
-        return Plugins.isInstalled(HookPlugin.LEVELLED_MOBS);
-    }
-
-    public static int getMobLevel(@NotNull LivingEntity entity) {
-        return hasLevelledMobs() ? LevelledMobsHook.getLevel(entity) : 0;
     }
 }

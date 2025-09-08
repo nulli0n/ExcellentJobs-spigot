@@ -38,8 +38,6 @@ public class CookingGrindListener extends GrindListener<CookingGrindTable, Cooki
         ItemStack ingredient = event.getSource();
         WorkstationMode mode = this.plugin.getJobManager().getWorkstationMode(tile);
 
-        this.giveXP(player, (skill, table) -> {
-            return table.getIngredientXP(ingredient, mode == WorkstationMode.AUTO);
-        });
+        this.giveXP(player, (skill, table) -> table.getIngredientXP(ingredient, mode == WorkstationMode.AUTO));
     }
 }

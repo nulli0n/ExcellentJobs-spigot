@@ -31,7 +31,6 @@ public class DayStats {
         return this.currencyEarned.getOrDefault(currencyId.toLowerCase(), 0D);
     }
 
-
     public void add(@NotNull DayStats stats) {
         stats.getCurrencyEarned().forEach(this::addCurrency);
     }
@@ -43,8 +42,6 @@ public class DayStats {
     public void addCurrency(@NotNull String currencyId, double amount) {
         this.currencyEarned.put(currencyId.toLowerCase(), this.getCurrency(currencyId) + amount);
     }
-
-
 
     @NotNull
     public Map<String, Double> getCurrencyEarned() {

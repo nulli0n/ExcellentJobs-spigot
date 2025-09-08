@@ -32,8 +32,6 @@ public class StatsListener extends AbstractListener<JobsPlugin> {
         Job job = event.getJob();
         JobIncome income = event.getIncome();
 
-        this.statsManager.addStats(player, job, stats -> {
-            income.getCurrencyMap().forEach(stats::addCurrency);
-        });
+        this.statsManager.addStats(player, job, stats -> income.getCurrencyMap().forEach(stats::addCurrency));
     }
 }

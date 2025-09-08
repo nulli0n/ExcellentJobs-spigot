@@ -43,8 +43,4 @@ public interface Workstation {
     void update();
 
     boolean isCrafting();
-
-    /*int getRemainingTime();
-
-    void setRemainingTime(int remainingTime);*/
 }
