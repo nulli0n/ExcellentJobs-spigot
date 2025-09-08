@@ -98,7 +98,6 @@ public class LevelsMenu extends LinkedMenu<JobsPlugin, Job> implements ConfigBas
                 List<LevelReward> rewards = job.getRewards().getRewards(level);
 
                 NightItem item = this.lockedReward.copy();
-                //boolean hasRewards = rewards.stream().anyMatch(reward -> reward.isAvailable(player) && reward.isGoodState(state));
 
                 if (data.isActive()) {
                     if (level - jobLevel == 1) {
