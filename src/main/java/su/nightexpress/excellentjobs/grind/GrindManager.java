@@ -122,6 +122,8 @@ public class GrindManager extends AbstractManager<JobsPlugin> {
 
             JobUser user = plugin.getUserManager().getOrFetch(player);
             JobData jobData = user.getData(job);
+            if (!jobData.isActive()) continue;
+
             int jobLevel = jobData.getLevel();
             ProgressBar progressBar = this.plugin.getJobManager().getProgressBarOrCreate(player, job);
 
