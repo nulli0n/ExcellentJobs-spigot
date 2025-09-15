@@ -6,11 +6,9 @@ import org.jetbrains.annotations.Nullable;
 public abstract class AbstractGrindAdapter<I, O> implements GrindAdapter<I, O> {
 
     protected final String name;
-    //protected final String key;
 
-    public AbstractGrindAdapter(@NotNull String name/*, @NotNull String key*/) {
+    public AbstractGrindAdapter(@NotNull String name) {
         this.name = name.toLowerCase();
-        //this.key = key;
     }
 
     @Override
@@ -18,12 +16,6 @@ public abstract class AbstractGrindAdapter<I, O> implements GrindAdapter<I, O> {
     public String getName() {
         return this.name;
     }
-
-    /*@Override
-    @NotNull
-    public String getKey() {
-        return this.key;
-    }*/
 
     @Nullable
     public String toFullNameOfEntity(@NotNull O entity) {

@@ -49,16 +49,9 @@ public class BlockPacketsHighlighter extends BlockHighlighter {
         var spawnPacket = this.createSpawnPacket(type, location, entityID, uuid);
 
         var dataPacket = this.createMetadataPacket(entityID, dataList -> {
-//            if (type == EntityType.BLOCK_DISPLAY) {
-                dataList.add(new EntityData<>(0, EntityDataTypes.BYTE, (byte) (0x20 | 0x40))); // glow
-                dataList.add(new EntityData<>(12, EntityDataTypes.VECTOR3F, new Vector3f(size, size, size))); // scale
-                dataList.add(new EntityData<>(23, EntityDataTypes.BLOCK_STATE, state.getGlobalId())); // block ID
-//            }
-//            else {
-//                dataList.add(new EntityData(0, EntityDataTypes.BYTE, (byte) 0x20 | 0x40)); // invisible
-//                dataList.add(new EntityData(5, EntityDataTypes.BOOLEAN, true)); // no gravity
-//            }
-
+            dataList.add(new EntityData<>(0, EntityDataTypes.BYTE, (byte) (0x20 | 0x40))); // glow
+            dataList.add(new EntityData<>(12, EntityDataTypes.VECTOR3F, new Vector3f(size, size, size))); // scale
+            dataList.add(new EntityData<>(23, EntityDataTypes.BLOCK_STATE, state.getGlobalId())); // block ID
         });
 
         WrapperPlayServerTeams.ScoreBoardTeamInfo info = new WrapperPlayServerTeams.ScoreBoardTeamInfo(
