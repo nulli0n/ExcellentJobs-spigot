@@ -2,12 +2,12 @@ package su.nightexpress.excellentjobs.job.legacy;
 
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import su.nightexpress.economybridge.currency.CurrencyId;
 import su.nightexpress.excellentjobs.Placeholders;
 import su.nightexpress.excellentjobs.config.Perms;
 import su.nightexpress.excellentjobs.data.impl.JobData;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
+import su.nightexpress.nightcore.integration.currency.CurrencyId;
 
 import java.util.HashMap;
 import java.util.HashSet;

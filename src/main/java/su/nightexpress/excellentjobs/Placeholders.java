@@ -1,6 +1,6 @@
 package su.nightexpress.excellentjobs;
 
-import su.nightexpress.economybridge.api.Currency;
+import su.nightexpress.nightcore.bridge.currency.Currency;
 import su.nightexpress.excellentjobs.api.booster.MultiplierType;
 import su.nightexpress.excellentjobs.booster.impl.Booster;
 import su.nightexpress.excellentjobs.config.Lang;

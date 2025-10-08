@@ -21,7 +21,7 @@ public class TamingGrindListener extends GrindListener<BasicEntityGrindTable, Ba
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onTame(EntityTameEvent event) {
         Player player = (Player) event.getOwner();
-        if (this.grindManager.canGrinding(player)) return;
+        if (!this.grindManager.canGrinding(player)) return;
 
         LivingEntity entity = event.getEntity();
 

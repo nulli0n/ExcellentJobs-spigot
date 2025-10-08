@@ -24,7 +24,7 @@ public class MilkingGrindListener extends GrindListener<BasicEntityGrindTable, B
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onMilk(PlayerBucketFillEvent event) {
         Player player = event.getPlayer();
-        if (this.grindManager.canGrinding(player)) return;
+        if (!this.grindManager.canGrinding(player)) return;
 
         if (event.getItemStack() == null) return;
         if (event.getItemStack().getType() != Material.MILK_BUCKET) return;

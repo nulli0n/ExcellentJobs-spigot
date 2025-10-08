@@ -49,7 +49,7 @@ public class BoosterCommands {
                         Arguments.decimal(CommandArguments.INCOME_MULTIPLIER, 0)
                             .localized(Lang.COMMAND_ARGUMENT_NAME_PAY_MULTIPLIER.text())
                             .suggestions((reader, context) -> Lists.newList("1.5", "2.0", "2.5", "3.0")),
-                        Arguments.decimal(CommandArguments.DURATION, 1)
+                        Arguments.integer(CommandArguments.DURATION, 1)
                             .localized(Lang.COMMAND_ARGUMENT_NAME_DURATION.text())
                             .suggestions((reader, context) -> Lists.newList("3600", "7200", "86400"))
                     )
@@ -73,7 +73,7 @@ public class BoosterCommands {
                         Arguments.decimal(CommandArguments.INCOME_MULTIPLIER, 0)
                             .localized(Lang.COMMAND_ARGUMENT_NAME_PAY_MULTIPLIER.text())
                             .suggestions((reader, context) -> Lists.newList("1.5", "2.0", "2.5", "3.0")),
-                        Arguments.decimal(CommandArguments.DURATION, 1)
+                        Arguments.integer(CommandArguments.DURATION, 1)
                             .localized(Lang.COMMAND_ARGUMENT_NAME_DURATION.text())
                             .suggestions((reader, context) -> Lists.newList("3600", "7200", "86400"))
                     )

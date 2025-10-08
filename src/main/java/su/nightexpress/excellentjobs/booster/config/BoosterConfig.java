@@ -1,11 +1,11 @@
 package su.nightexpress.excellentjobs.booster.config;
 
 import org.jetbrains.annotations.NotNull;
-import su.nightexpress.economybridge.currency.CurrencyId;
 import su.nightexpress.excellentjobs.booster.BoosterUtils;
 import su.nightexpress.excellentjobs.booster.impl.BoosterSchedule;
 import su.nightexpress.excellentjobs.config.Perms;
 import su.nightexpress.nightcore.config.ConfigValue;
+import su.nightexpress.nightcore.integration.currency.CurrencyId;
 import su.nightexpress.nightcore.util.Lists;
 import su.nightexpress.nightcore.util.rankmap.DoubleRankMap;
 import su.nightexpress.nightcore.util.rankmap.RankMap;

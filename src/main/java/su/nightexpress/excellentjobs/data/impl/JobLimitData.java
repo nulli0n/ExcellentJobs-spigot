@@ -1,9 +1,9 @@
 package su.nightexpress.excellentjobs.data.impl;
 
 import org.jetbrains.annotations.NotNull;
-import su.nightexpress.economybridge.api.Currency;
 import su.nightexpress.excellentjobs.config.Config;
 import su.nightexpress.excellentjobs.job.impl.Job;
+import su.nightexpress.nightcore.bridge.currency.Currency;
 import su.nightexpress.nightcore.util.TimeUtil;
 
 import java.time.LocalDate;

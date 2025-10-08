@@ -9,8 +9,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import su.nightexpress.economybridge.EconomyBridge;
-import su.nightexpress.economybridge.api.Currency;
+import su.nightexpress.nightcore.bridge.currency.Currency;
 import su.nightexpress.excellentjobs.JobsAPI;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.api.booster.MultiplierType;
@@ -36,6 +35,7 @@ import su.nightexpress.excellentjobs.job.impl.JobObjective;
 import su.nightexpress.excellentjobs.job.impl.ProgressBar;
 import su.nightexpress.excellentjobs.user.JobUser;
 import su.nightexpress.excellentjobs.util.JobUtils;
+import su.nightexpress.nightcore.integration.currency.EconomyBridge;
 import su.nightexpress.nightcore.manager.AbstractManager;
 import su.nightexpress.nightcore.util.PDCUtil;
 import su.nightexpress.nightcore.util.blocktracker.PlayerBlockTracker;
@@ -196,7 +196,7 @@ public class GrindManager extends AbstractManager<JobsPlugin> {
         if (event.isCancelled()) return 0;
 
         double xpAfter = event.getAmount() * event.getMultiplier();
-        return Double.isNaN(xpAfter) || Double.isInfinite(xpAfter) ? 0 : (int) Math.floor(Math.max(0, xpAfter));
+        return Double.isNaN(xpAfter) || Double.isInfinite(xpAfter) ? 0 : (int) Math.ceil(Math.max(0, xpAfter));
     }
 
     private double proceedIncome(@NotNull Player player, @NotNull Job job, @NotNull Currency currency, double moneyRoll) {

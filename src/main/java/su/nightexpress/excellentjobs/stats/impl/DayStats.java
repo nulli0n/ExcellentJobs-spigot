@@ -1,7 +1,7 @@
 package su.nightexpress.excellentjobs.stats.impl;
 
 import org.jetbrains.annotations.NotNull;
-import su.nightexpress.economybridge.api.Currency;
+import su.nightexpress.nightcore.bridge.currency.Currency;
 
 import java.time.LocalDate;
 import java.util.HashMap;

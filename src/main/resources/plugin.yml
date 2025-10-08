@@ -5,12 +5,9 @@ api-version: 1.21
 folia-supported: true
 description: A better & elegant jobs solution for your server!
 author: NightExpress
-depend:
-  - nightcore
-  - EconomyBridge
+depend: [ nightcore ]
 softdepend:
   - PlaceholderAPI
-  - Vault
   - ProtocolLib
   - MythicMobs
   - EvenMoreFish

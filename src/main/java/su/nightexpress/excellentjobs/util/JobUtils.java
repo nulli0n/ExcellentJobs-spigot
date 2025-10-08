@@ -5,7 +5,7 @@ import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.jetbrains.annotations.NotNull;
-import su.nightexpress.economybridge.api.Currency;
+import su.nightexpress.nightcore.bridge.currency.Currency;
 import su.nightexpress.excellentjobs.Placeholders;
 import su.nightexpress.excellentjobs.booster.BoosterUtils;
 import su.nightexpress.excellentjobs.config.Config;
