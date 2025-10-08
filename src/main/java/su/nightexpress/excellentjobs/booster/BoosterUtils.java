@@ -1,7 +1,7 @@
 package su.nightexpress.excellentjobs.booster;
 
 import org.jetbrains.annotations.NotNull;
-import su.nightexpress.economybridge.api.Currency;
+import su.nightexpress.nightcore.bridge.currency.Currency;
 import su.nightexpress.excellentjobs.booster.config.BoosterConfig;
 import su.nightexpress.excellentjobs.booster.impl.BoosterSchedule;
 import su.nightexpress.excellentjobs.util.JobUtils;

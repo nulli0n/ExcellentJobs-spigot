@@ -1,8 +1,7 @@
 package su.nightexpress.excellentjobs.command;
 
 import org.jetbrains.annotations.NotNull;
-import su.nightexpress.economybridge.EconomyBridge;
-import su.nightexpress.economybridge.api.Currency;
+import su.nightexpress.nightcore.bridge.currency.Currency;
 import su.nightexpress.excellentjobs.JobsPlugin;
 import su.nightexpress.excellentjobs.api.ModifyAction;
 import su.nightexpress.excellentjobs.config.Lang;
@@ -11,6 +10,7 @@ import su.nightexpress.excellentjobs.job.impl.JobState;
 import su.nightexpress.nightcore.commands.Commands;
 import su.nightexpress.nightcore.commands.builder.ArgumentNodeBuilder;
 import su.nightexpress.nightcore.commands.exceptions.CommandSyntaxException;
+import su.nightexpress.nightcore.integration.currency.EconomyBridge;
 import su.nightexpress.nightcore.util.Enums;
 import su.nightexpress.nightcore.util.Lists;
 

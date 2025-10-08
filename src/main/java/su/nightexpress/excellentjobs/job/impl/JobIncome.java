@@ -2,7 +2,7 @@ package su.nightexpress.excellentjobs.job.impl;
 
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import su.nightexpress.economybridge.api.Currency;
+import su.nightexpress.nightcore.bridge.currency.Currency;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

@@ -1,12 +1,12 @@
 package su.nightexpress.excellentjobs.data.impl;
 
 import org.jetbrains.annotations.NotNull;
-import su.nightexpress.economybridge.api.Currency;
 import su.nightexpress.excellentjobs.Placeholders;
 import su.nightexpress.excellentjobs.job.impl.Job;
 import su.nightexpress.excellentjobs.job.impl.JobIncome;
 import su.nightexpress.excellentjobs.job.impl.JobState;
 import su.nightexpress.excellentjobs.util.JobUtils;
+import su.nightexpress.nightcore.bridge.currency.Currency;
 import su.nightexpress.nightcore.util.TimeUtil;
 
 import java.util.HashSet;

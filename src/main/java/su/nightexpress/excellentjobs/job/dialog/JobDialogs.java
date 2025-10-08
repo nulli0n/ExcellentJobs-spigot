@@ -45,6 +45,7 @@ public class JobDialogs {
                 buttons.add(DialogButtons.action(locale).action(DialogActions.customClick("state", NightNbtHolder.builder().put("state", state.name()).build())).build());
             }
         }
+        if (buttons.isEmpty()) return;
 
         Dialogs.createAndShow(player, builder -> builder
                 .base(DialogBases.builder(Lang.DIALOG_JOB_STATUS_TITLE)

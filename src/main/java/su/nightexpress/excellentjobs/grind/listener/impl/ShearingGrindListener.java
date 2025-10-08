@@ -21,7 +21,7 @@ public class ShearingGrindListener extends GrindListener<BasicEntityGrindTable, 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onShear(PlayerShearEntityEvent event) {
         Player player = event.getPlayer();
-        if (this.grindManager.canGrinding(player)) return;
+        if (!this.grindManager.canGrinding(player)) return;
 
         Entity entity = event.getEntity();
 

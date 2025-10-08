@@ -247,7 +247,7 @@ public class JobDefaults {
 
         BukkitThing.getAll(RegistryType.ENTITY_TYPE).forEach(entityType -> {
             Class<? extends Entity> mobClass = entityType.getEntityClass();
-            if (mobClass == null || !entityType.isSpawnable()) return;
+            if (mobClass == null || !entityType.isSpawnable() || !LivingEntity.class.isAssignableFrom(mobClass)) return;
 
             double xpAvg = 12;
 

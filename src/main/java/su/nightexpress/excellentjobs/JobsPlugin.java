@@ -2,7 +2,6 @@ package su.nightexpress.excellentjobs;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import su.nightexpress.economybridge.EconomyBridge;
 import su.nightexpress.excellentjobs.booster.BoosterManager;
 import su.nightexpress.excellentjobs.booster.command.BoosterCommands;
 import su.nightexpress.excellentjobs.command.impl.BaseCommands;
@@ -22,6 +21,7 @@ import su.nightexpress.excellentjobs.zone.ZoneManager;
 import su.nightexpress.nightcore.NightPlugin;
 import su.nightexpress.nightcore.commands.command.NightCommand;
 import su.nightexpress.nightcore.config.PluginDetails;
+import su.nightexpress.nightcore.integration.currency.EconomyBridge;
 import su.nightexpress.nightcore.util.Plugins;
 import su.nightexpress.nightcore.util.blocktracker.PlayerBlockTracker;
 

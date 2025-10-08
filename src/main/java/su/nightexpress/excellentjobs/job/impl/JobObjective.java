@@ -1,10 +1,10 @@
 package su.nightexpress.excellentjobs.job.impl;
 
 import org.jetbrains.annotations.NotNull;
-import su.nightexpress.economybridge.currency.CurrencyId;
 import su.nightexpress.excellentjobs.grind.table.GrindTable;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.config.Writeable;
+import su.nightexpress.nightcore.integration.currency.CurrencyId;
 
 public class JobObjective implements Writeable {
 
