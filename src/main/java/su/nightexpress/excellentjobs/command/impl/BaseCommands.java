@@ -215,11 +215,7 @@ public class BaseCommands {
 
             Lang.COMMAND_STATS_DISPLAY.message().send(context.getSender(), replacer -> replacer
                 .replace(Placeholders.PLAYER_NAME, user.getName())
-                .replace(Placeholders.GENERIC_ENTRY, list -> {
-                    user.getDatas().forEach(jobData -> {
-                        list.add(jobData.replaceAllPlaceholders().apply(Lang.COMMAND_STATS_ENTRY.text()));
-                    });
-                }));
+                .replace(Placeholders.GENERIC_ENTRY, list -> user.getDatas().forEach(jobData -> list.add(jobData.replaceAllPlaceholders().apply(Lang.COMMAND_STATS_ENTRY.text())))));
         });
         return true;
     }

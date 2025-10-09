@@ -1,6 +1,8 @@
 name: ExcellentJobs
 main: su.nightexpress.excellentjobs.JobsPlugin
 version: '${project.version}'
+api-version: 1.21
+folia-supported: true
 description: A better & elegant jobs solution for your server!
 author: NightExpress
 depend: [ nightcore ]
@@ -10,4 +12,3 @@ softdepend:
   - MythicMobs
   - EvenMoreFish
   - CustomFishing
-api-version: 1.21

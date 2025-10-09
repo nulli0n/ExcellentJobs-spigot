@@ -78,8 +78,6 @@ public class Lang implements LangContainer {
         GRAY.wrap("Set " + YELLOW.wrap(GENERIC_AMOUNT) + " XP for " + YELLOW.wrap(PLAYER_NAME) + "'s " + YELLOW.wrap(JOB_NAME) + " job.")
     );
 
-
-
     public static final MessageLocale COMMAND_LEVEL_ADD_DONE = LangEntry.builder("Command.Level.Add.Done").chatMessage(
         GRAY.wrap("Added " + GREEN.wrap(GENERIC_AMOUNT) + " level(s) to " + GREEN.wrap(PLAYER_NAME) + "'s " + GREEN.wrap(JOB_NAME) + " job.")
     );
@@ -92,16 +90,12 @@ public class Lang implements LangContainer {
         GRAY.wrap("Set " + YELLOW.wrap(GENERIC_AMOUNT) + " level for " + YELLOW.wrap(PLAYER_NAME) + "'s " + YELLOW.wrap(JOB_NAME) + " job.")
     );
 
-
-
     public static final MessageLocale COMMAND_RESET_DONE = LangEntry.builder("Command.Reset.Done").chatMessage(
         GRAY.wrap("Successfully reset " + YELLOW.wrap(JOB_NAME) + " progress for " + YELLOW.wrap(PLAYER_NAME) + ".")
     );
 
-
     public static final MessageLocale COMMAND_SET_STATE_DONE = LangEntry.builder("Command.SetState.Done").chatMessage(
         GRAY.wrap("Set " + YELLOW.wrap(GENERIC_STATE) + " state for " + YELLOW.wrap(PLAYER_NAME) + "'s " + YELLOW.wrap(JOB_NAME) + " job!"));
-
 
     public static final MessageLocale COMMAND_TOP_LIST = LangEntry.builder("Command.Top.List").message(
         MessageData.CHAT_NO_PREFIX,
@@ -142,8 +136,6 @@ public class Lang implements LangContainer {
     public static final MessageLocale COMMAND_BOOSTER_REMOVE_ERROR_NOTHING = LangEntry.builder("Command.Booster.Remove.Error.Nothing").chatMessage(
         RED.wrap("There is no booster.")
     );
-
-
 
     public static final MessageLocale JOB_JOIN_ERROR_ALREADY_HIRED = LangEntry.builder("Job.Join.Error.AlreadyHired").chatMessage(
         GRAY.wrap("You're already hired for the " + RED.wrap(JOB_NAME) + " job!"));
@@ -193,8 +185,6 @@ public class Lang implements LangContainer {
         GRAY.wrap("All " + GREEN.wrap(JOB_NAME) + " progress have been reset!"),
         Sound.ENTITY_ZOMBIE_BREAK_WOODEN_DOOR
     );
-
-
 
     public static final MessageLocale JOB_PAYMENT_NOTIFY = LangEntry.builder("Job.Payment.Notify").message(
         MessageData.CHAT_NO_PREFIX,
@@ -341,7 +331,6 @@ public class Lang implements LangContainer {
         GRAY.wrap("You must select 2 zone corners!")
     );
 
-
     public static final ButtonLocale DIALOG_BUTTON_BACK = LangEntry.builder("Dialog.Generic.Button.Back").button(SOFT_YELLOW.wrap("←") + " Back");
 
     public static final TextLocale DIALOG_JOB_STATUS_TITLE = LangEntry.builder("Dialog.JobStatus.Title").text(SOFT_YELLOW.wrap(BOLD.and(UNDERLINED).wrap("Job Status")));
@@ -357,12 +346,10 @@ public class Lang implements LangContainer {
         SOFT_BLUE.wrap("Secondary") + " jobs give the " + SOFT_BLUE.wrap("highest") + " income and level rewards.",
         ""
     );
-    
+
     public static final ButtonLocale DIALOG_JOB_STATUS_BUTTON_GET_PRIMARY   = LangEntry.builder("Dialog.JobStatus.Button.GetPrimary").button(GREEN.wrap("✔") + " Get as Primary");
     public static final ButtonLocale DIALOG_JOB_STATUS_BUTTON_GET_SECONDARY = LangEntry.builder("Dialog.JobStatus.Button.GetSecondary").button(BLUE.wrap("✔") + " Get as Secondary");
     public static final ButtonLocale DIALOG_JOB_STATUS_BUTTON_LEAVE         = LangEntry.builder("Dialog.JobStatus.Button.Leave").button(RED.wrap("✘") + " Leave Job");
-
-
 
     public static final MessageLocale ERROR_COMMAND_INVALID_ZONE_ARGUMENT = LangEntry.builder("Error.Command.Argument.InvalidZone").chatMessage(
         GRAY.wrap(RED.wrap(GENERIC_VALUE) + " is not a valid zone!"));
@@ -381,7 +368,6 @@ public class Lang implements LangContainer {
 
     public static final MessageLocale ERROR_COMMAND_INVALID_CURRENCY_ARGUMENT = LangEntry.builder("Error.Error.Command.Argument.InvalidCurrency").chatMessage(
         GRAY.wrap(RED.wrap(GENERIC_VALUE) + " is not a valid currency!"));
-
 
     public static final TextLocale OTHER_NO_JOBS            = LangEntry.builder("Other.NoJobs").text(GRAY.wrap("<No Jobs>"));
     public static final TextLocale OTHER_NO_INCOME          = LangEntry.builder("Other.NoIncome").text(GRAY.wrap("$0"));

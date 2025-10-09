@@ -90,12 +90,8 @@ public class JobsMenu extends NormalMenu<JobsPlugin> implements Filled<Job>, Con
         return MenuFiller.builder(this)
             .setSlots(this.gridAutoSlots)
             .setItems(plugin.getJobManager().getJobs().stream().sorted(Comparator.comparing(Job::getName)).toList())
-            .setItemCreator(job -> {
-                return this.replaceJobItem(player, job);
-            })
-            .setItemClick(job -> (viewer1, event) -> {
-                this.onJobClick(viewer1, job);
-            })
+            .setItemCreator(job -> this.replaceJobItem(player, job))
+            .setItemClick(job -> (viewer1, event) -> this.onJobClick(viewer1, job))
             .build();
     }
 
@@ -114,9 +110,7 @@ public class JobsMenu extends NormalMenu<JobsPlugin> implements Filled<Job>, Con
             if (slot == null || slot.page != page) return;
 
             NightItem item = this.replaceJobItem(player, job);
-            MenuItem menuItem = item.toMenuItem().setSlots(slot.slots).setPriority(100).setHandler((viewer1, event) -> {
-                this.onJobClick(viewer1, job);
-            }).build();
+            MenuItem menuItem = item.toMenuItem().setSlots(slot.slots).setPriority(100).setHandler((viewer1, event) -> this.onJobClick(viewer1, job)).build();
 
             viewer.addItem(menuItem);
         });
@@ -160,7 +154,6 @@ public class JobsMenu extends NormalMenu<JobsPlugin> implements Filled<Job>, Con
             name = this.jobNameLockedPerm;
             lore = new ArrayList<>(this.jobLoreLockedPerm);
         }
-
 
         List<String> dailyLimits = new ArrayList<>();
         List<String> currencyLimits = new ArrayList<>();
@@ -293,9 +286,6 @@ public class JobsMenu extends NormalMenu<JobsPlugin> implements Filled<Job>, Con
         this.jobLoreLockedPerm = ConfigValue.create("Job.Locked_Permission.Lore", Lists.newList(
             GRAY.wrap("Upgrade your " + RED.wrap("/rank") + " to access this job.")
         )).read(config);
-
-
-
 
         this.jobDailyLimits = ConfigValue.create("Job.DailyLimits.Header", Lists.newList(
             SOFT_YELLOW.wrap(BOLD.wrap("Daily Limits:")),

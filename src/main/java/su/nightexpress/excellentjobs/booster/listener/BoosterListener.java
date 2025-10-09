@@ -13,9 +13,4 @@ public class BoosterListener extends AbstractListener<JobsPlugin> {
         super(plugin);
         this.manager = manager;
     }
-
-//    @EventHandler(priority = EventPriority.MONITOR)
-//    public void onBoosterJoin(PlayerJoinEvent event) {
-//
-//    }
 }
