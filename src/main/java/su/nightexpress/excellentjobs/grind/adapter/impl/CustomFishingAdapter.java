@@ -26,7 +26,7 @@ public class CustomFishingAdapter extends AbstractGrindAdapter<Loot, ItemStack> 
     @Override
     @Nullable
     public Loot getTypeByName(@NotNull String name) {
-        return getAPI().getLootManager().getRegisteredLoots().stream().filter(loot -> loot.id().equalsIgnoreCase(name)).findFirst().orElse(null);
+        return getAPI().getLootManager().getLoot(name).orElse(null);
     }
 
     @Override

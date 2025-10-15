@@ -16,6 +16,7 @@ import su.nightexpress.nightcore.locale.entry.ButtonLocale;
 import su.nightexpress.nightcore.ui.dialog.Dialogs;
 import su.nightexpress.nightcore.ui.dialog.build.*;
 import su.nightexpress.nightcore.util.Enums;
+import su.nightexpress.nightcore.util.placeholder.Replacer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,26 +49,26 @@ public class JobDialogs {
         if (buttons.isEmpty()) return;
 
         Dialogs.createAndShow(player, builder -> builder
-                .base(DialogBases.builder(Lang.DIALOG_JOB_STATUS_TITLE)
-                    .body(DialogBodies.plainMessage(Lang.DIALOG_JOB_STATUS_BODY))
-                    .build()
-                )
-                .type(DialogTypes.multiAction(buttons).columns(1).exitAction(DialogButtons.action(Lang.DIALOG_BUTTON_BACK).build()).build())
-                .handleResponse("state", (human, identifier, nbtHolder) -> {
-                    if (nbtHolder == null) return;
+            .base(DialogBases.builder(Lang.DIALOG_JOB_STATUS_TITLE)
+                .body(DialogBodies.plainMessage(Lang.DIALOG_JOB_STATUS_BODY.replace(str -> Replacer.create()
+                    .replace(data.replaceAllPlaceholders())
+                    .replace(GENERIC_PRIMARY_COUNT, () -> String.valueOf(user.countJobs(JobState.PRIMARY)))
+                    .replace(GENERIC_SECONDARY_COUNT, () -> String.valueOf(user.countJobs(JobState.SECONDARY)))
+                    .replace(GENERIC_PRIMARY_LIMIT, () -> primLimit < 0 ? CoreLang.OTHER_INFINITY.text() : String.valueOf(primLimit))
+                    .replace(GENERIC_SECONDARY_LIMIT, () -> secondLimit < 0 ? CoreLang.OTHER_INFINITY.text() : String.valueOf(secondLimit))
+                    .apply(str))))
+                .build()
+            )
+            .type(DialogTypes.multiAction(buttons).columns(1).exitAction(DialogButtons.action(Lang.DIALOG_BUTTON_BACK).build()).build())
+            .handleResponse("state", (human, identifier, nbtHolder) -> {
+                if (nbtHolder == null) return;
 
-                    JobState state = Enums.get(nbtHolder.getText("state", "null"), JobState.class);
-                    if (state == null) return;
+                JobState state = Enums.get(nbtHolder.getText("state", "null"), JobState.class);
+                if (state == null) return;
 
-                    manager.joinOrLeaveJob(human, job, state, false);
-                    manager.openLevelsMenu(human, job);
-                })
-            , replacer -> replacer
-                .replace(data.replaceAllPlaceholders())
-                .replace(GENERIC_PRIMARY_COUNT, () -> String.valueOf(user.countJobs(JobState.PRIMARY)))
-                .replace(GENERIC_SECONDARY_COUNT, () -> String.valueOf(user.countJobs(JobState.SECONDARY)))
-                .replace(GENERIC_PRIMARY_LIMIT, () -> primLimit < 0 ? CoreLang.OTHER_INFINITY.text() : String.valueOf(primLimit))
-                .replace(GENERIC_SECONDARY_LIMIT, () -> secondLimit < 0 ? CoreLang.OTHER_INFINITY.text() : String.valueOf(secondLimit))
+                manager.joinOrLeaveJob(human.getPlayer(), job, state, false);
+                manager.openLevelsMenu(human.getPlayer(), job);
+            })
         );
     }
 }
