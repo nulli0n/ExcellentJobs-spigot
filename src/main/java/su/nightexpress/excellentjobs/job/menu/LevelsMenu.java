@@ -102,7 +102,7 @@ public class LevelsMenu extends LinkedMenu<JobsPlugin, Job> implements ConfigBas
                         item = this.upcomingReward.copy();
                     }
                     else if (jobLevel >= level) {
-                        if (claimRequired && !data.isLevelRewardObtained(level)) {
+                        if (claimRequired && !data.isLevelRewardObtained(level) && !rewards.isEmpty()) {
                             item = this.unclaimedReward.copy();
                         }
                         else {
