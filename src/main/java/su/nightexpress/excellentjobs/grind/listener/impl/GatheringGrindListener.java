@@ -83,11 +83,11 @@ public class GatheringGrindListener extends GrindListener<GatheringGrindTable, G
         if (!this.grindManager.canGrinding(player)) return;
 
         ItemStack itemStack = player.getInventory().getItem(slot);
-        if (itemStack == null || itemStack.getType() != Material.GLASS_BOTTLE) return;
+        if (itemStack.getType() != Material.GLASS_BOTTLE) return;
 
-        this.plugin.runTask(task -> {
+        this.plugin.runTask(() -> {
             ItemStack honey = player.getInventory().getItem(slot);
-            if (honey == null || honey.getType() != Material.HONEY_BOTTLE) return;
+            if (honey.getType() != Material.HONEY_BOTTLE) return;
 
             this.giveXP(player, (job, table) -> table.getBlockResourceXP(honey));
         });

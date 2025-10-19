@@ -189,14 +189,6 @@ public class JobManager extends AbstractManager<JobsPlugin> {
     private Map<String, JobObjective> updateObjectives(@NotNull FileConfig config) {
         Map<String, JobObjective> objectives = new LinkedHashMap<>();
 
-        /*config.options().setHeader(Lists.newList(
-            "=".repeat(50),
-            "For a list of available Types and acceptable Objects, please refer to " + Placeholders.URL_WIKI_WORK_TYPES,
-            "For a list of available currencies, please refer to " + Placeholders.URL_WIKI_ECONOMY,
-            "For a list of available Icon options, please refer to " + Placeholders.URL_WIKI_ITEMS,
-            "=".repeat(50)
-        ));*/
-
         Map<String, Map<String, SourceReward>> converteds = new LinkedHashMap<>();
 
         config.getSection("").forEach(sId -> {
@@ -326,8 +318,6 @@ public class JobManager extends AbstractManager<JobsPlugin> {
             this.progressBarMap.computeIfAbsent(player.getUniqueId(), k -> new ConcurrentHashMap<>()).put(job.getId(), progressBar);
         }
         return progressBar;
-
-        //return this.getProgressBarMap(player).computeIfAbsent(job.getId(), k -> new ProgressBar(this.plugin, job, player));
     }
 
     @NotNull
@@ -384,7 +374,6 @@ public class JobManager extends AbstractManager<JobsPlugin> {
     public void handleQuit(@NotNull Player player) {
         this.payForJob(player);
         this.getProgressBars(player).forEach(ProgressBar::discard);
-        //this.incomeMap.remove(player.getUniqueId());
         this.progressBarMap.remove(player.getUniqueId());
     }
 
@@ -596,8 +585,6 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         return true;
     }
 
-
-
     public void addLevel(@NotNull Player player, @NotNull Job job, int amount) {
         this.addLevel(player, job, amount, false);
     }
@@ -669,8 +656,6 @@ public class JobManager extends AbstractManager<JobsPlugin> {
         }
     }
 
-
-
     public void addXP(@NotNull Player player, @NotNull Job job, int amount) {
         this.addXP(player, job, amount, false);
     }
@@ -691,10 +676,6 @@ public class JobManager extends AbstractManager<JobsPlugin> {
 
         this.handleXPSet(user, job, data.getXP() + amount, player);
     }
-
-
-
-
 
     public void removeXP(@NotNull Player player, @NotNull Job job, int amount) {
         this.removeXP(player, job, amount, false);
@@ -778,7 +759,6 @@ public class JobManager extends AbstractManager<JobsPlugin> {
                 }));
         }
     }
-
 
     public void setWorkstationOwnerId(@NotNull TileState station, @NotNull UUID uuid) {
         PDCUtil.set(station, this.stationOwnerKey, uuid);

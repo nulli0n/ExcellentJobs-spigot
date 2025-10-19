@@ -198,7 +198,7 @@ public class Zone extends AbstractFileData<JobsPlugin> {
         long resetDate = TimeUtil.createFutureTimestamp(blockList.getResetTime());
 
         this.renewBlocks.put(pos, new RenewBlock(blockData, resetDate));
-        this.plugin.runTask(task -> this.world.setBlockData(block.getLocation(), blockList.getFallbackMaterial().createBlockData()));
+        this.plugin.runTask(() -> this.world.setBlockData(block.getLocation(), blockList.getFallbackMaterial().createBlockData()));
         return true;
     }
 
@@ -341,7 +341,6 @@ public class Zone extends AbstractFileData<JobsPlugin> {
     public void activate(@NotNull World world) {
         if (this.worldName.equalsIgnoreCase(world.getName())) {
             this.world = world;
-            //this.plugin.debug("Zone activated: " + this.getId() + " in " + this.worldName);
         }
     }
 
@@ -353,7 +352,6 @@ public class Zone extends AbstractFileData<JobsPlugin> {
 
     public void deactivate() {
         this.world = null;
-        //this.plugin.debug("Zone deactivated: " + this.getId() + " in " + this.worldName);
     }
 
     @NotNull

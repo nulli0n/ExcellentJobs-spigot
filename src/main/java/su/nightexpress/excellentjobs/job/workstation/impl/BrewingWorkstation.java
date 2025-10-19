@@ -15,14 +15,4 @@ public class BrewingWorkstation extends AbstractWorkstation<BrewingStand> {
     public boolean isCrafting() {
         return this.backend.getBrewingTime() > 0;
     }
-
-    /*@Override
-    public int getRemainingTime() {
-        return this.backend.getBrewingTime();
-    }
-
-    @Override
-    public void setRemainingTime(int remainingTime) {
-        this.backend.setBrewingTime(remainingTime);
-    }*/
 }

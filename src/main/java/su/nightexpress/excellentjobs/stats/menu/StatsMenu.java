@@ -83,17 +83,14 @@ public class StatsMenu extends LinkedMenu<JobsPlugin, Job> implements ConfigBase
 
                 currencyAmounts.add(currency.replacePlaceholders().apply(this.currencyEntry.replace(GENERIC_AMOUNT, currency.format(amount))));
             }
-            if (currencyAmounts.isEmpty()) currencyAmounts.add(this.nothingEntry);
 
+            if (currencyAmounts.isEmpty()) {
+                currencyAmounts.add(this.nothingEntry);
+            }
 
-            /*for (JobLegacyObjective objective : job.getObjectives()) {
-                int amount = dayStats.getObjectives(objective);
-                if (amount == 0) continue;
-
-                objectiveAmounts.add(this.objectiveEntry.replace(OBJECTIVE_NAME, objective.getDisplayName()).replace(GENERIC_AMOUNT, NumberUtil.format(amount)));
-            }*/
-            if (objectiveAmounts.isEmpty()) objectiveAmounts.add(this.nothingEntry);
-
+            if (objectiveAmounts.isEmpty()) {
+                objectiveAmounts.add(this.nothingEntry);
+            }
 
             NightItem item = entry.item().copy().hideAllComponents()
                 .setDisplayName(this.entryName)
@@ -107,7 +104,7 @@ public class StatsMenu extends LinkedMenu<JobsPlugin, Job> implements ConfigBase
             viewer.addItem(item.toMenuItem().setSlots(entry.slots()).setPriority(Integer.MAX_VALUE).build());
         });
     }
-    
+
     private void handleReturn(@NotNull MenuViewer viewer, @NotNull InventoryClickEvent event) {
         this.runNextTick(() -> plugin.getJobManager().openLevelsMenu(viewer.getPlayer(), this.getLink(viewer)));
     }

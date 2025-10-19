@@ -38,8 +38,6 @@ public class BrewingGrindListener extends GrindListener<BrewingGrindTable, Brewi
         int potionsAmount = event.getResults().size();
         WorkstationMode mode = this.plugin.getJobManager().getWorkstationMode(stand);
 
-        this.giveXP(player, (skill, table) -> {
-            return table.getIngredientXP(ingredient, potionsAmount, mode == WorkstationMode.AUTO);
-        });
+        this.giveXP(player, (skill, table) -> table.getIngredientXP(ingredient, potionsAmount, mode == WorkstationMode.AUTO));
     }
 }

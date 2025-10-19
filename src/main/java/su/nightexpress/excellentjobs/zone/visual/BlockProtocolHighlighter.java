@@ -42,7 +42,6 @@ public class BlockProtocolHighlighter extends BlockHighlighter {
             metadata.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(23, WrappedDataWatcher.Registry.getBlockDataSerializer(false)), WrappedBlockData.createData(blockData)); // slot
         });
 
-
         PacketContainer teamPacket = new PacketContainer(PacketType.Play.Server.SCOREBOARD_TEAM);
         teamPacket.getStrings().write(0, entityUID); // Name
         teamPacket.getIntegers().write(0, 0); // Mode. 1 - Remove, 0 - Create
@@ -63,8 +62,6 @@ public class BlockProtocolHighlighter extends BlockHighlighter {
         this.manager.sendServerPacket(player, spawnPacket);
         this.manager.sendServerPacket(player, teamPacket);
         this.manager.sendServerPacket(player, dataPacket);
-
-        //return new FakeEntity(entityID, uuid);
     }
 
     @Override

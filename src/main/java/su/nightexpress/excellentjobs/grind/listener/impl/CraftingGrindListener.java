@@ -42,8 +42,6 @@ public class CraftingGrindListener extends GrindListener<BasicItemGrindTable, Ba
                 int crafted = now - has;
                 int craftedUnits = crafted / unitSize;
 
-                //Debugger.info(player, () -> DEBUG_MASS_CRAFT.formatted(String.valueOf(craftedUnits), ItemUtil.getNameSerialized(craftedItem)));
-
                 this.giveXP(player, (skill, table) -> table.getItemXP(craftedItem, craftedUnits));
             });
             return;

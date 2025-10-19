@@ -44,9 +44,4 @@ public class GrindAdapterFamily<O> {
     public GrindAdapter<?, O> getAdapterFor(@NotNull O entity) {
         return this.getAdaptersFor(entity).stream().findFirst().orElse(null);
     }
-
-    /*@Nullable
-    public GrindAdapter<?, O> getAdapterForName(@NotNull String fullName) {
-        return this.getAdapters().stream().filter(adapter -> adapter.getTypeByName(fullName) != null).findFirst().orElse(null);
-    }*/
 }

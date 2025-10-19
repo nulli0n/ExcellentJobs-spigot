@@ -75,9 +75,7 @@ public class LevelsMenu extends LinkedMenu<JobsPlugin, Job> implements ConfigBas
         int limit = this.rewardSlots.length;
         int page = (int) Math.ceil((double) level / (double) limit);
 
-        this.open(player, job, viewer -> {
-            viewer.setPage(page);
-        });
+        this.open(player, job, viewer -> viewer.setPage(page));
     }
 
     @Override
@@ -98,7 +96,6 @@ public class LevelsMenu extends LinkedMenu<JobsPlugin, Job> implements ConfigBas
                 List<LevelReward> rewards = job.getRewards().getRewards(level);
 
                 NightItem item = this.lockedReward.copy();
-                //boolean hasRewards = rewards.stream().anyMatch(reward -> reward.isAvailable(player) && reward.isGoodState(state));
 
                 if (data.isActive()) {
                     if (level - jobLevel == 1) {
@@ -115,9 +112,7 @@ public class LevelsMenu extends LinkedMenu<JobsPlugin, Job> implements ConfigBas
                 }
 
                 List<String> rewardFormats = new ArrayList<>();
-                rewards.forEach(reward -> {
-                    rewardFormats.addAll(Replacer.create().replace(reward.replacePlaceholders()).apply(this.rewardFormat));
-                });
+                rewards.forEach(reward -> rewardFormats.addAll(Replacer.create().replace(reward.replacePlaceholders()).apply(this.rewardFormat)));
                 if (rewards.isEmpty()) {
                     rewardFormats.add(CoreLang.OTHER_NONE.text());
                 }
@@ -474,9 +469,7 @@ public class LevelsMenu extends LinkedMenu<JobsPlugin, Job> implements ConfigBas
     @NotNull
     private ItemHandler createStatusHandler(@NotNull JobState state) {
         return new ItemHandler(LowerCase.USER_LOCALE.apply("status_" + state.name()),
-            (viewer, event) -> {
-                JobDialogs.openJobStateDialog(plugin, viewer.getPlayer(), this.getLink(viewer));
-            },
+            (viewer, event) -> JobDialogs.openJobStateDialog(plugin, viewer.getPlayer(), this.getLink(viewer)),
             ItemOptions.builder()
                 .setVisibilityPolicy(viewer -> {
                     Job job = this.getLink(viewer);
