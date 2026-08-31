@@ -43,7 +43,7 @@ public class BlockLootGrindListener extends GrindListener<ItemStack> {
         });
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onBlockDrop(BlockDropItemEvent event) {
         BlockState blockState = event.getBlockState();
         if (blockState instanceof Container) return; // Do not handle container's drops.

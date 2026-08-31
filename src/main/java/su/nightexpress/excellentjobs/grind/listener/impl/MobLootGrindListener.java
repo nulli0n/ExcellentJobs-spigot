@@ -26,7 +26,7 @@ public class MobLootGrindListener extends GrindListener<ItemStack> {
         super(plugin, manager, protection, type);
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onEntityDrop(EntityDeathEvent event) {
         LivingEntity entity = event.getEntity();
         if (entity instanceof Player) return;
